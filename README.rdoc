@@ -1,4 +1,4 @@
-= yodel
+= Yodel
 
 Rack based Ruby CMS.
 

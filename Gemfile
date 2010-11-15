@@ -1,5 +1,16 @@
 source 'http://rubygems.org'
-gem 'impromptu'
+gem 'impromptu',      '~> 1.0'
+gem 'rack',           '~> 1.0'
+gem 'mongo_mapper',   '~> 0.8.6'
+gem 'activesupport',  '~> 3.0.0'
+gem 'erubis',         '~> 2.6.6'
+gem 'mail',           '~> 2.2.9'
+gem 'image_science',  '~> 1.2.1'
+gem 'hpricot',        '~> 0.8.3'
+gem 'builder',        '~> 2.1.2'
+gem 'ri_cal',         '~> 0.8.7'
+gem 'json',           '~> 1.4.6'
+gem 'rack-contrib',   '~> 1.1.0'
 
 group :development do
   gem 'shoulda', '>= 0'

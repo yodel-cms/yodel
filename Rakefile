@@ -17,8 +17,19 @@ Jeweler::Tasks.new do |gem|
   gem.summary = 'Ruby CMS'
   gem.description = 'Rack based Ruby CMS'
   gem.email = 'me@willcannings.com'
-  gem.authors = ['Will']
-  gem.add_runtime_dependency 'impromptu', '>= 1.0.0'
+  gem.authors = ['Will']  
+  gem.add_runtime_dependency 'impromptu', 		'~> 1.0'
+  gem.add_runtime_dependency 'rack', 					'~> 1.0'
+  gem.add_runtime_dependency 'mongo_mapper', 	'~> 0.8.6'
+  gem.add_runtime_dependency 'activesupport',	'~> 3.0.0'
+  gem.add_runtime_dependency 'erubis',				'~> 2.6.6'
+  gem.add_runtime_dependency 'mail',					'~> 2.2.9'
+  gem.add_runtime_dependency 'image_science',	'~> 1.2.1'
+  gem.add_runtime_dependency 'hpricot',				'~> 0.8.3'
+  gem.add_runtime_dependency 'builder',				'~> 2.1.2'
+  gem.add_runtime_dependency 'ri_cal',				'~> 0.8.7'
+  gem.add_runtime_dependency 'json',					'~> 1.4.6'
+  gem.add_runtime_dependency 'rack-contrib',	'~> 1.1.0'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
