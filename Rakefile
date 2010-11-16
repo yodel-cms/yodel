@@ -21,7 +21,7 @@ Jeweler::Tasks.new do |gem|
   
   gem.files = ["lib/**/*.rb", "lib/**/*.components", "bin/*"]
   
-  gem.add_runtime_dependency 'impromptu', 		'~> 1.0'
+  gem.add_runtime_dependency 'impromptu', 		'~> 1.2'
   gem.add_runtime_dependency 'rack', 					'~> 1.0'
   gem.add_runtime_dependency 'mongo_mapper', 	'~> 0.8.6'
   gem.add_runtime_dependency 'activesupport',	'~> 3.0.0'

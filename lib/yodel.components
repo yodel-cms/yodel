@@ -1,13 +1,12 @@
 component 'yodel' do
-  namespace :Yodel
   requires  'rack', 'mongo_mapper', 'active_support', 'erubis'
   requires  'hpricot', 'json', 'image_science', 'rack/contrib'
-  folder    'yodel', nested_namespaces: false
-end
-
-component 'types' do
-  requires 'hpricot'
-  folder   'types', nested_namespaces: false do
+  
+  folder 'yodel', namespace: :Yodel, nested_namespaces: false do
+    file 'yodel.rb', provides: :'::Yodel'
+  end
+  
+  folder 'types', nested_namespaces: false do
     file 'css.rb', provides: :CSS
     file 'html.rb', provides: :HTML
     file 'html_code.rb', provides: :HTMLCode

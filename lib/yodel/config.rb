@@ -15,8 +15,4 @@ module Yodel
       end
     end
   end
-  
-  def self.config
-    @config ||= Config.new
-  end
 end

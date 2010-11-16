@@ -1,5 +1,5 @@
 source 'http://rubygems.org'
-gem 'impromptu',      '~> 1.0'
+gem 'impromptu',      '~> 1.2'
 gem 'rack',           '~> 1.0'
 gem 'mongo_mapper',   '~> 0.8.6'
 gem 'activesupport',  '~> 3.0.0'
