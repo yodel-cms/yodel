@@ -1,6 +1,9 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    RubyInline (3.8.6)
+      ZenTest (~> 4.3)
+    ZenTest (4.4.0)
     abstract (1.0.0)
     activesupport (3.0.1)
     bson (1.1.2)
@@ -48,6 +51,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  RubyInline (~> 3.8.6)
   activesupport (~> 3.0.0)
   builder (~> 2.1.2)
   bundler (~> 1.0.0)
