@@ -1,8 +1,8 @@
 module Yodel
-  def self.object_attribute(name, klass)
-    self.class_eval "def self.#{name}; @#{name} ||= #{klass}.new; end"
-  end
-  
-  object_attribute :config, Yodel::Config
-  object_attribute :routes, Yodel::RouteSet
 end
+
+# extend mongo mapper with the extra options yodel uses on keys
+MongoMapper::Plugins::Associations::Base::AssociationOptions << :required
+MongoMapper::Plugins::Associations::Base::AssociationOptions << :display
+MongoMapper::Plugins::Associations::Base::AssociationOptions << :sizes
+MongoMapper::Plugins::Associations::Base::AssociationOptions << :tab

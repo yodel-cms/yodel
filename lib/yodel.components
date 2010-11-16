@@ -4,7 +4,12 @@ component 'yodel' do
   
   folder 'yodel', namespace: :Yodel, nested_namespaces: false do
     file 'yodel.rb', provides: :'::Yodel'
+    file 'application/yodel.rb', provides: :'::Yodel'
+    file 'mime_types/yodel.rb', provides: :'::Yodel'
+    file 'routes/yodel.rb', provides: :'::Yodel'
   end
+  
+  folder 'middleware'
   
   folder 'types', nested_namespaces: false do
     file 'css.rb', provides: :CSS
