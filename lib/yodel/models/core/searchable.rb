@@ -22,7 +22,7 @@ module Yodel
       end
       
       # by default records which include this module can be displayed in search results
-      def show_in_search?
+      def self.show_in_search?
         true
       end
       

@@ -7,13 +7,14 @@ module Yodel
     key :name, String, required: true
     key :identifier, String, required: true
     key :domains, Array, required: true, default: [], index: true
+    key :extensions, Array, required: true, default: []
     
     def self.find_by_domain(domain)
-      Site.first domains: domain
+      where(domains: domain).first
     end
     
     def self.find_by_identifier(identifier)
-      Site.first identifier: identifier
+      where(identifier: identifier).first
     end
     
     def directory_path

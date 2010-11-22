@@ -14,5 +14,26 @@ module Yodel
         @options[method]
       end
     end
+    
+    def merge_defaults!
+      # mongo_mapper
+      self.database_hostname          ||= 'localhost'
+      self.database_port              ||= 27017
+      self.database                   ||= 'Yodel'
+      
+      # yodel
+      self.session_key                ||= 'yodel.session'
+      self.session_secret             ||= 'yodel.session'
+      self.public_directory_name      ||= 'public'
+      self.attachment_directory_name  ||= 'attachments'
+      
+      # directories
+      self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..')
+      self.public_directory           ||= self.root.join(self.public_directory_name)
+      
+      # logging
+      self.logger                     ||= Logger.new('yodel.log')
+      self.sev_threshold              ||= Logger::DEBUG
+    end
   end
 end

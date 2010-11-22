@@ -2,58 +2,31 @@ module Yodel
   class Application < Rack::Builder
     def initialize
       super
-      boot
       
-      use Rack::Reloader, 0
-      use Rack::ContentLength
+      # boot
+      Yodel.config.merge_defaults!
+      MongoMapper.connection = Mongo::Connection.new(Yodel.config.database_hostname, Yodel.config.database_port, slave_ok: true)
+      MongoMapper.database = Yodel.config.database
+      #Yodel.load_extensions(Yodel.config.root.join('app'))
+      Dir.chdir(Yodel.config.root)
+      
+      # serve files from public in development
+      if Yodel.env.development?
+        Yodel.use_middleware do |app|
+          app.use Yodel::ConditionalFile, Yodel.config.public_directory
+        end
+      end
+      
+      # setup middleware
       use Rack::NestedParams
-      use Rack::Sendfile
-      use Rack::Session::Cookie, key: 'yodel.session', secret: Yodel.config.session_secret
+      use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
       Yodel.initialise_middleware_with_app(self)
+      
+      # initialise a rack endpoint
       run Yodel::RequestHandler.new
       @app = to_app
     end
 
-    # TODO: extract boot out to "components" with dependencies; automatically resolve boot order based on deps
-    def boot
-      # initialise MongoMapper
-      Yodel.config.database_hostname  ||= 'localhost'
-      Yodel.config.database_port      ||= 27017
-      Yodel.config.database           ||= 'Yodel'
-      MongoMapper.connection = Mongo::Connection.new(Yodel.config.database_hostname, Yodel.config.database_port, :slave_ok => true)
-      MongoMapper.database = Yodel.config.database
-
-      # assign default values if needed
-      Yodel.config.session_secret             ||= "yodel.session"
-      Yodel.config.public_directory_name      ||= "public"
-      Yodel.config.attachment_directory_name  ||= "attachments"
-      
-      # determine root directories
-      Yodel.config.yodel_root = Pathname.new(File.dirname(__FILE__)).join('..')
-      Yodel.config.root = Yodel.config.yodel_root.join('..')
-      Yodel.config.public_directory = Yodel.config.root.join(Yodel.config.public_directory_name)
-
-      # by default, attachments are served from the public folder in the root of the app
-      Yodel.use_middleware do |app|
-        app.use Yodel::ConditionalFile, Yodel.config.public_directory
-      end
-
-      # load yodel and app extensions
-      Yodel.load_extensions(Yodel.config.yodel_root.join('extensions'))
-      Yodel.load_extensions(Yodel.config.root.join('extensions'))
-      Yodel.load_extensions(Yodel.config.root.join('app'))
-
-      # FIXME: hack!!!
-      ObjectSpace.each_object do |obj|
-        if obj.respond_to?(:ancestors) && obj.ancestors.include?(Yodel::AdminController)
-          obj.generate_admin_model_controllers
-        end
-      end
-
-      # deterministic PWD regardless of where we're require'd from
-      Dir.chdir(Yodel.config.root)
-    end
-    
     def call(env)
       @app.call(env)
     end

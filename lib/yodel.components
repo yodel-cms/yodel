@@ -11,6 +11,10 @@ component 'yodel' do
   
   folder 'middleware'
   
+  #folder 'mongo_mapper' do
+  #  file 'inherited_sci.rb', provides: :'::MongoMapper::Plugins::InheritedSCI'
+  #end
+  
   folder 'types', nested_namespaces: false do
     file 'css.rb', provides: :CSS
     file 'html.rb', provides: :HTML
