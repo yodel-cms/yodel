@@ -1,4 +1,4 @@
 module Yodel
-  class StaticFile < Record
+  class StaticFile < Yodel::Model
   end
 end

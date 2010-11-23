@@ -1,9 +1,9 @@
 module Yodel
-  class Layout < Record
-    allowed_child_types self
+  class Layout < Yodel::Model
+    allowed_descendants self
     
     key :name, String, required: true # FIXME: needs to be unique for a site
-    key :content, HTMLCode, required: true
+    key :content, ::HTMLCode, required: true
     key :cacheable, Boolean
     key :dependencies, Array
     

@@ -1,13 +1,13 @@
 module Yodel
-  class Page < Record
-    allowed_child_types self
+  class Page < Yodel::Model
+    allowed_descendants self
     single_root
     
     # core page attributes
     key :permalink, String, required: true, index: true
     key :path, String, required: true, index: true
     key :title, String, required: true
-    key :content, HTML
+    key :content, ::HTML
     
     # behaviour tab
     #key :show_in_menus, Boolean, tab: 'Behaviour', default: true
@@ -32,12 +32,8 @@ module Yodel
     
     # searching
     searchable
-    def self.show_in_search?
+    def show_in_search?
       show_in_search
-    end
-    
-    def search_title
-      title
     end
     
 
