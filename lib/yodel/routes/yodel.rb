@@ -1,5 +1,5 @@
 module Yodel
   def self.routes
-    @config ||= RouteSet.new
+    @routes ||= RouteSet.new
   end
 end

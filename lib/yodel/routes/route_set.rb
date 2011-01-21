@@ -7,7 +7,7 @@ module Yodel
     end
     
     def <<(route)
-      @routes << Route.new(route)
+      @routes << Yodel::Route.new(route)
     end
     
     def sort_routes!

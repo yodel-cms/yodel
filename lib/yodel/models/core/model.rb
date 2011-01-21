@@ -12,6 +12,11 @@ module Yodel
     key :index, Integer, required: true, default: nil
     key :parent_id, BSON::ObjectId, default: nil
     key :site_id, BSON::ObjectId, default: nil
+    
+    # yodel_search_keywords is a list of keywords (strings) which will match this record
+    # by default split all string keys (with !searchable false) and remove all non word
+    # characters. sub-classes should override this method if different functionality req.
+    key :yodel_search_keywords, Array, index: true, display: false
 
 
     # ----------------------------------------
@@ -44,8 +49,12 @@ module Yodel
     end
     
     # Scope to retrieve all root records of a model type under a site, e.g
-    # Yodel::Page.roots(site). Returns all records with a nil parent.
+    # Yodel::Groups.roots(site). Returns all records with a nil parent.
     scope :roots, lambda {|site| where(site_id: site.id, parent_id: nil).order('index asc')}
+    
+    # Scope to retrieve the first (or only) root record of a model under a
+    # site, e.g Yodel::Page.root(site) will retrieve the root page of a site
+    scope :root, lambda {|site| where(site_id: site.id, parent_id: nil).limit(1).order('index asc')}
     
     # Siblings of this record (other records with the same parent)
     def siblings
@@ -98,27 +107,17 @@ module Yodel
       name
     end
     
-    # Class method used within a model to indicate that it is searchable. Pages call this
-    # method so you only need to use this on custom (non page) records.
-    def self.searchable
-      class_eval do
-        # yodel_search_keywords is a list of keywords (strings) which will match this record
-        # by default split all string keys (with !searchable false) and remove all non word
-        # characters. sub-classes should override this method if different functionality req.
-        key :yodel_search_keywords, Array, index: true, display: false
-    
-        before_save :update_search_keywords
-        def update_search_keywords
-          search_terms = Set.new
-          self.class.keys.values.each do |key|
-            next if key.name.starts_with?('_') || key.options[:searchable] == false || key.type.nil? || !key.type.instance_methods.include?(:search_terms_set)
-            (self.send(key.name) || '').search_terms_set.each do |term|
-              search_terms << term.downcase
-            end
-          end
-          self.yodel_search_keywords = search_terms.to_a
+    # Before every save, the list of search keywords for a record is updated
+    before_save :update_search_keywords
+    def update_search_keywords
+      search_terms = Set.new
+      self.class.keys.values.each do |key|
+        next if key.name.starts_with?('_') || key.options[:searchable] == false || key.type.nil? || !key.type.instance_methods.include?(:search_terms_set)
+        (self.send(key.name) || '').search_terms_set.each do |term|
+          search_terms << term.downcase
         end
       end
+      self.yodel_search_keywords = search_terms.to_a
     end
     
     # Performs a search using the supplied query over all records of this model type or
@@ -177,84 +176,84 @@ module Yodel
 
     
     # FIXME: this needs to be extracted out to the different key types?
-    def self.cleanse_hash(hash)
-      # for readability rename '_id' to 'id',
-      # and '_type' to 'type'
-      if hash.has_key?('_id')
-        id = hash.delete('_id')
-        hash['id'] = id.to_s
-      end
-      if hash.has_key?('_type')
-        type = hash.delete('_type')
-        hash['type'] = type
-      end
-      
-      # we don't need to store which site the record belongs to
-      hash.delete('site_id')
-      
-      # or the search keywords that are generated
-      hash.delete('yodel_search_keywords') if hash.has_key?('yodel_search_keywords')
-      
-      # attributes starting with an underscore are private
-      hash.delete_if {|key, value| key.start_with? '_'}
-      
-      # change all references (values of type ObjectID)
-      # to a string of the object ID, cleanse embedded
-      # documents, remove "_id" from all keys, and change
-      # date and time values in to a format suitable for
-      # clients to read appropriately
-      hash.each do |key, value|
-        hash[key] = value.to_s if value.is_a?(BSON::ObjectId)
-        hash[key] = cleanse_hash(value) if value.is_a?(Hash)
-        hash[key] = value.force_encoding("UTF-8") if value.is_a?(String)
-        
-        if self.keys[key.to_sym].try(:type) && self.keys[key.to_sym].type.ancestors.include?(Tags)
-          hash[key] = Tags.new(value).to_s
-          next
-        end
-        
-        if key.end_with?('_id')
-          hash.delete(key)
-          value_key = key.gsub('_id', '')
-          hash[value_key] = value unless hash.has_key?(value_key)
-          next
-        end
-        
-        # hack to get around mongo mapper mapping all dates to time objects...
-        if value.is_a?(Time) || value.is_a?(Date)
-          if self.keys.has_key?(key) && !self.keys[key].type.nil?
-            type = self.keys[key].type
-          else
-            type = value.class
-          end
-        
-          if type.ancestors.include?(Date)
-            hash[key] = value.strftime("%d %b %Y")
-          elsif type.ancestors.include?(Time)
-            # FIXME: this is just horrible.... only done to make the admin interface easy
-            hash.delete(key)
-            hash[key + '_date'] = value.strftime("%d %b %Y")
-            hash[key + '_hour'] = value.localtime.hour
-            hash[key + '_min']  = value.localtime.min
-          end
-          next
-        end
-        
-        # has_many associations stored in an array need
-        # to have ObjectID's converted to strings
-        if value.is_a?(Array)
-          hash[key] = value.collect do |val|
-            val.is_a?(BSON::ObjectId) ? val.to_s : val
-          end
-        end
-      end
-      
-      hash
-    end
-    
-    def to_json_hash
-      self.class.cleanse_hash(attributes)
-    end
+    # def self.cleanse_hash(hash)
+    #   # for readability rename '_id' to 'id',
+    #   # and '_type' to 'type'
+    #   if hash.has_key?('_id')
+    #     id = hash.delete('_id')
+    #     hash['id'] = id.to_s
+    #   end
+    #   if hash.has_key?('_type')
+    #     type = hash.delete('_type')
+    #     hash['type'] = type
+    #   end
+    #   
+    #   # we don't need to store which site the record belongs to
+    #   hash.delete('site_id')
+    #   
+    #   # or the search keywords that are generated
+    #   hash.delete('yodel_search_keywords') if hash.has_key?('yodel_search_keywords')
+    #   
+    #   # attributes starting with an underscore are private
+    #   hash.delete_if {|key, value| key.start_with? '_'}
+    #   
+    #   # change all references (values of type ObjectID)
+    #   # to a string of the object ID, cleanse embedded
+    #   # documents, remove "_id" from all keys, and change
+    #   # date and time values in to a format suitable for
+    #   # clients to read appropriately
+    #   hash.each do |key, value|
+    #     hash[key] = value.to_s if value.is_a?(BSON::ObjectId)
+    #     hash[key] = cleanse_hash(value) if value.is_a?(Hash)
+    #     hash[key] = value.force_encoding("UTF-8") if value.is_a?(String)
+    #     
+    #     if self.keys[key.to_sym].try(:type) && self.keys[key.to_sym].type.ancestors.include?(Tags)
+    #       hash[key] = Tags.new(value).to_s
+    #       next
+    #     end
+    #     
+    #     if key.end_with?('_id')
+    #       hash.delete(key)
+    #       value_key = key.gsub('_id', '')
+    #       hash[value_key] = value unless hash.has_key?(value_key)
+    #       next
+    #     end
+    #     
+    #     # hack to get around mongo mapper mapping all dates to time objects...
+    #     if value.is_a?(Time) || value.is_a?(Date)
+    #       if self.keys.has_key?(key) && !self.keys[key].type.nil?
+    #         type = self.keys[key].type
+    #       else
+    #         type = value.class
+    #       end
+    #     
+    #       if type.ancestors.include?(Date)
+    #         hash[key] = value.strftime("%d %b %Y")
+    #       elsif type.ancestors.include?(Time)
+    #         # FIXME: this is just horrible.... only done to make the admin interface easy
+    #         hash.delete(key)
+    #         hash[key + '_date'] = value.strftime("%d %b %Y")
+    #         hash[key + '_hour'] = value.localtime.hour
+    #         hash[key + '_min']  = value.localtime.min
+    #       end
+    #       next
+    #     end
+    #     
+    #     # has_many associations stored in an array need
+    #     # to have ObjectID's converted to strings
+    #     if value.is_a?(Array)
+    #       hash[key] = value.collect do |val|
+    #         val.is_a?(BSON::ObjectId) ? val.to_s : val
+    #       end
+    #     end
+    #   end
+    #   
+    #   hash
+    # end
+    # 
+    # def to_json_hash
+    #   self.class.cleanse_hash(attributes)
+    # end
     
     def self.default_values
       {}.tap do |values|
@@ -270,8 +269,8 @@ module Yodel
       end
     end
     
-    def self.default_values_to_json_hash
-      cleanse_hash(default_values)
-    end
+    # def self.default_values_to_json_hash
+    #       cleanse_hash(default_values)
+    #     end
   end  
 end

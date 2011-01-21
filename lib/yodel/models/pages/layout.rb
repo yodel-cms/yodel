@@ -40,8 +40,8 @@ module Yodel
       FileUtils.rm path if File.exist?(path)
     end
     
-    def render_with_controller(controller)
-      context = RenderContext.new(controller, {})
+    def render_with_controller(controller, extra_context = {})
+      context = RenderContext.new(controller, extra_context)
       context.set_value('content', controller.render_file(self.file_path, context))
       
       layout = self.parent
