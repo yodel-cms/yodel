@@ -75,18 +75,6 @@ module Yodel
       Erubis::Eruby.new(markup).evaluate(context)
     end
     
-    
-    # controller routes
-    # FIXME: needs to take a site parameter
-    def self.route(path, options={})
-      Yodel.routes << {controller: self, method: :any, action: :index, path: path}.merge(options)
-    end
-    
-    def self.path_and_action_for(action, options={})
-      Yodel.routes.path_and_action_for(self, action, options)
-    end
-    
-    
     # content and status code assignment
     def status(code)
       response.status = code

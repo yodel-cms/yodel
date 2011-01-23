@@ -1,7 +1,5 @@
 module Yodel
   class PagesController < Controller
-    route '/', last: true, action: :show
-    
     def show
       page = Yodel::Page.where(path: params['glob'], site_id: site.id).first
       status(404) and return if page.nil? 
