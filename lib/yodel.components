@@ -2,7 +2,7 @@ component 'yodel' do
   requires  'rack', 'mongo_mapper', 'active_support', 'erubis'
   requires  'hpricot', 'json', 'image_science', 'rack/contrib'
   
-  folder 'mongo_mapper', preload: true
+  folder 'mongo_mapper', namespace: :MongoMapper
   folder 'middleware'
   
   folder 'yodel', namespace: :Yodel, nested_namespaces: false do

@@ -166,7 +166,8 @@ module Yodel
       @single_root
     end
 
-    # copy class instance attributes down the inheritance chain
+    
+    # Copy class instance attributes down the inheritance chain
     def self.inherited(child)
       super(child)
       child.instance_variable_set('@single_root', @single_root)
