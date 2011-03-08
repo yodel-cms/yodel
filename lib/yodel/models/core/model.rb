@@ -35,18 +35,22 @@ module Yodel
     def insert_in_siblings(index)
       remove_from_siblings if self.index
       self.siblings.where(:index.gte => index).each do |sibling|
-        sibling.update_attributes(position: sibling.position + 1)
+        sibling.update_attributes(index: sibling.index + 1)
       end
       record.index = index
     end
 
     def remove_from_siblings
-      self.siblings.where(:index.gte > self.index).each do |sibling|
-        sibling.update_attributes(position: sibling.position - 1)
+      self.siblings.where(:index.gte => self.index).each do |sibling|
+        sibling.update_attributes(index: sibling.index - 1)
       end
-      record.index  = nil
-      record.parent = nil
+      self.index  = nil
+      self.parent = nil
     end
+    
+    # Scope to retrieve all records of a model type under a site e.g
+    # Yodel::Layout.all_for(site) returns all layout records
+    scope :all_for, lambda {|site| where(site_id: site.id)}
     
     # Scope to retrieve all root records of a model type under a site, e.g
     # Yodel::Groups.roots(site). Returns all records with a nil parent.
@@ -108,8 +112,10 @@ module Yodel
     end
     
     # Before every save, the list of search keywords for a record is updated
+    # FIXME: remove things like layouts from search
     before_save :update_search_keywords
     def update_search_keywords
+      return unless self.class.searchable?
       search_terms = Set.new
       self.class.keys.values.each do |key|
         next if key.name.starts_with?('_') || key.options[:searchable] == false || key.type.nil? || !key.type.instance_methods.include?(:search_terms_set)
@@ -124,6 +130,18 @@ module Yodel
     # children on this model. If you would like to search all models, call on Yodel::Model.
     def self.search(query)
       # TODO
+    end
+    
+    # Specify whether this model type will appear in
+    # search results and have search keywords updated
+    def self.searchable(searchable)
+      @searchable = searchable
+    end
+    
+    # Indicates whether this model type will be returned
+    # in search results and have search keywords updated.
+    def self.searchable?
+      @searchable.nil? ? true : @searchable
     end
     
     
@@ -142,6 +160,18 @@ module Yodel
     # be overriden by subclasses.
     def self.icon
       '/admin/images/default_icon.png'
+    end
+    
+    # Specify whether the admin interface shows child
+    # elements of this record in a separate tree. For
+    # instance, all shop related records would be shown
+    # under a shop tree separate to the main page tree.
+    def self.menu_root(menu_root)
+      @menu_root = menu_root
+    end
+    
+    def self.menu_root?
+      @menu_root.nil? ? false : @menu_root
     end
     
     # Returns a list of the tabs used for the keys of

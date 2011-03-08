@@ -1,55 +1,61 @@
 module Yodel
   class Layout < Yodel::Model
-    allowed_descendants self
+    key :name, String, required: true, index: true # FIXME: needs to be unique for a site    
     
-    key :name, String, required: true # FIXME: needs to be unique for a site
-    key :content, ::HTMLCode, required: true
-    key :cacheable, Boolean
-    key :dependencies, Array
-    
-    def cache
-    end
-    
-    def invalidate_cache
+    # in development, all layout records are destroyed and recreated each
+    # refresh, so the database view of the layout structure is consistent
+    # with what is on disk. FileLayout objects lazy load the layout from
+    # disk as needed. In production, PersistentLayout records store the
+    # layout markup in the database.
+    def self.reload_layouts(site)
+      self.all_for(site).each(&:destroy)
+      Yodel.config.layout_directories.each {|directory| scan_folder(directory, site, nil)}
     end
 
-
-    # layouts are saved to disk to make editing during development easier.
-    # the on disk version of each file takes precedence to anything in the
-    # DB, so when deploying an app ensure the public dir is deployed as well
-    def file_path(was=false)
-      if was
-        self.site.directory_path.join("#{self.name_was}.html")
-      else
-        self.site.directory_path.join("#{name}.html")
-      end
-    end
-    
-    after_save :save_to_disk
-    def save_to_disk
-      FileUtils.mkpath self.site.directory_path
-      File.open(file_path, 'w') do |file|
-        file.write content
-      end
-    end
-    
-    after_destroy :remove_from_disk
-    before_save :remove_from_disk
-    def remove_from_disk
-      path = file_path(self.name_changed?)
-      FileUtils.rm path if File.exist?(path)
-    end
-    
-    def render_with_controller(controller, extra_context = {})
-      context = RenderContext.new(controller, extra_context)
-      context.set_value('content', controller.render_file(self.file_path, context))
-      
-      layout = self.parent
-      until layout.nil?
-        context.set_value('content', controller.render_file(layout.file_path, context))
-        layout = layout.parent
-      end
+    def render_with_context(context)
+      context.set_value('content', Erubis::Eruby.new(markup).evaluate(context))
+      parent.render_with_context(context) if parent
       context.get_value('content')
+    end
+    
+    private
+      def self.scan_folder(path, site, parent)
+        return unless File.directory?(path)
+        
+        # create layouts for all html files, then scan for any
+        # sub-layouts in folders with the same name as the layout
+        Dir.glob(File.join(path, '*.html')).each do |file_path|
+          # find or create the layout
+          name = File.basename(file_path, '.html')
+          if self.all_for(site).exists?(name: name)
+            layout = self.all_for(site).where(name: name).first
+            Yodel.logger.warn("Overriding existing layout #{name} with file: #{file_path}")
+          else
+            layout = FileLayout.new
+            layout.name = name
+            layout.site = site
+          end
+          layout.parent = parent
+          layout.path = file_path
+          layout.save
+          
+          # scan for sub layouts
+          scan_folder(file_path[0...-5], site, layout)
+        end
+      end
+  end
+  
+  class PersistentLayout < Layout
+    key :markup, ::HTMLCode, required: true
+    searchable false
+  end
+  
+  class FileLayout < Layout
+    key :path, String, required: true
+    searchable false
+    
+    def markup
+      IO.read(path)
     end
   end
 end

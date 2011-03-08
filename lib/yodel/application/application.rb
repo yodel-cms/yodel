@@ -10,10 +10,14 @@ module Yodel
       #Yodel.load_extensions(Yodel.config.root.join('app'))
       Dir.chdir(Yodel.config.root)
       
-      # serve files from public in development
+      # serve files from public in development. the directories are
+      # initialised in reverse order so the apps public directory
+      # takes first precedence over any extensions.
       if Yodel.env.development?
         Yodel.use_middleware do |app|
-          app.use Yodel::ConditionalFile, Yodel.config.public_directory
+          Yodel.config.public_directories.reverse.each do |directory|
+            app.use Yodel::ConditionalFile, directory
+          end
         end
       end
       

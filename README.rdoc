@@ -12,3 +12,38 @@ Rack based Ruby CMS.
 * Commit and push until you are happy with your contribution
 * Make sure you add tests for it
 * Please try not to mess with the Rakefile, version, or history.
+
+
+== Types
+class String
+  def to_mongo
+  end
+  
+  def from_mongo
+  end
+  
+  def to_json_value
+  end
+  
+  def from_json_value
+  end
+  
+  def self.to_html
+  end
+  
+  def self.from_html
+  end
+end
+
+== JSON format
+{
+  id: '',
+  parent_id: '',
+  type: '',
+  index: '',
+  ...
+  fields: [
+    {name: '', type: '', value: OBJ},
+    {name: '', type: '', value: OBJ}
+  ]
+}

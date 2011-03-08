@@ -1,7 +1,10 @@
 module Yodel
   class Config
     def initialize
-      @options = {}
+      @options = {
+        'public_directories' => [],
+        'layout_directories' => []
+      }
     end
     
     def method_missing(method, *args)
@@ -25,11 +28,13 @@ module Yodel
       self.session_key                ||= 'yodel.session'
       self.session_secret             ||= 'yodel.session'
       self.public_directory_name      ||= 'public'
+      self.layout_directory_name      ||= 'layouts'
       self.attachment_directory_name  ||= 'attachments'
       
       # directories
       self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..')
-      self.public_directory           ||= self.root.join(self.public_directory_name)
+      self.public_directories         << self.root.join(self.public_directory_name)
+      self.layout_directories         << self.root.join(self.layout_directory_name)
       
       # logging
       self.logger                     ||= Logger.new('yodel.log')

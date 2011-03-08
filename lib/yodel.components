@@ -6,14 +6,14 @@ component 'yodel' do
   folder 'middleware'
   
   folder 'yodel', namespace: :Yodel, nested_namespaces: false do
-    # yodel extensions
     file 'yodel.rb', provides: :'::Yodel'
     file 'application/yodel.rb', provides: :'::Yodel'
     file 'mime_types/yodel.rb', provides: :'::Yodel'
-    
-    # preloaded controllers
-    file 'controllers/pages/page_controller.rb', preload: true
-    file 'controllers/pages/pages_controller.rb', preload: true
+    file 'models/pages/layout.rb', provides: [
+      :'::Yodel::Layout',
+      :'::Yodel::PersistentLayout',
+      :'::Yodel::FileLayout'
+    ]
   end
   
   folder 'types', nested_namespaces: false do
