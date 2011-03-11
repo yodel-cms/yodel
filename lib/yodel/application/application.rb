@@ -7,7 +7,7 @@ module Yodel
       Yodel.config.merge_defaults!
       MongoMapper.connection = Mongo::Connection.new(Yodel.config.database_hostname, Yodel.config.database_port, slave_ok: true)
       MongoMapper.database = Yodel.config.database
-      #Yodel.load_extensions(Yodel.config.root.join('app'))
+      Yodel.load_extensions
       Dir.chdir(Yodel.config.root)
       
       # serve files from public in development. the directories are

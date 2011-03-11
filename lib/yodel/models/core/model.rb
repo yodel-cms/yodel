@@ -11,7 +11,7 @@ module Yodel
     
     key :index, Integer, required: true, default: nil
     key :parent_id, BSON::ObjectId, default: nil
-    key :site_id, BSON::ObjectId, default: nil
+    key :site_id, BSON::ObjectId, default: nil, required: true
     
     # yodel_search_keywords is a list of keywords (strings) which will match this record
     # by default split all string keys (with !searchable false) and remove all non word
@@ -48,17 +48,28 @@ module Yodel
       self.parent = nil
     end
     
+    # FIXME: these scopes are methods because plucky & or mongo_mapper
+    # has a bug which coalesces calls to a sub class with calls to
+    # its super class, meaning Layout.all_for is generated twice,
+    # once for Yodel::Model and once for Yodel::Layout.
+    
     # Scope to retrieve all records of a model type under a site e.g
     # Yodel::Layout.all_for(site) returns all layout records
-    scope :all_for, lambda {|site| where(site_id: site.id)}
+    def self.all_for(site)
+      self.where(site_id: site.id)
+    end
     
     # Scope to retrieve all root records of a model type under a site, e.g
     # Yodel::Groups.roots(site). Returns all records with a nil parent.
-    scope :roots, lambda {|site| where(site_id: site.id, parent_id: nil).order('index asc')}
+    def self.roots(site)
+      self.where(site_id: site.id, parent_id: nil).order('index asc')
+    end
     
     # Scope to retrieve the first (or only) root record of a model under a
     # site, e.g Yodel::Page.root(site) will retrieve the root page of a site
-    scope :root, lambda {|site| where(site_id: site.id, parent_id: nil).limit(1).order('index asc')}
+    def self.root(site)
+      self.where(site_id: site.id, parent_id: nil).limit(1).order('index asc').first
+    end
     
     # Siblings of this record (other records with the same parent)
     def siblings
@@ -79,19 +90,6 @@ module Yodel
     # True if this record has no parent
     def root?
       self.parent_id.nil?
-    end
-    
-    # Use to define acceptable children for a model type. For instance, blogs
-    # should only allow articles as children: allowed_descendants Article
-    def self.allowed_descendants(*args)
-      @allowed_descendants = args
-    end
-
-    # Returns an array of all allowed descendants, and all descendants of
-    # those types. If no call to allowed_descendants has been made, nil
-    # will be returned instead (indicating there are no allowed descendants).
-    def self.all_allowed_descendants
-      @all_allowed_descendants ||= @allowed_descendants.try(:collect) {|type| type.descendants + [type]}
     end
     
     
@@ -149,22 +147,26 @@ module Yodel
     # ----------------------------------------
     # Admin interface options
     # ----------------------------------------
-    # when records are referred to via an association,
-    # they need to be able to respond with a human
-    # readable name. this method should be overriden.
+    # The name of this model to be displayed in the admin list of records.
+    # For example, the title of pages are used as the name of each page.
     def name
       self._id.to_s
     end
     
-    # An icon representing this record type. Should
-    # be overriden by subclasses.
+    # The name of the model class to be displayed when creating new
+    # instances of the model.
+    def self.human_name
+      name.demodulize.underscore.humanize
+    end
+    
+    # An icon representing this record type. Return a string to a publicly
+    # accessible image to be displayed in the list of records.
     def self.icon
       '/admin/images/default_icon.png'
     end
     
-    # Specify whether the admin interface shows child
-    # elements of this record in a separate tree. For
-    # instance, all shop related records would be shown
+    # Specify whether the admin interface shows child elements of this record
+    # in a separate tree. For instance, all shop related records would be shown
     # under a shop tree separate to the main page tree.
     def self.menu_root(menu_root)
       @menu_root = menu_root
@@ -174,34 +176,60 @@ module Yodel
       @menu_root.nil? ? false : @menu_root
     end
     
-    # Returns a list of the tabs used for the keys of
-    # this record. Tabs include 'Behaviour', 'SEO' etc.
-    def self.tabs
-      unless @tabs
-        tabs = Set.new([nil])
-        keys.each {|key| @tabs << key.options[:tab]}
-        associations.each {|assoc| @tabs << assoc.options[:tab]}
-        @tabs = tabs.to_a
-      end
-      @tabs
+    # Specify whether the admin interface shows this model type in the new types
+    # panel. Hidden types won't appear, but their descendants may.
+    def self.hidden(hidden)
+      @hidden = hidden
+    end
+    
+    def self.hidden?
+      @hidden.nil? ? false : @hidden
+    end
+    
+    def self.visible?
+      !hidden?
+    end
+    
+    # Specify the types allowed to exist as children under this model. For
+    # instance Articles may only exist under Blog: allowed_children Article
+    def self.allowed_children(*args)
+      @allowed_children = (args.first.nil? ? [] : args)
+    end
+    
+    # Returns a list of all allowed children and their descendants.
+    def self.allowed_children_and_descendants
+      (@allowed_children || []).collect {|type| type.descendants + [type]}.flatten.uniq.select(&:visible?)
+    end
+    
+    # Specify the parent types this model is allowed to exist under. For
+    # instance Articles may only exist under Blog: allowed_parents Blog
+    def self.allowed_parents(*args)
+      @allowed_parents = (args.first.nil? ? [] : args)
+    end
+    
+    # Based on the list of allowed parents, returns true if the supplied
+    # class is a descendant of a valid parent of this model.
+    def self.valid_parent?(klass)
+      return true if @allowed_parents.nil?
+      ancestors = klass.ancestors.collect(&:name)
+      @allowed_parents.each {|parent| return true if ancestors.include?(parent.name)}
+      false
     end
 
-    # some types may or may not allow more than one root per site, and may or
-    # may not be able to act as a root for a site at all
-    def self.single_root
-      @single_root = true
+    # Returns an array of all allowed children, and descendants of those
+    # children. This list respects both allowed_children and allowd_parents
+    # restrictions, so Yodel::Page (which allows children which are
+    # descendants of Page) won't include Yodel::Article which can only
+    # exist under a Yodel::Blog page, even though Yodel::Article is a
+    # descendant of Yodel::Page.
+    def self.valid_children
+      @valid_children ||= allowed_children_and_descendants.select {|child| child.valid_parent?(self)}
     end
-
-    def self.single_root?
-      @single_root
-    end
-
     
     # Copy class instance attributes down the inheritance chain
     def self.inherited(child)
       super(child)
-      child.instance_variable_set('@single_root', @single_root)
-      child.instance_variable_set('@allowed_descendants', @allowed_descendants)
+      child.instance_variable_set('@allowed_children', @allowed_children)
     end
     
 

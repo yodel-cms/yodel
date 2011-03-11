@@ -7,37 +7,23 @@ module Yodel
     @env ||= Environment.new
   end
   
-  def self.load_extensions(path)
-    return if !File.exist?(path) || !File.directory?(path)
-    path = Pathname.new(path)
-    
-    if File.exist?(path.join('init.rb'))
-      require path.join('init.rb')
-    else
-      Dir.chdir(path)
-      Dir['*/'].sort.each {|directory| load_extension(path.join(directory))}
+  def self.load_extensions
+    Impromptu.components.each do |component|
+      next unless component.name.start_with?('yodel.extensions.')
+      load_extension(component.folders.first)
     end
   end
   
-  def self.load_extension(path)
-    return if !File.exist?(path) || !File.directory?(path)
-    path = Pathname.new(path)
+  def self.load_extension(models_folder)
+    path        = models_folder.folder.join('..')
+    init_file   = path.join('init.rb')
+    public_dir  = path.join('public')
+    layouts_dir = path.join('layouts')
     
-    if File.directory?(path.join('public'))
-      use_middleware {|app| app.use Yodel::ConditionalFile, path.join('public')}
-    end
-    
-    require_or_init_directory(path)
-  end
-  
-  def self.require_or_init_directory(path)
-    if File.exist?(path.join('init.rb'))
-      require path.join('init.rb')
-    else
-      Dir.chdir(path)
-      Dir['*.rb'].sort.collect {|file| path.join(file)}.each {|file_path| require file_path}
-      Dir['*/'].sort.each {|directory| require_or_init_directory(path.join(directory))}
-    end
+    require init_file if File.exist?(init_file)
+    Yodel.config.public_directories << public_dir if File.directory?(public_dir)
+    Yodel.config.layout_directories << layouts_dir if File.directory?(layouts_dir)
+    models_folder.preload!
   end
   
   def self.use_middleware(&block)

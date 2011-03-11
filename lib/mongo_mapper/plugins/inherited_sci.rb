@@ -8,7 +8,7 @@ module MongoMapper
         end
         
         def query(options={})
-          super.where(:_type.in => type_and_subtypes)
+          super.where(_type: type_and_subtypes)
         end
       end
       

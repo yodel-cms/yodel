@@ -1,7 +1,6 @@
 module Yodel
   class Page < Yodel::Model
-    allowed_descendants self
-    single_root
+    allowed_children self
     
     # core page attributes
     key :permalink, String, required: true, index: true
@@ -22,10 +21,6 @@ module Yodel
     
     
     # admin interface
-    def self.icon
-      '/admin/images/page_icon.png'
-    end
-    
     def name
       title
     end
@@ -121,6 +116,21 @@ module Yodel
     def response; @_response; end
     def session;  @_request.env['rack.session'] ||= {}; end
 
+    # By default, responses are assumed to be 200 (successful). Use
+    # status to change the code returned along with your response content.
+    def status(code)
+      response.status = code
+    end
+
+
+    # by default, pages use an appropriate html layout to render themselves
+    respond_to :get do
+      with :html do
+        context = Yodel::RenderContext.new(self)
+        layout.render_with_context(context)
+      end
+    end
+
     
     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # TODO: whenever a permalink changes on a top level page, children need their paths to be updated
@@ -129,6 +139,7 @@ module Yodel
     # permalinks are unique within the scope of the siblings of a page
     before_validation_on_create :assign_permalink
     def assign_permalink
+      return if self.title.blank?
       base_permalink = self.title.parameterize('_')
       suffix = ''
       count  = 0
@@ -143,17 +154,7 @@ module Yodel
       self.permalink = base_permalink + suffix
     end
     
-    #def path
-      # the first ancestor is the root page (we ignore its permalink since it is accessed by '/')
-    #  @path ||= '/' + parents.reverse[1..-1].collect(&:permalink).join('/')
-    #end
     
-    respond_to :get do
-      with :html do
-        context = Yodel::RenderContext.new(self)
-        layout.render_with_context(context)
-      end
-    end
     
     def layout
       # if we're in production we'll have a reference to a layout record
