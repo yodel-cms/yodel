@@ -3,21 +3,25 @@ class Tags < Array
     self
   end
   
-  def self.from_string(tags)
-    Tags.new(tags.split(',').map(&:strip).reject(&:blank?).uniq)
+  def self.from_json(record, field, value)
+    new(value.split(',').map(&:strip).reject(&:blank?).uniq)
+  end
+  
+  def to_json(record, field, value)
+    to_s
   end
   
   def to_s
     self.join(', ')
   end
   
-  def self.to_mongo(value)
-    value
+  def self.to_mongo(record, field, value)
+    from_mongo(record, field, value)
   end
 
-  def self.from_mongo(value)
+  def self.from_mongo(record, field, value)
     if value.is_a?(String)
-      Tags.from_string(value)
+      Tags.from_json(value)
     elsif value.nil?
       Tags.new
     else

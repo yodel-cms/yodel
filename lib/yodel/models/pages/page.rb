@@ -1,36 +1,40 @@
 module Yodel
-  class Page < Yodel::Model
-    allowed_children self
+  class Page < Record
+    include Yodel::Authentication
     
-    # core page attributes
-    key :permalink, String, required: true, index: true
-    key :path, String, required: true, index: true
-    key :title, String, required: true
-    key :content, ::HTML
+    # ----------------------------------------
+    # Paths and permalinks
+    # ----------------------------------------
+    #     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #     # TODO: whenever a permalink changes on a top level page, children need their paths to be updated
+    #     # the path of the current page also needs to be updated
+    #     
+    #     # permalinks are unique within the scope of the siblings of a page
+    #     before_validation_on_create :assign_permalink
+    #     def assign_permalink
+    #       return if self.title.blank?
+    #       base_permalink = self.title.parameterize('_')
+    #       suffix = ''
+    #       count  = 0
+    #       
+    #       # ensure other pages don't have the same path as this page
+    #       page_siblings = self.siblings
+    #       while !page_siblings.select {|page| page.permalink == base_permalink + suffix}.empty?
+    #         count += 1
+    #         suffix = "_#{count}"
+    #       end
+    #       
+    #       self.permalink = base_permalink + suffix
+    #     end
     
-    # behaviour tab
-    key :show_in_menus, Boolean, tab: 'Behaviour', default: true
-    key :show_in_search, Boolean, tab: 'Behaviour', default: true
-    key :page_layout, String, tab: 'Options', default: nil
-    key :page_layout_record, class: Yodel::Layout, required: false, tab: 'Behaviour', display: false
     
-    # SEO tab
-    key :description, Text, tab: 'SEO'
-    key :keywords, Text, tab: 'SEO'
-    key :custom_meta_tags, Text, tab: 'SEO', searchable: false
-    
-    
-    # admin interface
-    def name
-      title
+    # ----------------------------------------
+    # Layout helpers
+    # ----------------------------------------
+    def snippet(name)
+      site.snippets.where(name: name).first
     end
     
-    def show_in_search?
-      show_in_search
-    end
-    
-
-    # text content helpers
     def paragraph(index, field=:content)
       text = self[field]
       paragraphs = Hpricot(text).search('/p')
@@ -45,8 +49,10 @@ module Yodel
       paragraphs[index..-1].collect {|p| p.to_s}.join('')
     end
     
-    
-    # response content
+        
+    # ----------------------------------------
+    # Response content
+    # ----------------------------------------
     def self.respond_to(http_method)
       # FIXME: this is not thread safe
       @_http_method = http_method
@@ -122,52 +128,46 @@ module Yodel
       response.status = code
     end
 
-
-    # by default, pages use an appropriate html layout to render themselves
-    respond_to :get do
-      with :html do
-        context = Yodel::RenderContext.new(self)
-        layout.render_with_context(context)
-      end
-    end
-
-    
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO: whenever a permalink changes on a top level page, children need their paths to be updated
-    # the path of the current page also needs to be updated
-    
-    # permalinks are unique within the scope of the siblings of a page
-    before_validation_on_create :assign_permalink
-    def assign_permalink
-      return if self.title.blank?
-      base_permalink = self.title.parameterize('_')
-      suffix = ''
-      count  = 0
-      
-      # ensure other pages don't have the same path as this page
-      page_siblings = self.siblings
-      while !page_siblings.select {|page| page.permalink == base_permalink + suffix}.empty?
-        count += 1
-        suffix = "_#{count}"
-      end
-      
-      self.permalink = base_permalink + suffix
-    end
-    
-    
-    
+    # Determine the first best layout to be used by this page for rendering
     def layout
       # if we're in production we'll have a reference to a layout record
       return page_layout_record if page_layout_record
       
       # try and return a layout by name or by the name of the page's class
-      layout = Layout.all_for(site).where(name: page_layout).first
-      layout = Layout.all_for(site).where(name: self.class.name.demodulize.underscore).first if !layout
+      layout = site.layouts.where(name: page_layout).first
+      layout = site.layouts.where(name: model.name.underscore).first unless layout
       return layout if layout
       
       # otherwise fall back to the parent's layout
       return parent.layout unless parent.nil?
       raise Yodel::LayoutNotFound
     end
+    
+
+    # ----------------------------------------
+    # Default rendering
+    # ----------------------------------------
+    def render
+      layout.render(self)
+    end
+    
+    def set_content(content)
+      @content = content
+    end
+    
+    def get_content
+      @content
+    end
+        
+    respond_to :get do
+      with :html do
+        render
+      end
+      
+      with :json do
+        raw_values
+      end
+    end
+
   end
 end

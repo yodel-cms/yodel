@@ -1,9 +1,14 @@
 component 'yodel' do
-  requires  'rack', 'mongo_mapper', 'active_support', 'erubis'
-  requires  'hpricot', 'json', 'image_science', 'rack/contrib'
+  requires  'rack', 'mongo', 'plucky', 'erubis', 'hpricot', 'logger'
+  requires  'json', 'image_science', 'rack/contrib', 'forwardable'
+  requires  'bigdecimal', 'date'
   
-  folder 'mongo_mapper', namespace: :MongoMapper
-  folder 'middleware'
+  # require active support extensions individually to keep fit and lean
+  requires  'active_support/core_ext/object/blank', 'active_support/core_ext/object/try'
+  requires  'active_support/inflector', 'active_support/core_ext/hash/keys'
+  
+  # rack extensions
+  folder    'middleware'
   
   folder 'yodel', namespace: :Yodel, nested_namespaces: false do
     file 'yodel.rb', provides: :'::Yodel'
@@ -16,7 +21,7 @@ component 'yodel' do
     ]
   end
   
-  folder 'types', nested_namespaces: false do
+  folder 'types', nested_namespaces: false, preload: true do
     file 'css.rb', provides: :CSS
     file 'html.rb', provides: :HTML
     file 'html_code.rb', provides: :HTMLCode

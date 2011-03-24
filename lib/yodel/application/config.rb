@@ -2,6 +2,7 @@ module Yodel
   class Config
     def initialize
       @options = {
+        'migration_directories' => [],
         'public_directories' => [],
         'layout_directories' => []
       }
@@ -23,19 +24,28 @@ module Yodel
       self.database_hostname          ||= 'localhost'
       self.database_port              ||= 27017
       self.database                   ||= 'Yodel'
+      self.db_connection              ||= Mongo::Connection.new(
+                                            self.database_hostname,
+                                            self.database_port
+                                          ).db(self.database)
       
       # yodel
       self.session_key                ||= 'yodel.session'
       self.session_secret             ||= 'yodel.session'
       self.public_directory_name      ||= 'public'
-      self.layout_directory_name      ||= 'layouts'
-      self.attachment_directory_name  ||= 'attachments'
+      self.layouts_directory_name     ||= 'layouts'
+      self.migrations_directory_name  ||= 'migrations'
+      self.attachments_directory_name ||= 'attachments'
       
       # directories
       self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..')
       self.public_directories         << self.root.join(self.public_directory_name)
-      self.layout_directories         << self.root.join(self.layout_directory_name)
+      self.layout_directories         << self.root.join(self.layouts_directory_name)
+      self.migration_directories      << self.root.join(self.migrations_directory_name)
+      self.migration_directories      << self.yodel_root.join('yodel', 'models', 'migrations')
       
+      # TODO: switch to log4r and log to a file and stdout
+      # TODO: also switch rack to use this logger for requests
       # logging
       self.logger                     ||= Logger.new('yodel.log')
       self.sev_threshold              ||= Logger::DEBUG

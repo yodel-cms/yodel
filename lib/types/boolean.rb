@@ -1,21 +1,17 @@
-class String
+class Boolean
   def self.to_mongo(record, field, value)
-    new(value)
+    !!value
   end
-  
+
   def self.from_mongo(record, field, value)
-    value.nil? ? nil : new(value)
-  end
-  
-  def search_terms_set
-    self.gsub(/\W+/, ' ').split
+    value.nil? ? nil : !!value
   end
   
   def self.from_json(record, field, value)
-    value.nil? ? nil : new(value)
+    raise "unimplemented"
   end
   
   def self.to_json(record, field, value)
-    new(value)
+    !!value
   end
 end

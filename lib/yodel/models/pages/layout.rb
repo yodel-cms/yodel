@@ -1,7 +1,5 @@
 module Yodel
-  class Layout < Yodel::Model
-    key :name, String, required: true, index: true # FIXME: needs to be unique for a site    
-    
+  class Layout < Record
     def self.reload_mutex
       @reload_mutex ||= Mutex.new
     end
@@ -13,15 +11,15 @@ module Yodel
     # layout markup in the database.
     def self.reload_layouts(site)
       reload_mutex.synchronize do
-        self.all_for(site).each(&:destroy)
+        site.layouts.all.each(&:destroy)
         Yodel.config.layout_directories.each {|directory| scan_folder(directory, site, nil)}
       end
     end
 
-    def render_with_context(context)
-      context.set_value('content', Erubis::Eruby.new(markup).evaluate(context))
-      parent.render_with_context(context) if parent
-      context.get_value('content')
+    def render(page)
+      page.set_content(Erubis::Eruby.new(markup).evaluate(page))
+      parent.render(page) if parent
+      page.get_content
     end
     
     private
@@ -32,11 +30,10 @@ module Yodel
         # sub-layouts in folders with the same name as the layout
         Dir.glob(File.join(path, '*.html')).each do |file_path|
           name = File.basename(file_path, '.html')
-          raise Yodel::DuplicateLayout if self.all_for(site).exists?(name: name)
+          raise Yodel::DuplicateLayout if site.layouts.exists?(name: name)
           
-          layout = FileLayout.new
+          layout = site.file_layouts.new
           layout.name = name
-          layout.site = site
           layout.parent = parent
           layout.path = file_path
           layout.save
@@ -48,14 +45,9 @@ module Yodel
   end
   
   class PersistentLayout < Layout
-    key :markup, ::HTMLCode, required: true
-    searchable false
   end
   
   class FileLayout < Layout
-    key :path, String, required: true
-    searchable false
-    
     def markup
       IO.read(path)
     end
