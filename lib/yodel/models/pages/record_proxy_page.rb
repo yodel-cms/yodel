@@ -8,6 +8,25 @@ module Yodel
       @record = record
     end
     
+    def form_for(record, options={}, &block)
+      options[:method] = record.new? ? 'post' : 'put'
+      options[:url] = path
+      super(record, options, &block)
+    end
+    
+    def form_for_new_record(options={}, &block)
+      form_for(record_model.new, options, &block)
+    end
+    
+    
+    # FIXME: a lot of this code is duplicated between html/json, need a way to
+    # extract common code to something like
+    # respond_to :delete do
+    #    record.destroy
+    #
+    #    with :html do
+    #      ...
+    
     # show
     respond_to :get do
       with :html do
@@ -46,6 +65,7 @@ module Yodel
           end
         else
           if edit_record_page
+            # FIXME: need a better way of cross-calling page renders
             edit_record_page.request = request
             edit_record_page.response = response
             flash.now(:record, record)
@@ -64,7 +84,7 @@ module Yodel
       end
     end
     
-    # create child
+    # create
     respond_to :post do
       with :html do
         record = record_model.new
