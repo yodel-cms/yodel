@@ -1,6 +1,6 @@
 class UserModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model('User', site.records) do |model|
+    site.models.create_model 'User', inherits: 'Record' do |model|
       model.add_field :first_name, String
       model.add_field :last_name, String
       model.add_field :email, Email, required: true, unique: true

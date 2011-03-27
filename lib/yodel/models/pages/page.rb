@@ -2,30 +2,44 @@ module Yodel
   class Page < Record
     include Yodel::Authentication
     
+    def flash
+      @flash ||= Yodel::Flash.new
+    end
+    
     # ----------------------------------------
     # Paths and permalinks
     # ----------------------------------------
-    #     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    #     # TODO: whenever a permalink changes on a top level page, children need their paths to be updated
-    #     # the path of the current page also needs to be updated
-    #     
-    #     # permalinks are unique within the scope of the siblings of a page
-    #     before_validation_on_create :assign_permalink
-    #     def assign_permalink
-    #       return if self.title.blank?
-    #       base_permalink = self.title.parameterize('_')
-    #       suffix = ''
-    #       count  = 0
-    #       
-    #       # ensure other pages don't have the same path as this page
-    #       page_siblings = self.siblings
-    #       while !page_siblings.select {|page| page.permalink == base_permalink + suffix}.empty?
-    #         count += 1
-    #         suffix = "_#{count}"
-    #       end
-    #       
-    #       self.permalink = base_permalink + suffix
-    #     end
+    # permalinks are unique within the scope of the siblings of a page
+    before_validation :assign_permalink
+    def assign_permalink
+      return unless title_changed? && title?
+      base_permalink = title.parameterize(site.option('pages.permalink_character'))
+      suffix = ''
+      count  = 0
+      
+      # ensure other pages don't have the same path as this page
+      page_siblings = siblings
+      while page_siblings.any? {|page| page.permalink == base_permalink + suffix}
+        count += 1
+        suffix = "_#{count}"
+      end
+      
+      # set the page's permalink, then construct its path and reset any child paths
+      self.permalink = base_permalink + suffix
+      assign_path
+    end
+    
+    def assign_path(prefix=nil)
+      if prefix
+        new_prefix = prefix + '/' + permalink
+      else
+        new_prefix = '/' + parents.reverse[1..-1].collect(&:permalink).join('/')
+      end
+      
+      self.path = new_prefix
+      save_without_validation if prefix
+      children.each {|child| child.assign_path(new_prefix)}
+    end
     
     
     # ----------------------------------------
@@ -81,8 +95,9 @@ module Yodel
     # request handling
     def respond_to_request(request, response, mime_type)
       # initialise request & response for use by the environment accessors
-      @_request  = request
-      @_response = response
+      @_request   = request
+      @_response  = response
+      @_mime_type = mime_type
       
       # determine the default action name for the request
       http_method = request.request_method.downcase
@@ -113,14 +128,21 @@ module Yodel
       # process the response and set headers
       response.write mime_type.process(data)
       response['Content-Type'] = mime_type.default_mime_type
+      
+      # write the flash to the session if appropriate
+      @flash.finalize if @flash
     end
     
     # basic environment accessors
-    def env;      @_request.env; end
-    def request;  @_request; end
-    def params;   @_request.params; end
-    def response; @_response; end
-    def session;  @_request.env['rack.session'] ||= {}; end
+    def request;        @_request; end
+    def request=(r);    @_request = r; end;
+    def env;            @_request.env; end
+    def params;         @_request.params; end
+    def response;       @_response; end
+    def response=(r);   @_response = r; end
+    def mime_type;      @_mime_type; end
+    def mime_type=(m);  @_mime_type = m; end
+    def session;        @_request.env['rack.session'] ||= {}; end
 
     # By default, responses are assumed to be 200 (successful). Use
     # status to change the code returned along with your response content.
@@ -145,27 +167,123 @@ module Yodel
     
 
     # ----------------------------------------
-    # Default rendering
+    # Default request handling
     # ----------------------------------------
+    def to_form(url=nil, options={})
+      options[:params] ||= {}
+      options[:params][:_method] = new? ? 'post' : 'put'
+      super(url || path, options)
+    end
+    
+    def new_child_form(options={})
+      default_child_model.new.to_form(path, options)
+    end
+    
+    def delete_button(text, options={})
+      attributes = options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
+      button_input = "<input type='submit' value=#{text}>"
+      method_input = "<input type='hidden' name='_method' value='delete'>"
+      "<form action='' method='post' #{attributes}>#{method_input}#{button_input}</form>"
+    end
+    
     def render
+      @content ||= content
       layout.render(self)
+    end
+    
+    def content
+      @content ||= get_field('content')
     end
     
     def set_content(content)
       @content = content
     end
     
-    def get_content
-      @content
+    def page
+      self
     end
-        
+    
+    # show
     respond_to :get do
       with :html do
         render
       end
       
       with :json do
-        raw_values
+        to_json
+      end
+    end
+    
+    # destroy
+    respond_to :delete do
+      with :html do
+        response.redirect parent ? parent.path : '/'
+        destroy
+      end
+      
+      with :json do
+        destroy
+        {success: true}
+      end
+    end
+    
+    # update
+    respond_to :put do
+      with :html do
+        # update the page assuming a form created by to_form
+        path_was = path
+        from_form(params)
+        
+        # updating the page can change its url
+        if save && path != path_was
+          respond.redirect path
+        else
+          render
+        end
+      end
+      
+      with :json do
+        from_json(params['record'])
+        if save
+          to_json
+        else
+          # FIXME: need to show errors
+          to_json
+        end
+      end
+    end
+    
+    # create child
+    respond_to :post do
+      with :html do
+        new_page = default_child_model.new
+        new_page.parent = self
+        new_page.from_form(params)
+        
+        if new_page.save
+          flash[:create_successful] = true
+          response.redirect new_page.path
+        else
+          if new_child_page
+            new_child_page.request = request
+            new_child_page.response = response
+            flash.now(:child_page, new_page)
+            new_child_page.respond_to_get_with_html
+          else
+            response.redirect request.referrer
+          end
+        end
+      end
+      
+      with :json do
+        new_page = default_child_model.new
+        new_page.parent = self
+        new_page.from_json(params['record'])
+        if new_page.save
+          new_page.to_json
+        else
+          {success: false}
+        end
       end
     end
 

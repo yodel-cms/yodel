@@ -21,6 +21,7 @@ module Yodel
       
       # setup middleware
       use Rack::NestedParams
+      use Rack::MethodOverride
       use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
       Yodel.initialise_middleware_with_app(self)
       

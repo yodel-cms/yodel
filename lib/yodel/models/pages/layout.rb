@@ -19,7 +19,7 @@ module Yodel
     def render(page)
       page.set_content(Erubis::Eruby.new(markup).evaluate(page))
       parent.render(page) if parent
-      page.get_content
+      page.content
     end
     
     private

@@ -1,6 +1,6 @@
 class LayoutModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model('Layout', site.records) do |model|
+    site.models.create_model 'Layout', inherits: 'Record' do |model|
       model.add_field :name, String, required: true, index: true, unique: true
       
       model.allowed_children = []
@@ -9,8 +9,9 @@ class LayoutModelMigration < Yodel::Migration
       model.klass = 'Yodel::Layout'
     end
     
-    site.models.create_model('PersistentLayout', site.layouts) do |model|
+    site.models.create_model 'PersistentLayout', inherits: 'Layout' do |model|
       model.add_field :markup, HTMLCode, required: true
+      model.add_field :pages, Many, of: 'Page', foreign_key: 'page_layout_record'
       
       model.allowed_children = ['PersistentLayout']
       model.allowed_parents = ['PersistentLayout']
@@ -18,7 +19,7 @@ class LayoutModelMigration < Yodel::Migration
       model.klass = 'Yodel::PersistentLayout'
     end
     
-    site.models.create_model('FileLayout', site.layouts) do |model|
+    site.models.create_model 'FileLayout', inherits: 'Layout' do |model|
       model.add_field :path, String, required: true
       
       model.allowed_children = ['FileLayout']

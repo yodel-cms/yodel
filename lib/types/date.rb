@@ -10,10 +10,20 @@ class Date
   end
   
   def self.to_json(record, field, value)
-    raise "unimplemented"
+    return nil unless value.is_a?(Date)
+    {year: value.year, month: value.month, day: value.day}
   end
   
   def self.from_json(record, field, value)
-    raise "unimplemented"
+    return nil if value.is_a?(nil)
+    Time.new(value['year'], value['month'], value['day'])
+  end
+  
+  def self.from_html_field(record, field, value)
+    value.nil? ? nil : Date.parse(value).to_time
+  end
+  
+  def self.to_html_field(record, field, value)
+    "<input type='text' name='#{field}' value='#{value}'>"
   end
 end

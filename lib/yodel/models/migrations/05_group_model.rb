@@ -1,6 +1,6 @@
 class GroupModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model('Group', site.records) do |model|      
+    site.models.create_model 'Group', inherits: 'Record' do |model|      
       model.add_field :name, String, required: true
       
       model.icon = '/admin/images/group_icon.png'

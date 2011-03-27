@@ -43,6 +43,11 @@ class ModelModelMigration < Yodel::Migration
           name: 'klass',
           type: 'String',
           default: 'Record'
+        },
+        {
+          name: 'mixins',
+          type: 'Array',
+          default: []
         }
       ],
       name: 'Model',
@@ -52,6 +57,7 @@ class ModelModelMigration < Yodel::Migration
       allowed_children: ['Model'],
       allowed_parents: ['Model'],
       klass: 'Model',
+      mixins: [],
       _site_id: site.id,
       _parent_id: nil,
       _index: nil,

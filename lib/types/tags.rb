@@ -7,12 +7,12 @@ class Tags < Array
     new(value.split(',').map(&:strip).reject(&:blank?).uniq)
   end
   
-  def to_json(record, field, value)
-    to_s
+  def self.to_json(record, field, value)
+    value.to_s
   end
   
   def to_s
-    self.join(', ')
+    join(', ')
   end
   
   def self.to_mongo(record, field, value)

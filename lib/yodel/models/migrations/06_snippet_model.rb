@@ -1,6 +1,6 @@
 class SnippetModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model('Snippet') do |model|
+    site.models.create_model 'Snippet', inherits: 'Record' do |model|
       model.add_field :name, String, required: true, index: true
       model.add_field :content, Text
       model.searchable = false

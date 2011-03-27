@@ -142,7 +142,7 @@ module Yodel
     end
     
     def new(values={})
-      @klass.new(self, nil, site).tap {|record| record.update(values)}
+      @klass.new(self, nil, site).tap {|record| record.update(values, save: false)}
     end
   
     def load(values)
@@ -151,27 +151,49 @@ module Yodel
       model.klass.new(model, values)
     end
     
-    def default_values
-      model_fields.each_with_object(parent.try(:default_values) || {}) do |field, values|
-        default_value = field['default']
-        default_value = eval(default_value) if field['eval']
-        values[field['name']] = default_value
+    def default_values(include_parents_and_mixins=true)
+      if include_parents_and_mixins
+        parents_and_mixins.each_with_object({}) do |ancestor, values|
+          values.merge! ancestor.default_values(false)
+        end
+      else
+        model_fields.each_with_object({}) do |field, values|
+          default_value = field['default']
+          default_value = eval(default_value) if field['eval']
+          values[field['name']] = default_value
+        end
       end
     end
     
-    def all_model_fields
-      model_fields.each_with_object(parent.try(:all_model_fields) || {}) do |field, fields|
-        fields[field['name']] = field
+    def all_model_fields(include_parents_and_mixins=true)
+      if include_parents_and_mixins
+        parents_and_mixins.each_with_object({}) do |ancestor, fields|
+          fields.merge! ancestor.all_model_fields(false)
+        end
+      else
+        model_fields.each_with_object({}) do |field, fields|
+          fields[field['name']] = field
+        end
       end
+    end
+    
+    # Combine the full set of parents and mixins in a way that doesn't duplicate models
+    # if mixins would cause a duplicate, and maintains the correct position of mixins in
+    # the inheritance tree for this model, any parents, and any mixins (and their mixins)
+    def parents_and_mixins
+      models = parent.try(:parents_and_mixins) || []
+      mixins.each do |mixin_name|
+        models |= site.model(mixin_name).parents_and_mixins
+      end
+      models << self
     end
     
     def model_fields
       @changed['model_fields'] || @document['model_fields']
     end
     
-    def reload
-      @all_fields = nil
-      super
+    def mixins
+      @changed['mixins'] || @document['mixins']
     end
     
     
@@ -200,8 +222,28 @@ module Yodel
       raise Yodel::InvalidModelField.new("Field name cannot start with an underscore") if name.start_with?('_')
       
       # add the field to the model and subclasses
-      collection << options.stringify_keys.merge('name' => name.to_s, 'type' => type.name.to_s)
+      collection << stringify_keys_and_convert_values(options.merge('name' => name, 'type' => type))
       # TODO: check for index options on fields
+    end
+    
+    def self.stringify_keys_and_convert_values(hash)
+      hash.each_with_object({}) do |(key, value), clean|
+        clean[key.to_s] = convert_value(value)
+      end
+    end
+    
+    def self.convert_value(value)
+      if value.is_a?(Hash)
+        value = stringify_keys_and_convert_values(value)
+      elsif value.is_a?(Module)
+        value = value.name.to_s
+      elsif value.is_a?(Symbol)
+        value = value.to_s
+      elsif value.is_a?(Array)
+        value = value.collect {|v| convert_value(v)}
+      else
+        value
+      end
     end
     
     # Add a single field with a name and type. Children inherit parent fields, but
@@ -229,14 +271,14 @@ module Yodel
     
     # Create a new model which inherits from the current model. If supplied, a block
     # is run and passed a reference to the new model.
-    def create_model(name, parent=nil)
+    def create_model(name, options={})
       raise "create_model must be called on the root model instance only" unless self.name == 'Model'
       raise "Model name '#{name}' is not unique" if site.model_plural_names.key?(name)
       
       # create a new instance of model
       child = new
       child.name = name
-      child.parent_id = parent.id if parent
+      child.parent_id = site.model(options[:inherits]).id if options[:inherits]
       child.save
       
       # insert the model in to the site models list
@@ -252,11 +294,33 @@ module Yodel
       child.save
     end
     
+    # Add a new mixin to this model
+    def add_mixin(model_name)
+      raise Yodel::InvalidMixin.new("#{model_name} has already been mixed in to this model") if mixins.include?(model_name)
+      raise Yodel::InvalidMixin.new("Mixin cannot be a parent") if parents.collect(&:name).include?(model_name)
+      
+      # for all intents and purposes, by mixing in a model, we are a subtype of that model
+      mixin_model = site.model(model_name)
+      mixin_model.descendants << name
+      mixin_model.save
+      
+      mixins << model_name
+      save
+    end
+    
+    # Remove a mixin from this model
+    def remove_mixin(model_name)
+      site.model(model_name).remove_descendant(name)
+      mixins.delete(model_name)
+      save
+    end
+    
     # Destroys all records which are instances of this model, removes a reference to
     # the model from the parent site, and repeats for any child models of the model.
     def destroy
       # remove this model from the model tree
       parent.try(:remove_descendant, name)
+      mixins.each {|mixin_name| site.model(mixin_name).remove_descendant(name)}
       
       # destroy any child models
       children.each(&:destroy)
@@ -293,6 +357,12 @@ module Yodel
       self.where(_parent_id: nil).order('index asc').first
     end
     
+    # Simple lookup operator for models that have records with unique names.
+    # Used as if the model object was a hash: site.emails['name']
+    def [](name)
+      self.where(name: name).first
+    end
+    
     # Retrieve a model specified in conditions. Conditions is a mongo driver
     # query hash, such as {_id: id} or {name: name}
     def self.find_by(site, conditions)
@@ -314,17 +384,18 @@ module Yodel
       
       def self.valid_type?(type)
         type.respond_to?(:to_mongo) && type.respond_to?(:from_mongo) &&
-        type.respond_to?(:to_json) && type.respond_to?(:from_json)
+        type.respond_to?(:to_json) && type.respond_to?(:from_json) &&
+        type.respond_to?(:to_html_field) && type.respond_to?(:from_html_field)
       end
       
       def add_descendant(name)
         parent.try(:add_descendant, name)
-        descendants << name
+        descendants << name unless descendants.include?(name)
         save
       end
       
       def remove_descendant(name)
-        parent.try(:add_descendant, name)
+        parent.try(:remove_descendant, name)
         descendants.delete(name)
         save
       end

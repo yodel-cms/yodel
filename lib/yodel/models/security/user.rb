@@ -32,9 +32,9 @@ module Yodel
       self.password.tap {self.save}
     end
 
-    private
+    protected
       def hash(password)
         Digest::SHA1.hexdigest("#{password_salt}:#{password}")
-      end    
+      end
   end
 end

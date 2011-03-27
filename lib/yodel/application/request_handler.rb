@@ -16,7 +16,7 @@ module Yodel
       components = PATH_FORMAT_REGEX.match(request.path)
       return fail_with "Unable to parse request path: #{request.path}" if components.nil?
       path, format = components.captures
-      path = path[0...-1] if path.end_with?('/')
+      path = path[0...-1] if path.end_with?('/') && path.length != 1
       
       # match the request to the closest mime type we're aware of
       mime_type = Yodel.mime_types.mime_type_for_request(format, request.env['HTTP_ACCEPT'])

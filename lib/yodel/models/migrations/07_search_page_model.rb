@@ -1,16 +1,41 @@
 class SearchPageModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model('SearchPage', site.pages) do |model|
-      model.add_field :where, String, searchable: false
+    site.models.create_model 'SearchPage', inherits: 'Page' do |model|
+      model.add_field :conditions, Embedded, fields: [
+        {
+          name: :field,
+          type: String
+        },
+        {
+          name: :value,
+          type: String
+        },
+        {
+          name: :operator,
+          type: Enum,
+          values: ['Equals', 'Not Equal', 'Greater Than', 'Less Than', 'Greater Than or Equal To', 'Less Than or Equal To', 'In']
+        }
+      ]
       model.add_field :sort, String, searchable: false
       model.add_field :limit, Integer
       model.add_field :skip, Integer
       model.add_field :type, Reference, to: 'Model', default: nil
+      model.add_field :user_conditions, Embedded, fields: [
+        {
+          name: :field,
+          type: String
+        },
+        {
+          name: :operator,
+          type: Enum,
+          values: ['Equals', 'Not Equal', 'Greater Than', 'Less Than', 'Greater Than or Equal To', 'Less Than or Equal To', 'In']
+        }
+      ], default: [{parameter: 'search_keywords', operator: 'In'}]
       model.klass = 'Yodel::SearchPage'
     end
   end
   
   def self.down(site)
-    site.snippets.destroy
+    site.search_pages.destroy
   end
 end

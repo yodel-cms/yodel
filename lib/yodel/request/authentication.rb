@@ -7,7 +7,8 @@ module Yodel
     def current_user
       unless defined?(@current_user)
         if session['current_user_id']
-          @current_user = site.users.first(_id: session['current_user_id'])
+          @current_user = site.users.find(session['current_user_id'])
+          session.delete('current_user_id') if @current_user.nil?
         else
           @current_user = nil
         end
@@ -20,8 +21,9 @@ module Yodel
       user = site.users.first(credentials)
       if user && user.passwords_match?(password)
         session['current_user_id'] = user._id
+        @current_user = user
       end
-      !user.nil?
+      !@current_user.nil?
     end
     
     def logout
