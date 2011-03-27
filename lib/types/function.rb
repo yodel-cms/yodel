@@ -1,5 +1,8 @@
 class Function < String
-  undef_method(:search_terms_set)
+  class << self
+    undef search_terms_set
+  end
+  
   def self.uncacheable?
     true
   end
@@ -9,15 +12,22 @@ class Function < String
   end
   
   def self.from_mongo(record, field, value)
-    fn = record.all_fields[field].try(:fetch, 'fn', nil)
-    record.instance_eval(fn.to_s)
+    record.instance_eval(field.fn.to_s)
+  end
+  
+  def self.to_json(record, field, value)
+    from_mongo(record, field, value)
   end
   
   def self.from_json(record, field, value)
     nil
   end
   
-  def self.to_json(record, field, value)
-    from_mongo(record, field, value)
+  def self.to_html_field(record, field, value)
+    nil
+  end
+  
+  def self.from_html_field(record, field, value)
+    nil
   end
 end

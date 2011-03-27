@@ -1,5 +1,5 @@
 class Code < Text
-  def search_terms_set
-    []
+  class << self
+    undef search_terms_set
   end
 end

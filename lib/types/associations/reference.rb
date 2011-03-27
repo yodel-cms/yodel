@@ -1,7 +1,9 @@
 class Reference
+  extend YodelTypeInterface
+  
   def self.from_mongo(record, field, value)
     return nil if value.nil?
-    model = record.site.model(record.all_fields[field].try(:fetch, 'to', nil))
+    model = record.site.model(field.to)
     return nil if model.nil?
     model.find(value)
   end
@@ -13,7 +15,7 @@ class Reference
   
   def self.from_json(record, field, value)
     return nil if value.nil?
-    model = record.site.model(record.all_fields[field].try(:fetch, 'to', nil))
+    model = record.site.model(field.to)
     return nil if model.nil?
     record = model.find(value)
     record.try(:id)
@@ -28,21 +30,29 @@ class Reference
   end
   
   def self.to_html_field(record, field, value)
-    field_options = record.all_fields[field]
-    return nil if field_options.nil?
-    
-    model = record.site.model(field_options['to'])
+    model = record.site.model(field.to)
     return nil if model.nil?
+    if value.nil? && field.required && !field.default.nil?
+      if field.eval
+        value = record.instance_eval(field.default)
+      else
+        value = field.default
+      end
+    end
     value = value.to_s
     
     select_options = model.all.collect do |record|
-      "<option value='#{record.id}' #{'selected' if record.id.to_s == value}>#{record.name}</option>"
+      options = {value: record.id.to_s}
+      options[:selected] = 'selected' if value == record.id.to_s
+      Hpricot::Elem.new('option', options, [Hpricot::Text.new(record.name)])
     end
     
-    unless field_options['required'] == true
-      select_options.unshift("<option value='' #{'selected' if value.nil?}>None</option>")
+    unless field.required
+      options = {value: ''}
+      options[:selected] = 'selected' if value == ''
+      select_options.unshift(Hpricot::Elem.new('option', options, [Hpricot::Text.new('None')]))
     end
     
-    "<select name='#{field}'>#{select_options.join('')}</select>"
+    Hpricot::Elem.new('select', {name: field.name}, select_options)
   end
 end

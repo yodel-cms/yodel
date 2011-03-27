@@ -1,22 +1,8 @@
 class Array
+  extend ::YodelTypeInterface
+  
   def self.mutable?
     true
-  end
-  
-  def self.to_mongo(record, field, value)
-    value.nil? ? nil : new(value)
-  end
-  
-  def self.from_mongo(record, field, value)
-    value.nil? ? nil : new(value)
-  end
-  
-  def self.from_json(record, field, value)
-    value.nil? ? nil : new(value)
-  end
-  
-  def self.to_json(record, field, value)
-    value.nil? ? nil : new(value)
   end
   
   def self.from_html_field(record, field, value)
@@ -24,6 +10,6 @@ class Array
   end
   
   def self.to_html_field(record, field, value)
-    "<input type='text' name='#{field}' value='#{value.try(:join, ', ')}'>"
+    Hpricot::Elem.new('input', type: 'text', name: field.name, value: value.try(:join, ', '))
   end
 end

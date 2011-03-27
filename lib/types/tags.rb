@@ -1,6 +1,8 @@
 class Tags < Array
-  def search_terms_set
-    self
+  extend YodelTypeInterface
+  
+  def self.search_terms_set(tags)
+    tags
   end
   
   def self.from_json(record, field, value)

@@ -9,10 +9,13 @@ module Yodel
         mail.send("#{param}=", options[param.to_sym] || self.send(param))
       end
       
+      # FIXME: need to create a proper binding class for this; options[:mail] could overwrite mail
+      options.each {|key, value| eval "#{key} = #{value}"}
+      
       # rendered text body
       unless text_body.blank?
         text_part = Mail::Part.new do
-          body Erubis::Eruby.new(text_body).evaluate(options)
+          body Ember::Template.new(text_body).render(binding)
         end
         mail.text_part = text_part
       end
@@ -21,7 +24,7 @@ module Yodel
       unless html_body.blank?
         html_part = Mail::Part.new do
           content_type 'text/html; charset=UTF-8'
-          body Erubis::Eruby.new(html_body).evaluate(options)
+          body Ember::Template.new(html_body).render(binding)
         end
         mail.html_part = html_part
       end

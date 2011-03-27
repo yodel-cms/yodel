@@ -1,5 +1,5 @@
 class Text < String
   def self.to_html_field(record, field, value)
-    "<textarea name='#{field}'>#{value}</textarea>"
+    Hpricot::Elem.new('textarea', {name: field.name}, [Hpricot::Text.new(value.to_s)])
   end
 end

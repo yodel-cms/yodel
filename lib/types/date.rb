@@ -1,4 +1,6 @@
 class Date
+  extend YodelTypeInterface
+  
   def self.to_mongo(record, field, value)
     return nil if value.blank?
     date = value.is_a?(Date) || value.is_a?(Time) ? value : Date.parse(value.to_s)
@@ -21,9 +23,5 @@ class Date
   
   def self.from_html_field(record, field, value)
     value.nil? ? nil : Date.parse(value).to_time
-  end
-  
-  def self.to_html_field(record, field, value)
-    "<input type='text' name='#{field}' value='#{value}'>"
-  end
+  end  
 end

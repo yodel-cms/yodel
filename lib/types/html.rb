@@ -1,10 +1,9 @@
 class HTML < Text
-  def search_terms_set
-    # TODO: split out html tags, then do a normal word split
-    []
+  def self.search_terms_set(html)
+    String.search_terms_set(to_text(html))
   end
   
-  def to_text
-    Hpricot(self).search('text()').collect(&:to_s).collect(&:strip).join(' ').strip
+  def self.to_text(html)
+    Hpricot(html.to_s).search('//text()').collect(&:to_s).collect(&:strip).join(' ').strip
   end
 end

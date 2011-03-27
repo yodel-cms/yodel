@@ -64,13 +64,6 @@ module Yodel
       end
     end
     
-    if new_child_page
-      new_child_page.request = request
-      new_child_page.response = response
-      flash.now(:child_page, new_page)
-      new_child_page.respond_to_get_with_html
-    
-    
     # create child
     respond_to :post do
       with :html do

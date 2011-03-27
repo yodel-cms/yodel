@@ -34,6 +34,7 @@ module Yodel
       end
     end
     
+    # TODO: a better interface is site.options.name.option; site.options.pages.permalink_character
     def option(path)
       component, option = path.split('.')
       options[component].try(:fetch, 'options', nil).try(:fetch, option, nil).try(:fetch, 'value', nil)

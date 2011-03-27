@@ -1,4 +1,6 @@
 class Boolean
+  extend YodelTypeInterface
+  
   def self.to_mongo(record, field, value)
     value.nil? ? nil : !!value
   end
@@ -20,6 +22,13 @@ class Boolean
   end
   
   def self.to_html_field(record, field, value)
-    "<input type='checkbox' name='#{field}' #{'checked' if value}>"
+    options = {type: 'checkbox', name: field.name}
+    
+    if value.nil? && !field.default.nil?
+      value = field.default
+    end
+    
+    options[:checked] = 'checked' if !!value
+    Hpricot::Elem.new('input', options)
   end
 end

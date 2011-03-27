@@ -6,6 +6,11 @@ module Yodel
       @flash ||= Yodel::Flash.new
     end
     
+    def form_for(record, options={}, &block)
+      Yodel::FormBuilder.new(record, options, &block).render
+    end
+    
+    
     # ----------------------------------------
     # Paths and permalinks
     # ----------------------------------------
@@ -201,6 +206,10 @@ module Yodel
     
     def page
       self
+    end
+    
+    def get_binding
+      binding
     end
     
     # show

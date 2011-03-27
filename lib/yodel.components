@@ -1,7 +1,7 @@
 component 'yodel' do
-  requires  'rack', 'mongo', 'plucky', 'erubis', 'hpricot', 'logger'
+  requires  'rack', 'mongo', 'plucky', 'ember', 'hpricot', 'logger'
   requires  'json', 'image_science', 'rack/contrib', 'forwardable'
-  requires  'bigdecimal', 'date'
+  requires  'bigdecimal', 'date', 'ostruct'
   
   # require active support extensions individually to keep fit and lean
   requires  'active_support/core_ext/object/blank', 'active_support/core_ext/object/try'

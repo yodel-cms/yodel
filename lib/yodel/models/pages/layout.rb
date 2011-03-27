@@ -17,7 +17,7 @@ module Yodel
     end
 
     def render(page)
-      page.set_content(Erubis::Eruby.new(markup).evaluate(page))
+      page.set_content(Ember::Template.new(markup).render(page.get_binding))
       parent.render(page) if parent
       page.content
     end

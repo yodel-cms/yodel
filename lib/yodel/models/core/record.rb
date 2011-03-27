@@ -109,9 +109,16 @@ module Yodel
     end
     
     def reload
-      # FIXME: need to remove all instance vars prior to calling initialize
       return if @new || @destroyed
-      initialize(@model, COLLECTION.find_one(_id: id), @site)
+      
+      # locally store the values we need to re-initialise the record
+      _model = model
+      _id = id
+      _site = site
+      
+      # remove all instance variables and re-initialise after retrieving the record's document again
+      instance_variables.each {|var| remove_instance_variable(var)}
+      initialize(_model, COLLECTION.find_one(_id: _id), _site)
     end
     
     
@@ -134,8 +141,19 @@ module Yodel
     # ----------------------------------------
     # TODO: field modelling can be abstracted out to a module and included in Model and Record and the Embedded field type
     def all_fields
-      eigenmodel_fields = eigenmodel.each_with_object({}) {|field, hash| hash[field['name']] = field}
-      model.all_model_fields.merge(eigenmodel_fields)
+      @all_fields ||= model.all_model_fields.merge(eigenmodel.each_with_object({}) {|field, hash| hash[field['name']] = field})
+    end
+    
+    def each_field_with_options(obj=nil)
+      all_fields.each do |name, options|
+        yield OpenStruct.new(options), obj
+      end
+      obj
+    end
+    
+    def field_options(name)
+      options = all_fields[name]
+      options.nil? ? nil : OpenStruct.new(options)
     end
     
     def add_field(name, type, options={})
@@ -225,8 +243,10 @@ module Yodel
       @changed[field] || @typecast[field] || generate_uncached_field(field)
     end
     
-    def generate_uncached_field(field)
-      Object.module_eval(all_fields[field]['type']).from_mongo(self, field, @document[field])
+    def generate_uncached_field(name)
+      field = field_options(name)
+      raise NameError if field.nil?
+      Object.module_eval(field.type).from_mongo(self, field, @document[name])
     end
     
     def field_changed?(field)
@@ -238,22 +258,21 @@ module Yodel
     end
     
     def typecast_values
-      all_fields.each do |name, options|
-        type = Object.module_eval(options['type'])
+      each_field_with_options do |field|
+        type = Object.module_eval(field.type)
         unless type.uncacheable?
-          value = type.from_mongo(self, name, @document[name])
-          @typecast[name] = value
-          @changed[name] = value if type.mutable?
+          value = type.from_mongo(self, field, @document[field.name])
+          @typecast[field.name] = value
+          @changed[field.name] = value if type.mutable?
         end
       end
     end
     
     def copy_mutable_values
-      all_fields.each_with_object({}) do |pair, changed|
-        name, options = pair
-        type = Object.module_eval(options['type'])
+      each_field_with_options({}) do |field, changed|
+        type = Object.module_eval(field.type)
         if type.mutable? && !type.uncacheable?
-          changed[name] = @typecast[name]
+          changed[field.name] = @typecast[field.name]
         end
       end
     end
@@ -268,47 +287,40 @@ module Yodel
         parent_id: parent_id.nil? ? nil : parent_id.to_s,
         model: model_name,
         index: index,
-        fields: all_fields.collect do |name, options|
-          type_name = options['type']
-          type = Object.module_eval(type_name)
-          unless type.uncacheable? || options['display'] == false
-            value = type.to_json(self, name, @document[name])
-            {name: name, type: type_name, value: value}
-          else
-            nil
+        fields: each_field_with_options([]) do |field, values|
+          type = Object.module_eval(field.type)
+          unless type.uncacheable? || field.display == false
+            value = type.to_json(self, field, @document[field.name])
+            values << {name: name, type: field.type, value: value}
           end
-        end.compact
+        end
       }
     end
     
     def from_json(json)
-      # FIXME: need to handle _index, _parent_id etc.
       return unless json['fields']
-      json['fields'].each do |field|
-        name = field['name']
-        options = all_fields[name]
-        next if options.nil?
-        @changed[name] = Object.module_eval(options['type']).from_html_field(self, name, field['value'])
+      json['fields'].each do |json_field|
+        json_field = OpenStruct.new(json_field)
+        field = field_options(json_field.name)
+        next if field.nil?
+        @changed[field.name] = Object.module_eval(field.type).from_json(self, field, json_field.value)
       end
     end
     
     def to_form(url, options={})
       method = options.delete(:method) || 'post'
-      if options[:only]
-        fields = options[:only].collect {|name| all_fields[name.to_s]}
-      else
-        fields = all_fields.values
-      end
+      only = options[:only].try(:collect, &:to_s)
       
       html = "<form action='#{url}' method='#{method}'>"
-      fields.each do |options|
-        type = Object.module_eval(options['type'])
-        name = options['name']
+      each_field_with_options do |field|
+        next unless only.nil? || only.include?(field.name)
+        type = Object.module_eval(field.type)
         
-        unless type.uncacheable? || options['display'] == false
-          input = type.to_html_field(self, name, @document[name]).to_s
+        # FIXME: field.display is being overriden by Object#display
+        unless type.uncacheable? || field.display == false
+          input = type.to_html_field(self, field, @document[field.name]).to_s
           if input
-            html += "<p><label for='#{name}'>#{name.humanize}</label>#{input}</p>"
+            html += "<p><label for='#{field.name}'>#{field.name.humanize}</label>#{input}</p>"
           end
         end
       end
@@ -321,9 +333,9 @@ module Yodel
     
     def from_form(values)
       values.each do |name, value|
-        options = all_fields[name]
-        next if options.nil?
-        @changed[name] = Object.module_eval(options['type']).from_html_field(self, name, value)
+        field = field_options(name)
+        next if field.nil?
+        @changed[name] = Object.module_eval(field.type).from_html_field(self, field, value)
       end
     end
     
@@ -454,15 +466,15 @@ module Yodel
       return unless !self.is_a?(Model) && model.searchable?
       search_terms = Set.new
       
-      all_fields.each do |name, options|
+      each_field_with_options do |field|
         # TODO: we should cache somewhere which types do and do not contain the search_terms_set
         # method; this can also be used to automatically populate the searchable option on fields
-        type = Object.module_eval(options['type'])
-        next if options['searchable'] == false || !type.instance_methods.include?(:search_terms_set)
+        type = Object.module_eval(field.type)
+        next if field.searchable == false || !type.respond_to?(:search_terms_set)
         
-        value = get_field(name)
+        value = get_field(field.name)
         next if value.nil?
-        search_terms.merge(value.search_terms_set.collect(&:downcase))
+        search_terms.merge(type.search_terms_set(value).collect(&:downcase))
       end
       
       self.search_keywords = search_terms.to_a
@@ -471,9 +483,9 @@ module Yodel
     private
       def perform_save
         # merge the modified values back to the mongo document
-        fields = all_fields
         @changed.each do |name, value|
-          @document[name] = Object.module_eval(fields[name]['type']).to_mongo(self, name, value)
+          field = field_options(name)
+          @document[name] = Object.module_eval(field.type).to_mongo(self, field, value)
           @typecast[name] = value
         end
         
