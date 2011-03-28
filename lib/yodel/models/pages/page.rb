@@ -3,7 +3,7 @@ module Yodel
     include Yodel::Authentication
     
     def flash
-      @flash ||= Yodel::Flash.new
+      @flash ||= Yodel::Flash.new(session)
     end
     
     def form_for(record, options={}, &block)
@@ -14,10 +14,12 @@ module Yodel
     # ----------------------------------------
     # Paths and permalinks
     # ----------------------------------------
-    # permalinks are unique within the scope of the siblings of a page
+    # Permalinks are unique within the scope of the siblings of a page. Only reassign
+    # a permalink after a title has changed, or if the title is a function type (and
+    # could change on every update of the page).
     before_validation :assign_permalink
     def assign_permalink
-      return unless title_changed? && title?
+      return unless (title_changed? && title?) || (!title.nil? && @document['title'].nil?)
       base_permalink = title.parameterize(site.option('pages.permalink_character'))
       suffix = ''
       count  = 0
@@ -174,19 +176,19 @@ module Yodel
     # ----------------------------------------
     # Default request handling
     # ----------------------------------------
-    def to_form(url=nil, options={})
-      options[:params] ||= {}
-      options[:params][:_method] = new? ? 'post' : 'put'
-      super(url || path, options)
-    end
-    
-    def new_child_form(options={})
-      default_child_model.new.to_form(path, options)
+    def form_for_page(options={}, &block)
+      options[:method] = new? ? 'post' : 'put'
+      options[:url] = path
+      form_for(self, options, &block)
     end
     
     def delete_button(text, options={})
-      attributes = options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
-      button_input = "<input type='submit' value=#{text}>"
+      attributes = ""
+      if options[:confirm]
+        attributes << " onsubmit='return confirm(\"#{options.delete(:confirm)}\")'"
+      end
+      attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
+      button_input = "<button>#{text}</button>"
       method_input = "<input type='hidden' name='_method' value='delete'>"
       "<form action='' method='post' #{attributes}>#{method_input}#{button_input}</form>"
     end
@@ -245,8 +247,9 @@ module Yodel
         
         # updating the page can change its url
         if save && path != path_was
-          respond.redirect path
+          response.redirect path
         else
+          flash.now(:update_successful, true)
           render
         end
       end
@@ -261,6 +264,8 @@ module Yodel
         end
       end
     end
+    
+    # DOC TIP: make sure a title is set or no path will be generated and this action will fail Rack::Lint
     
     # create child
     respond_to :post do

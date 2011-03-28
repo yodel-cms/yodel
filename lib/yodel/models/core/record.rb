@@ -82,7 +82,6 @@ module Yodel
   
     def save_without_validation
       raise Yodel::DestroyedRecord if @destroyed
-      
       _run_save_callbacks do
         if new?
           _run_create_callbacks { perform_save }
@@ -190,6 +189,7 @@ module Yodel
     def parent
       return nil if model.nil?
       @parent ||= model.first(_id: @document['_parent_id'])
+      @parent ||= model.load(COLLECTION.find_one(_id: @document['_parent_id']))
     end
     
     def parent=(parent_record)
@@ -366,19 +366,37 @@ module Yodel
         end
         
         def _run_before_#{callback}_callbacks
+          before_completed = self.class._before_#{callback}_callbacks.dup
           self.class._before_#{callback}_callbacks.each {|method| send method}
+          
+          unless self.is_a?(Model)
+            mixins.collect {|mixin| mixin.class._before_#{callback}_callbacks}.flatten.each do |callback|
+              unless before_completed.include?(callback)
+                send callback
+                before_completed << callback
+              end
+            end
+          end
         end
         
         def _run_after_#{callback}_callbacks
+          after_completed = self.class._after_#{callback}_callbacks.dup
           self.class._after_#{callback}_callbacks.each {|method| send method}
+          
+          unless self.is_a?(Model)
+            mixins.collect {|mixin| mixin.class._after_#{callback}_callbacks}.flatten.each do |callback|
+              unless after_completed.include?(callback)
+                send callback
+                after_completed << callback
+              end
+            end
+          end
         end
         
         def _run_#{callback}_callbacks(&block)
-          _run_before_#{callback}_callbacks
-          mixins.each(&:_run_before_#{callback}_callbacks) unless self.is_a?(Model)
+          _run_before_#{callback}_callbacks          
           yield if block_given?
-          mixins.each(&:_run_after_#{callback}_callbacks) unless self.is_a?(Model)
-          _run_before_#{callback}_callbacks
+          _run_after_#{callback}_callbacks
         end
       "
     end
@@ -396,6 +414,7 @@ module Yodel
     def valid?
       _run_validation_callbacks do
       end
+      true
     end
 
     

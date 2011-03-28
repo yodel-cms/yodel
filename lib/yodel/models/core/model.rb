@@ -278,7 +278,11 @@ module Yodel
       # create a new instance of model
       child = new
       child.name = name
-      child.parent_id = site.model(options[:inherits]).id if options[:inherits]
+      if options[:inherits]
+        parent_model = site.model(options[:inherits])
+        child.parent_id = parent_model.id
+        child.klass = parent_model.get_field('klass')
+      end
       child.save
       
       # insert the model in to the site models list

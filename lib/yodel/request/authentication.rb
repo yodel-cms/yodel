@@ -20,7 +20,7 @@ module Yodel
       password = credentials.delete('password')
       user = site.users.first(credentials)
       if user && user.passwords_match?(password)
-        session['current_user_id'] = user._id
+        session['current_user_id'] = user.id
         @current_user = user
       end
       !@current_user.nil?

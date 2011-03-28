@@ -50,7 +50,13 @@ module Yodel
         if @embedded_doc_name
           field.name = "#{@embedded_doc_name}[][#{field.name}]"
         end
-        Object.module_eval(field.type).to_html_field(@record, field, value).to_s
+        element = Object.module_eval(field.type).to_html_field(@record, field, value)
+        return nil if element.nil?
+        element.set_attribute(:id, name)
+        options.each do |name, value|
+          element.set_attribute(name, value)
+        end
+        element
       end
     end
     

@@ -46,7 +46,7 @@ module Yodel
       # in nil being yielded. The caller can respond appropriately.
       # The current file (a string path) is also provided.
       def self.each_migration
-        Yodel.config.migration_directories.each do |dir|
+        Yodel.config.migration_directories.reverse.each do |dir|
           next unless dir.directory?
           Dir[dir.join('*.rb')].sort.each do |file|
             @migration = nil

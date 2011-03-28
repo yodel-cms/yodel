@@ -15,6 +15,7 @@ gem 'builder',        '~> 2.1.2'
 gem 'ri_cal',         '~> 0.8.7'
 gem 'json',           '~> 1.4.6'
 gem 'rack-contrib',   '~> 1.1.0'
+gem 'linguistics',    '~> 1.0.8'
 
 group :development do
   gem 'shoulda', '>= 0'
