@@ -178,7 +178,7 @@ module Yodel
     # ----------------------------------------
     def form_for_page(options={}, &block)
       options[:method] = new? ? 'post' : 'put'
-      options[:url] = path
+      options[:action] = path
       form_for(self, options, &block)
     end
     
@@ -214,13 +214,28 @@ module Yodel
       binding
     end
     
+    def user_permitted_to?(action)
+      group = get_field("#{action}_group")
+      
+      # users are permitted if no group is provided, or the group contains the user
+      return true if group.nil? || group.permitted?(current_user, self)
+      
+      # otherwise the user is not permitted to perform the action
+      session[:redirect_to_after_login] = self.path
+      response.redirect site.login_pages.first.path
+      flash[:permission_denied] = action
+      false
+    end
+    
     # show
     respond_to :get do
       with :html do
+        return unless user_permitted_to?(:view)
         render
       end
       
       with :json do
+        return unless user_permitted_to?(:view)
         to_json
       end
     end
@@ -228,11 +243,13 @@ module Yodel
     # destroy
     respond_to :delete do
       with :html do
+        return unless user_permitted_to?(:delete)
         response.redirect parent ? parent.path : '/'
         destroy
       end
       
       with :json do
+        return unless user_permitted_to?(:delete)
         destroy
         {success: true}
       end
@@ -241,6 +258,8 @@ module Yodel
     # update
     respond_to :put do
       with :html do
+        return unless user_permitted_to?(:update)
+        
         # update the page assuming a form created by to_form
         path_was = path
         from_form(params)
@@ -255,6 +274,7 @@ module Yodel
       end
       
       with :json do
+        return unless user_permitted_to?(:update)
         from_json(params['record'])
         if save
           to_json
@@ -270,6 +290,7 @@ module Yodel
     # create child
     respond_to :post do
       with :html do
+        return unless user_permitted_to?(:create)
         new_page = default_child_model.new
         new_page.parent = self
         new_page.from_form(params)
@@ -290,6 +311,7 @@ module Yodel
       end
       
       with :json do
+        return unless user_permitted_to?(:create)
         new_page = default_child_model.new
         new_page.parent = self
         new_page.from_json(params['record'])

@@ -2,7 +2,7 @@ class Embedded
   extend YodelTypeInterface
   
   def self.from_mongo(record, field, value)
-    clean_document(record, field, value, :from_mongo)
+    clean_document(record, field, value, :from_mongo).collect {|record| OpenStruct.new(record)}
   end
   
   def self.to_mongo(record, field, value)
@@ -30,10 +30,18 @@ class Embedded
     def self.clean_document(record, field, value, method)
       return [] unless value.respond_to?(:collect)
       fields = field.fields.collect {|options| OpenStruct.new(options)}
-
+      
       value.collect do |typecast_document|
-        fields.each_with_object({}) do |field, document|
-          document[field.name] = Object.module_eval(field.type).send(method, record, field, typecast_document[field.name])
+        typecast_document.stringify_keys! if typecast_document.is_a?(Hash)
+        
+        if typecast_document.is_a?(Hash)
+          fields.each_with_object({}) do |field, document|
+            document[field.name] = Object.module_eval(field.type).send(method, record, field, typecast_document[field.name])
+          end
+        else
+          fields.each_with_object({}) do |field, document|
+            document[field.name] = Object.module_eval(field.type).send(method, record, field, typecast_document.send(field.name))
+          end
         end
       end
     end

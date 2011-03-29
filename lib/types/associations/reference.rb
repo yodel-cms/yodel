@@ -32,13 +32,6 @@ class Reference
   def self.to_html_field(record, field, value)
     model = record.site.model(field.to)
     return nil if model.nil?
-    if value.nil? && field.required && !field.default.nil?
-      if field.eval
-        value = record.instance_eval(field.default)
-      else
-        value = field.default
-      end
-    end
     value = value.to_s
     
     select_options = model.all.collect do |record|

@@ -1,7 +1,4 @@
 class Many < Array
-  # FIXME: currently implements a to_many relationship by doing a lookup
-  # we also need to support many ids stored within the record
-  
   def self.uncacheable?
     true
   end
@@ -9,7 +6,10 @@ class Many < Array
   def self.from_mongo(record, field, value)
     model = record.site.model(field.of)
     fkey  = field.foreign_key || record.model.name.underscore
-    model.where(fkey => record.id).all
+    
+    query = model.where(fkey => record.id)
+    query = query.order(field.order) if field.order
+    query.all
   end
   
   def self.to_mongo(record, field, value)

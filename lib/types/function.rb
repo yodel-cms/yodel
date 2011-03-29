@@ -12,7 +12,11 @@ class Function < String
   end
   
   def self.from_mongo(record, field, value)
-    record.instance_eval(field.fn.to_s)
+    if value != field.default
+      value
+    else
+      record.instance_eval(field.fn.to_s)
+    end
   end
   
   def self.to_json(record, field, value)

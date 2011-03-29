@@ -16,10 +16,17 @@ module Yodel
       @failed_email_lookup = failed
     end
     
+    respond_to :get do
+      with :html do
+        @email = params['email']
+        render
+      end
+    end
+    
     respond_to :post do
       with :html do
-        email = params[password_email_field]
-        user = site.users.where(email: email)
+        email = params[email_field]
+        user = site.users.where(email: email).first
         
         if user
           name = user.name
@@ -30,6 +37,7 @@ module Yodel
           self.failed_email_lookup = true
         end
         
+        @email = email
         render
       end
       

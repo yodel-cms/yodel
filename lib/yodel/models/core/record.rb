@@ -2,7 +2,8 @@ module Yodel
   class Record
     COLLECTION    = Yodel.config.db_connection.collection('records', pk: Yodel::PrimaryKeyFactory)
     attr_reader   :model, :site, :mixins, :document, :typecast, :changed
-    attr_accessor :core_model
+    attr_accessor :core_model # if this record is mixed in to another (core) record
+    # FIXME: rename core_model to core_record
     
     def initialize(model, document=nil, site=nil)
       @model    = model
@@ -184,6 +185,8 @@ module Yodel
     def id;             @document['_id']; end
     def raw_values;     @document; end
     def new?;           @new; end
+    
+    # FIXME: switch parent to use model.unscoped.where instead of a manual lookup
     
     # parent acts as an association
     def parent
@@ -452,12 +455,18 @@ module Yodel
     
     # Children of this record (other records which have this record as a parent)
     def children
-      model.where(_parent_id: id).order('index asc')
+      model.unscoped.where(_parent_id: id).order('index asc')
     end
         
     # Siblings of this record (other records with the same parent)
     def siblings
-      model.where(:_parent_id => parent_id, :_id.ne => id).order('index asc')
+      unless parent_id.nil?
+        model.unscoped.where(:_parent_id => parent_id, :_id.ne => id).order('index asc')
+      else
+        # A parent ID of nil indicates this record is the root of a tree. Since there
+        # are multiple trees (including the model tree), a sibling query makes no sense.
+        model.unscoped.where(:_id => id)
+      end
     end
     
     # All descendent children of this record, i.e children, grandchildren and so on.

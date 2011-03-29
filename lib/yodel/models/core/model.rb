@@ -124,10 +124,13 @@
 
 module Yodel
   class Model < Record
+    attr_reader :unscoped
+    
     def initialize(model, document=nil, site=nil)
       unless document.nil?
-        @scope = Yodel::Query.new(self, document['_site_id'], document['descendants'])
-        @klass = Object.module_eval(document['klass'])
+        @scope    = Yodel::Query.new(self, document['_site_id'], document['descendants'])
+        @unscoped = Yodel::Query.new(self, document['_site_id'])
+        @klass    = Object.module_eval(document['klass'])
       end
       
       if model.nil?
@@ -142,7 +145,7 @@ module Yodel
     end
     
     def new(values={})
-      @klass.new(self, nil, site).tap {|record| record.update(values, save: false)}
+      obj = @klass.new(self, nil, site).tap {|record| record.update(values, save: false)}
     end
   
     def load(values)

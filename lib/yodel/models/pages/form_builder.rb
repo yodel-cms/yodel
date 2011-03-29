@@ -5,7 +5,7 @@ module Yodel
       @options = options
       @block = block
       
-      @url = options.delete(:url)
+      @action = options.delete(:action)
       @method = options.delete(:method) || 'post'
       @params = options.delete(:params) || {}
       @embedded_record = options.delete(:embedded_record)
@@ -70,7 +70,7 @@ module Yodel
         buffer << Ember::Template.content_from_block(@block, self)
       else
         Ember::Template.wrap_content_block(@block, self) do |content|
-          Hpricot::Elem.new('form', {url: @url, method: 'post'}.merge(@params), [
+          Hpricot::Elem.new('form', {action: @action, method: 'post'}.merge(@params), [
             Hpricot::Text.new(content.join),
             Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method})
           ])

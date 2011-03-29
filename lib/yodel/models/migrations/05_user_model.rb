@@ -7,11 +7,10 @@ class UserModelMigration < Yodel::Migration
       model.add_field :username, String, required: true, index: true, unique: true, searchable: false
       model.add_field :password, Password, required: true, searchable: false
       model.add_field :password_salt, String, display: false, searchable: false
+      model.add_field :groups, StoreMany, of: 'Group', default: [site.groups['Users'].id]
       
       model.add_field :name, Function, fn: '"#{first_name} #{last_name}".strip'
       model.icon = '/admin/images/user_icon.png'
-      model.allowed_children = []
-      model.allowed_parents = ['Group']
       model.klass = 'Yodel::User'
     end
   end
