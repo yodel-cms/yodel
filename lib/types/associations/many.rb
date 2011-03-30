@@ -1,5 +1,5 @@
 class Many < Array
-  def self.uncacheable?
+  def self.delay_load?
     true
   end
   

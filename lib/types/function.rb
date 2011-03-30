@@ -3,7 +3,7 @@ class Function < String
     undef search_terms_set
   end
   
-  def self.uncacheable?
+  def self.delay_load?
     true
   end
   

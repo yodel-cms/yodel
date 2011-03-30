@@ -15,10 +15,11 @@ class Enum < String
       Hpricot::Elem.new('option', options, [Hpricot::Text.new(enum_value)])
     end
     
-    unless field.required
+    if field.show_blank || !field.required
       options = {value: ''}
+      text = field.blank_text || 'None'
       options[:selected] = 'selected' if value == ''
-      select_options.unshift(Hpricot::Elem.new('option', options, [Hpricot::Text.new('None')]))
+      select_options.unshift(Hpricot::Elem.new('option', options, [Hpricot::Text.new(text)]))
     end
     
     Hpricot::Elem.new('select', {name: field.name}, select_options)

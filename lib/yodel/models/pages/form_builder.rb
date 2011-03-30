@@ -27,7 +27,7 @@ module Yodel
     
     def field_value(name)
       if @embedded_record
-        @record[name]
+        @record.send(name)
       else
         @record.get_field(name)
       end
@@ -44,7 +44,7 @@ module Yodel
         end
         
         if options[:blank_record]
-          self.class.new({}, {base_record: @base_record, embedded_record: field, blank_record: true, embedded_doc_name: name}, &block).render
+          self.class.new(OpenStruct.new(site: @base_record.site), {base_record: @base_record, embedded_record: field, blank_record: true, embedded_doc_name: name}, &block).render
         end
       else
         if @embedded_doc_name

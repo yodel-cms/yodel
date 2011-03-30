@@ -2,7 +2,11 @@ class Embedded
   extend YodelTypeInterface
   
   def self.from_mongo(record, field, value)
-    clean_document(record, field, value, :from_mongo).collect {|record| OpenStruct.new(record)}
+    clean_document(record, field, value, :from_mongo).collect do |values|
+      OpenStruct.new(values).tap do |record_object|
+        record_object.site = record.site
+      end
+    end
   end
   
   def self.to_mongo(record, field, value)

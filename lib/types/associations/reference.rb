@@ -6,6 +6,8 @@ class Reference
     model = record.site.model(field.to)
     return nil if model.nil?
     model.find(value)
+  rescue
+    nil
   end
   
   def self.to_mongo(record, field, value)
@@ -17,8 +19,9 @@ class Reference
     return nil if value.nil?
     model = record.site.model(field.to)
     return nil if model.nil?
-    record = model.find(value)
-    record.try(:id)
+    record = model.find(BSON::ObjectId.from_string(value))
+  rescue
+    nil
   end
   
   def self.to_json(record, field, value)
@@ -40,10 +43,11 @@ class Reference
       Hpricot::Elem.new('option', options, [Hpricot::Text.new(record.name)])
     end
     
-    unless field.required
+    if field.show_blank || !field.required
       options = {value: ''}
+      text = field.blank_text || 'None'
       options[:selected] = 'selected' if value == ''
-      select_options.unshift(Hpricot::Elem.new('option', options, [Hpricot::Text.new('None')]))
+      select_options.unshift(Hpricot::Elem.new('option', options, [Hpricot::Text.new(text)]))
     end
     
     Hpricot::Elem.new('select', {name: field.name}, select_options)

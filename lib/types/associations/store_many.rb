@@ -1,4 +1,8 @@
 class StoreMany < Array
+  def self.delay_load?
+    true
+  end
+  
   def self.from_mongo(record, field, value)
     return [] unless value.respond_to?(:collect)
     model = record.site.model(field.of)

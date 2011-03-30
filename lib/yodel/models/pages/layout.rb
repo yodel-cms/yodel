@@ -17,7 +17,7 @@ module Yodel
     end
 
     def render(page)
-      page.set_content(Ember::Template.new(markup).render(page.get_binding))
+      page.set_content(Ember::Template.new(markup, options).render(page.get_binding))
       parent.render(page) if parent
       page.content
     end
@@ -45,11 +45,18 @@ module Yodel
   end
   
   class PersistentLayout < Layout
+    def options
+      {}
+    end
   end
   
   class FileLayout < Layout
     def markup
       IO.read(path)
+    end
+    
+    def options
+      {source_file: path}
     end
   end
 end

@@ -150,6 +150,8 @@ module Yodel
   
     def load(values)
       return nil if values.nil?
+      #$loads[values['_model']] += 1
+      #$total_loads += 1
       model = site.model(values['_model'])
       model.klass.new(model, values)
     end

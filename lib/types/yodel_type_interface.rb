@@ -1,9 +1,9 @@
 module YodelTypeInterface
-  def uncacheable?
+  def mutable?
     false
   end
   
-  def mutable?
+  def delay_load?
     false
   end
   

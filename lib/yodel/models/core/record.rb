@@ -126,7 +126,7 @@ module Yodel
     # Equality
     # ----------------------------------------
     def eql?(other)
-      other.is_a?(Record) && other.model_name == self.model_name && other.id == self.id
+      other.respond_to?(:model_name) && other.model_name == self.model_name && other.id == self.id
     end
     
     alias :== :eql?
@@ -175,6 +175,7 @@ module Yodel
     # Accessors
     # ----------------------------------------
     def inspect;        {changed: @changed, typecast: @typecast, original: @document}.inspect; end
+    def to_str;         "#<#{@model.name}: #{@document['_id']}>"; end
     def model_name;     @document['_model']; end
     def parent_id=(i);  @document['_parent_id'] = i; end
     def parent_id;      @document['_parent_id']; end
@@ -186,13 +187,10 @@ module Yodel
     def raw_values;     @document; end
     def new?;           @new; end
     
-    # FIXME: switch parent to use model.unscoped.where instead of a manual lookup
-    
     # parent acts as an association
     def parent
       return nil if model.nil?
-      @parent ||= model.first(_id: @document['_parent_id'])
-      @parent ||= model.load(COLLECTION.find_one(_id: @document['_parent_id']))
+      @parent ||= model.unscoped.first(_id: @document['_parent_id'])
     end
     
     def parent=(parent_record)
@@ -202,6 +200,11 @@ module Yodel
     
     # values are stored in the documents hash
     def method_missing(name, *args, &block)
+      # Catch a "fun" ruby 1.9 implemention detail. Calls to flatten blindly call
+      # to_ary on items in an array rather than checking it they really support
+      # the method with respond_to? Catch, and raise the expected exception.
+      raise NoMethodError if name == :to_ary
+      
       # TODO: prevent access to certain fields here; prevent assignment to special fields
       # strip off any trailing modifier characters to get a raw field name
       field = name.to_s
@@ -221,8 +224,8 @@ module Yodel
       else
         action = :getter
       end
-    
-      return super unless @document.key?(field)
+      
+      raise Yodel::UnknownField, "Unknown field <#{field}> for action <#{name}>" unless @document.key?(field)
       
       case action
         when :getter
@@ -243,13 +246,15 @@ module Yodel
     end
     
     def get_field(field)
-      @changed[field] || @typecast[field] || generate_uncached_field(field)
+      @changed[field] || @typecast[field] || generate_unloaded_field(field)
     end
     
-    def generate_uncached_field(name)
+    def generate_unloaded_field(name)
       field = field_options(name)
-      raise NameError if field.nil?
-      Object.module_eval(field.type).from_mongo(self, field, @document[name])
+      raise Yodel::UnknownField, "Unknown field <#{name}>" if field.nil?
+      type = Object.module_eval(field.type)
+      value = type.from_mongo(self, field, @document[name])
+      @typecast[name] = value
     end
     
     def field_changed?(field)
@@ -263,7 +268,7 @@ module Yodel
     def typecast_values
       each_field_with_options do |field|
         type = Object.module_eval(field.type)
-        unless type.uncacheable?
+        unless type.delay_load?
           value = type.from_mongo(self, field, @document[field.name])
           @typecast[field.name] = value
           @changed[field.name] = value if type.mutable?
@@ -274,7 +279,7 @@ module Yodel
     def copy_mutable_values
       each_field_with_options({}) do |field, changed|
         type = Object.module_eval(field.type)
-        if type.mutable? && !type.uncacheable?
+        if type.mutable?
           changed[field.name] = @typecast[field.name]
         end
       end
@@ -285,18 +290,25 @@ module Yodel
     # Conversions
     # ----------------------------------------
     def to_json
+      fields = []
+      values = {}
+      
+      each_field_with_options do |field, _|
+        type = Object.module_eval(field.type)
+        #unless field.display == false
+          value = type.to_json(self, field, @document[field.name])
+          values[field.name] = value
+          fields << {name: field.name, type: field.type}
+        #end
+      end
+      
       {
         id: id.to_s,
         parent_id: parent_id.nil? ? nil : parent_id.to_s,
         model: model_name,
         index: index,
-        fields: each_field_with_options([]) do |field, values|
-          type = Object.module_eval(field.type)
-          unless type.uncacheable? || field.display == false
-            value = type.to_json(self, field, @document[field.name])
-            values << {name: name, type: field.type, value: value}
-          end
-        end
+        fields: fields,
+        values: values
       }
     end
     
@@ -320,7 +332,7 @@ module Yodel
         type = Object.module_eval(field.type)
         
         # FIXME: field.display is being overriden by Object#display
-        unless type.uncacheable? || field.display == false
+        unless field.display == false
           input = type.to_html_field(self, field, @document[field.name]).to_s
           if input
             html += "<p><label for='#{field.name}'>#{field.name.humanize}</label>#{input}</p>"

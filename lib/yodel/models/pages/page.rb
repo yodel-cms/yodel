@@ -190,7 +190,28 @@ module Yodel
       attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
       button_input = "<button>#{text}</button>"
       method_input = "<input type='hidden' name='_method' value='delete'>"
-      "<form action='' method='post' #{attributes}>#{method_input}#{button_input}</form>"
+      "<form action='#{path}' method='post' #{attributes}>#{method_input}#{button_input}</form>"
+    end
+    
+    def delete_link(text, options={})
+      attributes = ""
+      if options[:confirm]
+        confirm = "if(confirm(\"#{options.delete(:confirm)}\"))"
+      else
+        confirm = ''
+      end
+      if options[:wrap]
+        wrap_start = options[:wrap][0]
+        wrap_end = options[:wrap][1]
+        options.delete(:wrap)
+      else
+        wrap_start = ''
+        wrap_end = ''
+      end
+      attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
+      delete_link = "#{wrap_start}<a #{attributes} onclick='#{confirm}submit()'>#{text}</a>#{wrap_end}"
+      method_input = "<input type='hidden' name='_method' value='delete'>"
+      "<form action='#{path}' method='post'>#{method_input}#{delete_link}</form>"
     end
     
     def render
