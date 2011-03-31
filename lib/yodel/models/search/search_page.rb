@@ -15,13 +15,13 @@ module Yodel
       
       # constant constraints
       conditions.each do |condition|
-        q = add_condition(q, condition.field, condition.operator, condition.value)
+        q = add_condition(q, condition.field, condition.operator, condition.value, condition.type)
       end
       
       # user conditions
       user_conditions.each do |condition|
         param_name = condition.as || condition.field
-        q = add_condition(q, condition.field, condition.operator, params[param_name])
+        q = add_condition(q, condition.field, condition.operator, params[param_name], condition.type)
       end
       
       # add other optional search parameters
@@ -31,12 +31,13 @@ module Yodel
       q
     end
     
-    def add_condition(q, field, operator, value)
+    def add_condition(q, field, operator, value, type)
       return q if value.blank?
       operator = OPERATOR_METHODS[operator]
       field = field.to_sym
       
       # process value - 'null' == nil, and the in operator works on arrays
+      value = Object.module_eval(type).from_html_field(nil, nil, value)
       return q if value.nil?
       if operator == :in
         value = value.to_s.split(' ').reject(&:blank?).collect(&:downcase)
@@ -103,6 +104,7 @@ module Yodel
 
     respond_to :get do
       with :json do
+        return unless user_permitted_to?(:view)
         {results: query.all.collect {|record| record_to_json(record)}}
       end
     end

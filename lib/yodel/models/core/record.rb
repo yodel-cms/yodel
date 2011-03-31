@@ -121,6 +121,22 @@ module Yodel
       initialize(_model, COLLECTION.find_one(_id: _id), _site)
     end
     
+    def increment!(field, value=1, conditions={})
+      raise Yodel::DestroyedRecord if @destroyed
+      raise NameError unless @document.key?(field.to_s)
+      return false if @new
+      
+      # atomic increment (amount can be negative)
+      conditions = Plucky::CriteriaHash.new(conditions).to_hash
+      result = COLLECTION.update({_id: id}.merge(conditions), {'$inc' => {field => value}}, safe: true)
+      succeeded = result['n'] != 0
+      
+      # update the object cache, and indicate if the update was successful
+      @document[field.to_s] += value if succeeded
+      @typecast[field.to_s] += value if succeeded # FIXME: should pull the value through from_mongo
+      succeeded
+    end
+    
     
     # ----------------------------------------
     # Equality
@@ -318,7 +334,19 @@ module Yodel
         json_field = OpenStruct.new(json_field)
         field = field_options(json_field.name)
         next if field.nil?
-        @changed[field.name] = Object.module_eval(field.type).from_json(self, field, json_field.value)
+        
+        if field.type == 'StoreMany' && !json_field.action.nil?
+          value = model.unscoped.find(BSON::ObjectId.from_string(json_field.value))
+          @changed[field.name] = get_field(field.name)
+          
+          if json_field.action == 'remove'
+            @changed[field.name].delete(value)
+          elsif json_field.action == 'add'
+            @changed[field.name] << value unless @changed[field.name].include?(value)
+          end
+        else
+          @changed[field.name] = Object.module_eval(field.type).from_json(self, field, json_field.value)
+        end
       end
     end
     
@@ -530,6 +558,7 @@ module Yodel
         end
         
         # perform an update or insert of the raw values
+        # FIXME: safe: true, and handle failed result
         COLLECTION.save(@document)
         
         # after a save there are no changed fields

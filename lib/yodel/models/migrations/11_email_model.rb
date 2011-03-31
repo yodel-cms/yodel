@@ -17,7 +17,7 @@ class EmailModelMigration < Yodel::Migration
     password_reset_email.name = 'password_reset'
     password_reset_email.from = 'admin@site.com'
     password_reset_email.subject = 'Password Reset'
-    password_reset_email.text_body = 'Hi #{user.name}, your password has been reset and is now: #{new_password}.'
+    password_reset_email.text_body = 'Hi <%= name %>, your password has been reset and is now: <%= new_password %>.'
     password_reset_email.save
   end
   

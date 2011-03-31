@@ -24,7 +24,7 @@ module Yodel
     require init_file if File.exist?(init_file)
     Yodel.config.public_directories << public_dir if File.directory?(public_dir)
     Yodel.config.layout_directories << layouts_dir if File.directory?(layouts_dir)
-    Yodel.config.migration_directories << layouts_dir if File.directory?(migration_dir)
+    Yodel.config.migration_directories.insert(-2, migration_dir) if File.directory?(migration_dir)
     models_folder.preload!
   end
   

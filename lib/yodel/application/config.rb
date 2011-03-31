@@ -41,8 +41,10 @@ module Yodel
       self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..')
       self.public_directories         << self.root.join(self.public_directory_name)
       self.layout_directories         << self.root.join(self.layouts_directory_name)
-      self.migration_directories      << self.root.join(self.migrations_directory_name)
-      self.migration_directories      << self.yodel_root.join('yodel', 'models', 'migrations')
+      
+      # add the user migration directory to the front of the list (so it runs last)
+      self.migration_directories.unshift(self.root.join(self.migrations_directory_name))
+      self.migration_directories << self.yodel_root.join('yodel', 'models', 'migrations')
       
       # TODO: switch to log4r and log to a file and stdout
       # TODO: also switch rack to use this logger for requests

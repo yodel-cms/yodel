@@ -296,7 +296,7 @@ module Yodel
       
       with :json do
         return unless user_permitted_to?(:update)
-        from_json(params['record'])
+        from_json(JSON.parse(params['record']))
         if save
           to_json
         else

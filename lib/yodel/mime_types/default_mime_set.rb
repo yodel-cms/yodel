@@ -12,7 +12,7 @@ module Yodel
           extensions 'json'
           mime_types 'application/json'
           processor do |data|
-            data.to_json
+            JSON.generate(data)
           end
         end
       end

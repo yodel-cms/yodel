@@ -11,6 +11,10 @@ class SearchPageModelMigration < Yodel::Migration
           type: String
         },
         {
+          name: :type,
+          type: String
+        },
+        {
           name: :operator,
           type: Enum,
           values: ['Equals', 'Not Equal', 'Greater Than', 'Less Than', 'Greater Than or Equal To', 'Less Than or Equal To', 'In']
@@ -27,6 +31,10 @@ class SearchPageModelMigration < Yodel::Migration
         },
         {
           name: :as,
+          type: String
+        },
+        {
+          name: :type,
           type: String
         },
         {
