@@ -3,9 +3,6 @@ module Yodel
     PATH_FORMAT_REGEX = /^(?<path>.*?)(\.(?<format>\w+))?$/
     
     def call(env)
-      #$loads = Hash.new(0)
-      #$total_loads = 0
-      
       # in development all yodel files, extensions, and application files are reloaded each request
       Impromptu.update if Yodel.env.development?
       
@@ -29,7 +26,6 @@ module Yodel
       return fail_with "Path (#{request.path}) not found for this site (#{site.name})." if page.nil?
       Yodel::Layout.reload_layouts(site) if Yodel.env.development?
       page.respond_to_request(request, response, mime_type)
-      #puts "loads: #{$loads.inspect}, total: #{$total_loads}"
       response.finish
     end
     

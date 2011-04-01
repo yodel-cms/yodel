@@ -127,9 +127,11 @@ module Yodel
     attr_reader :unscoped
     
     def initialize(model, document=nil, site=nil)
+      @cached_records_by_name = {}
+      
       unless document.nil?
-        @scope    = Yodel::Query.new(self, document['_site_id'], document['descendants'])
-        @unscoped = Yodel::Query.new(self, document['_site_id'])
+        @scope    = Yodel::Query.new(self, site, document['descendants'])
+        @unscoped = Yodel::Query.new(self, site)
         @klass    = Object.module_eval(document['klass'])
       end
       
@@ -150,10 +152,8 @@ module Yodel
   
     def load(values)
       return nil if values.nil?
-      #$loads[values['_model']] += 1
-      #$total_loads += 1
       model = site.model(values['_model'])
-      model.klass.new(model, values)
+      model.klass.new(model, values, site)
     end
     
     def default_values(include_parents_and_mixins=true)
@@ -369,7 +369,7 @@ module Yodel
     # Simple lookup operator for models that have records with unique names.
     # Used as if the model object was a hash: site.emails['name']
     def [](name)
-      self.where(name: name).first
+      @cached_records_by_name[name] ||= self.where(name: name).first
     end
     
     # Retrieve a model specified in conditions. Conditions is a mongo driver

@@ -14,6 +14,7 @@ module Yodel
     
     def initialize(document=nil)
       @document = document || DEFAULT_DOCUMENT
+      @cached_records = {}
       @cached_models = {}
     end
     
@@ -21,6 +22,7 @@ module Yodel
     # ----------------------------------------
     # Accessors
     # ----------------------------------------
+    attr_reader :cached_records, :cached_models
     def id; @document['_id']; end
     
     # generate a getter/setter pair for each of the standard attributes
