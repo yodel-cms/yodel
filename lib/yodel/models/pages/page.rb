@@ -20,6 +20,10 @@ module Yodel
     before_validation :assign_permalink
     def assign_permalink
       return unless (title_changed? && title?) || (!title.nil? && @document['title'].nil?)
+      
+      # until we detect changes to fields used by cached functions, force a refresh of the value
+      generate_unloaded_field('title') if field_options('title').type == 'Function'
+      
       base_permalink = title.parameterize(site.option('pages.permalink_character'))
       suffix = ''
       count  = 0

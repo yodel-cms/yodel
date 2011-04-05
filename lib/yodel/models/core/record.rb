@@ -262,7 +262,9 @@ module Yodel
     end
     
     def get_field(field)
-      @changed[field] || @typecast[field] || generate_unloaded_field(field)
+      return @changed[field] if @changed.key?(field)
+      return @typecast[field] if @typecast.key?(field)
+      generate_unloaded_field(field)
     end
     
     def generate_unloaded_field(name)
@@ -295,7 +297,7 @@ module Yodel
     def copy_mutable_values
       each_field_with_options({}) do |field, changed|
         type = Object.module_eval(field.type)
-        if type.mutable?
+        if type.mutable? && @typecast.key?(field.name)
           changed[field.name] = @typecast[field.name]
         end
       end

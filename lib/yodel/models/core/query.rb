@@ -15,6 +15,9 @@ module Yodel
     end
     
     # override higher level queries to produce record objects
+    # TODO: can search through identity map here to return cached records and avoid
+    # an object creation step. Also cache any new records, so they can be matched
+    # by single lookups in the future as well.
     def all(opts={})
       super.collect {|document| @model.load(document)}
     end

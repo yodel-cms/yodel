@@ -18,16 +18,11 @@ class Boolean
   end
   
   def self.from_html_field(record, field, value)
-    value.nil? ? false : true
+    value == 'true'
   end
   
   def self.to_html_field(record, field, value)
-    options = {type: 'checkbox', name: field.name}
-    
-    if value.nil? && !field.default.nil?
-      value = field.default
-    end
-    
+    options = {type: 'checkbox', name: field.name, value: 'true'}    
     options[:checked] = 'checked' if !!value
     Hpricot::Elem.new('input', options)
   end
