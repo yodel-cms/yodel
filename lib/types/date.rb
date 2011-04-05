@@ -11,17 +11,11 @@ class Date
     value.to_date if value.present?
   end
   
-  def self.to_json(record, field, value)
-    return nil unless value.is_a?(Date)
-    {year: value.year, month: value.month, day: value.day}
+  def to_json(*a)
+    "new Date(#{year}, #{month}, #{day})".to_json(*a)
   end
   
-  def self.from_json(record, field, value)
-    return nil if value.is_a?(nil)
+  def self.from_json(record, field, value, action)
     Time.new(value['year'], value['month'], value['day'])
   end
-  
-  def self.from_html_field(record, field, value)
-    value.nil? ? nil : Date.parse(value).to_time
-  end  
 end

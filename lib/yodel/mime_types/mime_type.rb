@@ -7,6 +7,7 @@ module Yodel
       @mime_types = []
       @processor = nil
       @builder = nil
+      @layout_processor = :ember
     end
 
     def mime_types(*types)
@@ -47,6 +48,14 @@ module Yodel
 
     def process(data)
       @processor ? @processor.call(data) : data
+    end
+    
+    def layout_processor(*processor)
+      if processor.empty?
+        @layout_processor
+      else
+        @layout_processor = processor.first
+      end
     end
   end
 end

@@ -12,39 +12,61 @@ module Yodel
     def self.reload_layouts(site)
       reload_mutex.synchronize do
         site.layouts.all.each(&:destroy)
-        Yodel.config.layout_directories.each {|directory| scan_folder(directory, site, nil)}
+        Yodel.mime_types.each do |mime_type|
+          mime_type_name = mime_type.name.to_s
+          mime_type_extensions = mime_type.extensions.join(',')
+          Yodel.config.layout_directories.each do |directory|
+            scan_folder(directory, site, mime_type_name, mime_type_extensions, nil)
+          end
+        end
       end
     end
 
     def render(page)
-      page.set_content(Ember::Template.new(markup, options).render(page.get_binding))
-      parent.render(page) if parent
-      page.content
+      method = "render_#{Yodel.mime_types[mime_type.to_sym].layout_processor}"
+      if respond_to?(method)
+        send(method, page)
+      else
+        render_default(page)
+      end
     end
     
+    def self.render(name, &block)
+      define_method("render_#{name}", block)
+    end
+    
+    render :default do |page|
+      markup
+    end
+    
+    
     private
-      def self.scan_folder(path, site, parent)
+      def self.scan_folder(path, site, mime_type_name, mime_type_extensions, parent)
         return unless File.directory?(path)
         
-        # create layouts for all html files, then scan for any
+        # create layouts for all mime type files, then scan for any
         # sub-layouts in folders with the same name as the layout
-        Dir.glob(File.join(path, '*.html')).each do |file_path|
-          name = File.basename(file_path, '.html')
-          raise Yodel::DuplicateLayout if site.layouts.exists?(name: name)
+        Dir.glob(File.join(path, "*.{#{mime_type_extensions}}")).each do |file_path|
+          name = File.basename(file_path, File.extname(file_path))
+          raise Yodel::DuplicateLayout if site.layouts.exists?(name: name, mime_type: mime_type_name)
           
           layout = site.file_layouts.new
           layout.name = name
           layout.parent = parent
           layout.path = file_path
+          layout.mime_type = mime_type_name
           layout.save
-          
+        
           # scan for sub layouts
-          scan_folder(file_path[0...-5], site, layout)
+          sub_layouts_folder = File.join(File.dirname(file_path), name)
+          scan_folder(sub_layouts_folder, site, mime_type_name, mime_type_extensions, layout)
         end
       end
   end
   
+  
   class PersistentLayout < Layout
+    # markup is defined as a field of persistent layouts
     def options
       {}
     end
@@ -57,6 +79,16 @@ module Yodel
     
     def options
       {source_file: path}
+    end
+    
+    render :ember do |page|
+      page.set_content(Ember::Template.new(markup, options).render(page.get_binding))
+      parent.render(page) if parent
+      page.content
+    end
+    
+    render :eval do |page|
+      page.instance_eval(markup)
     end
   end
 end

@@ -1,7 +1,8 @@
 class LayoutModelMigration < Yodel::Migration
   def self.up(site)
     site.models.create_model 'Layout', inherits: 'Record' do |model|
-      model.add_field :name, String, required: true, index: true, unique: true
+      model.add_field :name, String, required: true, index: true
+      model.add_field :mime_type, String, required: true, index: true
       
       model.allowed_children = []
       model.allowed_parents = []

@@ -11,16 +11,11 @@ class Time
     Time.at(value)
   end
   
-  def self.to_json(record, field, value)
-    return nil unless value.is_a?(Time)
-    {year: value.year, month: value.month, day: value.day, hour: value.hour, min: value.min, sec: value.sec}
+  def to_json(*a)
+    "new Date(#{year}, #{month}, #{day}, #{hour}, #{minute}, #{second})".to_json(*a)
   end
   
-  def self.from_json(record, field, value)
+  def self.from_json(record, field, value, action)
     Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], value['sec']).utc
-  end
-  
-  def self.from_html_field(record, field, value)
-    value.nil? ? nil : DateTime.parse(value).to_time.utc
   end
 end

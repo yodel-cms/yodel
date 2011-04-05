@@ -8,6 +8,12 @@ module Yodel
       @mime_types = {}  # index by mime types (text/html)
     end
     
+    def each
+      @types.values.each do |type|
+        yield type
+      end
+    end
+    
     def [](name)
       @types[name]
     end

@@ -2,7 +2,7 @@ component 'yodel' do
   requires  'rack', 'mongo', 'plucky', 'ember', 'hpricot', 'logger'
   requires  'json', 'image_science', 'rack/contrib', 'forwardable'
   requires  'bigdecimal', 'date', 'ostruct', 'linguistics', 'mail'
-  requires  'json'
+  requires  'bson'
   
   # require active support extensions individually to keep fit and lean
   requires  'active_support/core_ext/object/blank', 'active_support/core_ext/object/try'
@@ -26,5 +26,6 @@ component 'yodel' do
     file 'css.rb', provides: :CSS
     file 'html.rb', provides: :HTML
     file 'html_code.rb', provides: :HTMLCode
+    #file 'object_id.rb', provides: :'::BSON::ObjectId'
   end
 end

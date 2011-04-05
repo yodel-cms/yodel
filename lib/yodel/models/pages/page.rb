@@ -162,17 +162,17 @@ module Yodel
     end
 
     # Determine the first best layout to be used by this page for rendering
-    def layout
+    def layout(mime_type)
       # if we're in production we'll have a reference to a layout record
-      return page_layout_record if page_layout_record
+      #return page_layout_record if page_layout_record # FIXME: implement layout caching
       
       # try and return a layout by name or by the name of the page's class
-      layout = site.layouts.where(name: page_layout).first
-      layout = site.layouts.where(name: model.name.underscore).first unless layout
+      layout = site.layouts.where(name: page_layout, mime_type: mime_type).first
+      layout = site.layouts.where(name: model.name.underscore, mime_type: mime_type).first unless layout
       return layout if layout
       
       # otherwise fall back to the parent's layout
-      return parent.layout unless parent.nil?
+      return parent.layout(mime_type) unless parent.nil?
       raise Yodel::LayoutNotFound
     end
     
@@ -218,9 +218,11 @@ module Yodel
       "<form action='#{path}' method='post'>#{method_input}#{delete_link}</form>"
     end
     
-    def render
+    def render_or_default(mime_type, &block)
       @content ||= content
-      layout.render(self)
+      layout(mime_type.to_s).render(self)
+    rescue Yodel::LayoutNotFound
+      yield
     end
     
     def content
@@ -256,12 +258,16 @@ module Yodel
     respond_to :get do
       with :html do
         return unless user_permitted_to?(:view)
-        render
+        render_or_default(:html) do
+          "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
+        end
       end
       
       with :json do
         return unless user_permitted_to?(:view)
-        to_json
+        render_or_default(:json) do
+          to_json
+        end
       end
     end
     
@@ -301,10 +307,8 @@ module Yodel
       with :json do
         return unless user_permitted_to?(:update)
         from_json(JSON.parse(params['record']))
-        if save
-          to_json
-        else
-          # FIXME: need to show errors
+        success = save
+        render_or_default(:json) do
           to_json
         end
       end
@@ -340,10 +344,9 @@ module Yodel
         new_page = default_child_model.new
         new_page.parent = self
         new_page.from_json(params['record'])
-        if new_page.save
+        success = new_page.save
+        new_page.render_or_default(:json) do
           new_page.to_json
-        else
-          {success: false}
         end
       end
     end
