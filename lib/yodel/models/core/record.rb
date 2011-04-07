@@ -127,13 +127,14 @@ module Yodel
       return false if @new
       
       # atomic increment (amount can be negative)
+      field = field.to_s
       conditions = Plucky::CriteriaHash.new(conditions).to_hash
       result = COLLECTION.update({_id: id}.merge(conditions), {'$inc' => {field => value}}, safe: true)
       succeeded = result['n'] != 0
       
       # update the object cache, and indicate if the update was successful
-      @document[field.to_s] += value if succeeded
-      @typecast[field.to_s] += value if succeeded # FIXME: should pull the value through from_mongo
+      @document[field] += value if succeeded
+      @typecast[field] = @document[field] if succeeded # FIXME: should pull the value through from_mongo
       succeeded
     end
     
@@ -476,20 +477,18 @@ module Yodel
       self.index = highest_index + 1
     end
 
-    # FIXME: these need to be atomic ops
+    # FIXME: these need to be atomic ops over the whole set of children
     def insert_in_siblings(new_index)
       remove_from_siblings if index
       siblings.where(:_index.gte => new_index).each do |sibling|
-        sibling.index += 1
-        sibling.save
+        sibling.increment!(:_index)
       end
       self.index = new_index
     end
 
     def remove_from_siblings
       siblings.where(:_index.gte => index).each do |sibling|
-        sibling.index -= 1
-        sibling.save
+        sibling.increment!(:_index, -1)
       end
       self.index = nil
       self.parent = nil
@@ -497,13 +496,13 @@ module Yodel
     
     # Children of this record (other records which have this record as a parent)
     def children
-      model.unscoped.where(_parent_id: id).order('index asc')
+      model.unscoped.where(_parent_id: id).order('_index asc')
     end
         
     # Siblings of this record (other records with the same parent)
     def siblings
       unless parent_id.nil?
-        model.unscoped.where(:_parent_id => parent_id, :_id.ne => id).order('index asc')
+        model.unscoped.where(:_parent_id => parent_id, :_id.ne => id).order('_index asc')
       else
         # A parent ID of nil indicates this record is the root of a tree. Since there
         # are multiple trees (including the model tree), a sibling query makes no sense.

@@ -42,8 +42,7 @@ class SearchPageModelMigration < Yodel::Migration
           type: Enum,
           values: ['Equals', 'Not Equal', 'Greater Than', 'Less Than', 'Greater Than or Equal To', 'Less Than or Equal To', 'In']
         }
-      ], default: [{field: 'search_keywords', as: 'query', operator: 'In'}]
-      model.add_field :json_fields, Array, default: ['id', 'name']
+      ], default: [{field: 'search_keywords', type: 'String', as: 'query', operator: 'In'}]
       model.klass = 'Yodel::SearchPage'
     end
   end

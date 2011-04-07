@@ -49,5 +49,10 @@ module Yodel
         q.where(field => value)
       end
     end
+    
+    # True if the request contains any of the parameters 
+    def user_query?
+      user_conditions.any? {|condition| params[condition.as ? condition.as : condition.field].present?}
+    end
   end
 end
