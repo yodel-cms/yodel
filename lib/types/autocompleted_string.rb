@@ -1,2 +1,0 @@
-class AutocompletedString < String
-end

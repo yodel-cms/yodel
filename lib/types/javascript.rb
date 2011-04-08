@@ -1,2 +1,0 @@
-class Javascript < Code
-end

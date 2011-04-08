@@ -115,6 +115,7 @@ module Yodel
       model = Yodel::Model.find_by(self, _id: model_id)
       @cached_models[name] = model
       @cached_models[model.name] = model
+      @cached_records[model.id] = model
     end
     
     # Retrieve a model by its full name ('Model' as opposed to 'models')

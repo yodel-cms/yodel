@@ -1,2 +1,0 @@
-class CSS < Code
-end

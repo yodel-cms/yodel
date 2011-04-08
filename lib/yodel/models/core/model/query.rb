@@ -1,26 +1,21 @@
 module Yodel
   class Query < Plucky::Query
-    # construct a default scope for queries on a model. we need to use the raw_values
-    # version of descendants because typecasting relies on model objects, and constructing
-    # the root model object is done before any other models are.
-    def initialize(model, site, descendants=nil)
-      @model = model
-      @site  = site
-      
-      if descendants
-        super(Yodel::Record::COLLECTION, _site_id: site.id, _model: descendants)
-      else
-        super(Yodel::Record::COLLECTION, _site_id: site.id)
-      end
+    # construct a default scope for queries on a resource
+    def initialize(constructor, site, collection, scope={})
+      @site = site
+      @constructor = constructor
+      super(collection, scope)
     end
     
-    # override higher level queries to produce record objects
     # TODO: can search through identity map here to return cached records and avoid
     # an object creation step. Also cache any new records, so they can be matched
     # by single lookups in the future as well.
     def all(opts={})
-      super.collect {|document| @model.load(document)}
+      super.collect {|values| @constructor.load(@site, values)}
     end
+
+    # TODO: extract this out to a collection sub class; yodel collection subclass
+    # will override 'find' itself, so it doesn't need to be done here
 
     # override find_one to find objects via an identity hash
     def find_one(opts={})
@@ -44,7 +39,7 @@ module Yodel
       # lookup failed, so perform a query
       record = query.collection.find_one(criteria_hash, query.options.to_hash)
       if record
-        record = @model.load(record)
+        record = @constructor.load(@site, record)
         @site.cached_records[id] = record if cacheable
       end
       
