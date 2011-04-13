@@ -1,26 +1,30 @@
 class GroupModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model 'Group', inherits: 'Record' do |model|
-      model.add_field :name, String, required: true
-      model.add_field :users, Many, of: 'User', foreign_key: 'groups'
-      model.icon = '/admin/images/group_icon.png'
-      model.klass = 'Yodel::Group'
+    site.records.create_model :groups do |groups|
+      add_field :name, :string, required: true
+      many      :users, store: false, foreign_key: 'groups'
+      groups.icon = '/admin/images/group_icon.png'
+      groups.record_class_name = 'Yodel::Group'
     end
+    site.reload
     
     # a special singleton group representing an 'owner' of a record
-    site.models.create_model 'OwnerGroup', inherits: 'Group' do |model|
-      model.klass = 'Yodel::OwnerGroup'
+    site.groups.create_model :owner_groups do |group|
+      group.record_class_name = 'Yodel::OwnerGroup'
     end
+    site.reload
     
     # a special singleton group representing no one
-    site.models.create_model 'NooneGroup', inherits: 'Group' do |model|
-      model.klass = 'Yodel::NooneGroup'
+    site.groups.create_model :noone_groups do |group|
+      group.record_class_name = 'Yodel::NooneGroup'
     end
+    site.reload
     
     # a special singleton group representing 'everyone'
-    site.models.create_model 'GuestsGroup', inherits: 'Group' do |model|
-      model.klass = 'Yodel::GuestsGroup'
+    site.groups.create_model :guest_groups do |group|
+      group.record_class_name = 'Yodel::GuestsGroup'
     end
+    site.reload
     
     
     # permissions are based on a hierarchy of groups. branches are permitted.
@@ -43,23 +47,15 @@ class GroupModelMigration < Yodel::Migration
     users.parent = owner
     users.save
     
-    guests = site.guests_groups.new(name: 'Guests')
+    guests = site.guest_groups.new(name: 'Guests')
     guests.parent = users
     guests.save
-    
-    
-    # add fields to track permissions per page; these fields can be overriden
-    # to have defaults so you don't need to set them manually each instance
-    site.records.modify do |model|
-      model.add_field :view_group, Reference, to: 'Group', default: nil
-      model.add_field :create_group, Reference, to: 'Group', default: nil
-      model.add_field :update_group, Reference, to: 'Group', default: nil
-      model.add_field :delete_group, Reference, to: 'Group', default: nil
-    end
   end
   
   def self.down(site)
     site.groups.destroy
     site.owner_groups.destroy
+    site.noone_groups.destroy
+    site.guest_groups.destroy
   end
 end

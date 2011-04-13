@@ -1,17 +1,17 @@
 class UserModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model 'User', inherits: 'Record' do |model|
-      model.add_field :first_name, String, searchable: false
-      model.add_field :last_name, String, searchable: false
-      model.add_field :email, Email, required: true, unique: true, searchable: false
-      model.add_field :username, String, required: true, index: true, unique: true, searchable: false
-      model.add_field :password, Password, required: true, searchable: false
-      model.add_field :password_salt, String, display: false, searchable: false
-      model.add_field :groups, StoreMany, of: 'Group', default: [site.groups['Users'].id]
+    site.records.create_model :users do |users|
+      add_field :first_name, :string, searchable: false
+      add_field :last_name, :string, searchable: false
+      add_field :email, :email, required: true, unique: true, searchable: false
+      add_field :username, :string, required: true, index: true, unique: true, searchable: false
+      add_field :password, :password, required: true, searchable: false
+      add_field :password_salt, :string, display: false, searchable: false
+      many      :groups, default: [site.groups['Users'].id]
       
-      model.add_field :name, Function, fn: '"#{first_name} #{last_name}".strip'
-      model.icon = '/admin/images/user_icon.png'
-      model.klass = 'Yodel::User'
+      #add_field :name, Function, fn: '"#{first_name} #{last_name}".strip'
+      users.icon = '/admin/images/user_icon.png'
+      users.record_class_name = 'Yodel::User'
     end
   end
   

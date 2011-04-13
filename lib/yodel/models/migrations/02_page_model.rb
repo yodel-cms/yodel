@@ -1,30 +1,29 @@
 class PageModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model 'Page', inherits: 'Record' do |model|
+    site.records.create_model :pages do |pages|
       # core page attributes
-      model.add_field :permalink, String, required: true, index: true, searchable: false, display: false
-      model.add_field :path, String, required: true, index: true, searchable: false, display: false
-      model.add_field :created, Time, display: false, eval: true, default: 'Time.now'
-      model.add_field :title, String, required: true
-      model.add_field :content, HTML
+      add_field :permalink, :string, required: true, index: true, searchable: false, display: false
+      add_field :path, :string, required: true, index: true, searchable: false, display: false
+      add_field :created, :time, display: false
+      add_field :title, :string, required: true
+      add_field :content, :html
       
       # options section
-      model.add_field :show_in_menus, Boolean, default: true, section: 'Options'
-      model.add_field :description, Text, section: 'Options', searchable: false
-      model.add_field :keywords, Text, section: 'Options', searchable: false
-      model.add_field :custom_meta_tags, Text, section: 'Options', searchable: false
-      model.add_field :new_child_page, Reference, to: 'Page', section: 'Options', default: nil
+      add_field :show_in_menus, :boolean, default: true, section: 'Options'
+      add_field :description, :text, section: 'Options', searchable: false
+      add_field :keywords, :text, section: 'Options', searchable: false
+      add_field :custom_meta_tags, :text, section: 'Options', searchable: false
+      one       :new_child_page, model: :page, section: 'Options'
       
       # layout
-      model.add_field :page_layout, String, section: 'Options', default: nil, searchable: false
-      model.add_field :page_layout_record, Reference, to: 'Layout', section: 'Options', default: nil
+      add_field :page_layout, :string, section: 'Options', default: nil, searchable: false
+      one       :page_layout_record, model: :layout, section: 'Options'
       
-      # override abstract record settings
-      model.add_field :default_child_model, Reference, to: 'Model', default: 'site.pages.id', eval: true
-      model.add_field :name, Function, fn: 'title'
-      model.allowed_children = ['Page']
-      model.allowed_parents = ['Page']
-      model.klass = 'Yodel::Page'
+      #add_field :name, Function, fn: 'title'
+      pages.default_child_model = pages.id
+      pages.allowed_children = [pages]
+      pages.allowed_parents = [pages]
+      pages.record_class_name = 'Yodel::Page'
     end
   end
   

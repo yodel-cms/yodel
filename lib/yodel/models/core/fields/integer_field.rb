@@ -1,5 +1,9 @@
 module Yodel
   class IntegerField < Field
+    def numeric?
+      true
+    end
+    
     def json_action(action, value, record)
       case action
       when 'set'
@@ -9,8 +13,12 @@ module Yodel
       end
     end
     
+    def untypecast(value, record)
+      value.to_i
+    end
+    
     def from_json(value, record)
-      record.set_raw(name, value.to_i)
+      value.to_i
     end
   end
 end

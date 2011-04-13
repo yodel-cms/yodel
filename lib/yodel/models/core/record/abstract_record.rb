@@ -3,8 +3,8 @@ module Yodel
     attr_reader   :values, :typecast, :changed, :errors
     
     def initialize(values={})
-      @new      = values.empty?
-      @values   = default_values.merge(values)
+      @new      = values.blank?
+      @values   = default_values.merge(values.stringify_keys) # FIXME: don't merge here; default || values
       @typecast = {} # typecast versions of original document values
       @changed  = {} # typecast versions of changed values
     end
@@ -50,13 +50,15 @@ module Yodel
     # ----------------------------------------
     def inspect_hash
       fields.each_with_object({}) do |(name, field), hash|
-        value = get(name)
-        hash[name] = (value.respond_to?(:to_str) ? value.to_str : value.inspect)
+        hash[name] = get(name)
       end
     end
     
     def inspect
-      "#<#{self.class.name} #{inspect_hash.collect {|pair| pair.join(': ')}.join(', ')}>"
+      values = inspect_hash.collect do |name, value|
+        "#{name}: #{value.respond_to?(:to_str) ? value.to_str : value.inspect}"
+      end
+      "#<#{self.class.name} #{values.join(', ')}>"
     end
   
     def to_str
@@ -78,7 +80,7 @@ module Yodel
         if value.is_a?(Hash) && value.key?(:_action) && value.key?(:_value)
           current_field.json_action(value.delete(:_action), value.delete(:_value), self)
         else
-          current_field.from_json(value, self)
+          set_raw(name, current_field.from_json(value, self))
         end
       end
     
@@ -104,6 +106,10 @@ module Yodel
       ensure_field_is_valid(name)
       @values[name]
     end
+    
+    def get_meta(name)
+      @values[name]
+    end
   
     def set(name, value)
       ensure_field_is_valid(name)
@@ -115,6 +121,10 @@ module Yodel
       @values[name] = value
       @changed.delete(name)
       @typecast.delete(name)
+    end
+    
+    def set_meta(name, value)
+      @values[name] = value
     end
   
     def present?(name)
@@ -129,6 +139,7 @@ module Yodel
     
     def changed!(name)
       ensure_field_is_valid(name)
+      return if @changed.key?(name)
       @changed[name] = get(name)
     end
   
@@ -182,14 +193,24 @@ module Yodel
 
     def save_without_validation
       raise Yodel::DestroyedRecord if destroyed?
+      callback = "run_#{new? ? 'create' : 'update'}_callbacks"
       succeeded = false
-    
+      
       run_save_callbacks do
-        send("run_#{new? ? 'create' : 'update'}_callbacks") do
-          @changed.each do |name, value|
-            @values[name] = field(name).untypecast(value, self)
-            @typecast[name] = value
+        send(callback) do
+          
+          # untypecast all changed values to construct an up to date values hash
+          changed.each do |name, value|
+            changed_field = field(name)
+            untypecast_value = changed_field.untypecast(value, self)
+            if untypecast_value.nil? && changed_field.strip_nil?
+              values.delete(name)
+            else
+              values[name] = untypecast_value
+            end
+            typecast[name] = value
           end
+          
           succeeded = perform_save
         end
       end
@@ -212,6 +233,7 @@ module Yodel
   
     def update(values, do_save=true)
       raise Yodel::DestroyedRecord if destroyed?
+      values.stringify_keys!
       values.each do |name, value|
         if field(name).protected?
           raise Yodel::MassAssignment, "Cannot mass assign #{field}"
@@ -236,35 +258,27 @@ module Yodel
     # Callbacks & Validation
     # ----------------------------------------
     CALLBACKS = %w{save create update destroy validation}
+    ORDERS    = %w{before after}
     CALLBACKS.each do |callback|
+      ORDERS.each do |order|
+        eval "
+          @_#{order}_#{callback}_callbacks = []
+
+          def self._#{order}_#{callback}_callbacks
+            @_#{order}_#{callback}_callbacks
+          end
+
+          def self.#{order}_#{callback}(*callbacks)
+            @_#{order}_#{callback}_callbacks += callbacks
+          end
+
+          def run_#{order}_#{callback}_callbacks
+            self.class._#{order}_#{callback}_callbacks.each {|method| send method}
+          end
+        "
+      end
+      
       eval "
-        @_before_#{callback}_callbacks = []
-        @_after_#{callback}_callbacks = []
-      
-        def self._before_#{callback}_callbacks
-          @_before_#{callback}_callbacks
-        end
-      
-        def self._after_#{callback}_callbacks
-          @_after_#{callback}_callbacks
-        end
-      
-        def self.before_#{callback}(*callbacks)
-          @_before_#{callback}_callbacks += callbacks
-        end
-      
-        def self.after_#{callback}(*callbacks)
-          @_after_#{callback}_callbacks += callbacks
-        end
-      
-        def run_before_#{callback}_callbacks
-          self.class._before_#{callback}_callbacks.each {|method| send method}
-        end
-      
-        def run_after_#{callback}_callbacks
-          self.class._after_#{callback}_callbacks.each {|method| send method}
-        end
-      
         def run_#{callback}_callbacks(&block)
           run_before_#{callback}_callbacks          
           yield if block_given?
@@ -276,24 +290,52 @@ module Yodel
     def self.inherited(child)
       super(child)
       CALLBACKS.each do |callback|
-        before_callbacks = instance_variable_get("@_before_#{callback}_callbacks")
-        after_callbacks = instance_variable_get("@_after_#{callback}_callbacks")
-        child.instance_variable_set("@_before_#{callback}_callbacks", before_callbacks)
-        child.instance_variable_set("@_after_#{callback}_callbacks", after_callbacks)
+        ORDERS.each do |order|
+          callbacks = instance_variable_get("@_#{order}_#{callback}_callbacks")
+          child.instance_variable_set("@_#{order}_#{callback}_callbacks", callbacks)
+        end
       end
     end
   
     def valid?
-      valid = false
+      # validate all fields for new records; we know saved records should be
+      # valid so we can limit testing to the set of changed fields only
       run_validation_callbacks do
-        @errors = Hash.new {|hash, key| hash[key] = []}    
-        @changed.each {|name, value| field(name).validate(value, self, errors)}
-        valid = @errors.empty?
+        @errors = Hash.new {|hash, key| hash[key] = []}
+        unless new?
+          @changed.each {|name, value| field(name).validate(value, self, @errors)}
+        else
+          fields.each {|name, field| field.validate(get(field.name), self, @errors)}
+        end
+        @errors.empty?
       end
-      valid
     end
-  
-  
+    
+    def errors?
+      !@errors.blank?
+    end
+    
+    # Field callbacks
+    FIELD_CALLBACKS = %w{save create update destroy}
+    FIELD_CALLBACKS.each do |callback|
+      ORDERS.each do |order|
+        eval "
+          #{order}_#{callback} :trigger_field_#{order}_#{callback}_callbacks
+          def trigger_field_#{order}_#{callback}_callbacks
+            trigger_field_callback(:#{order}, :#{callback})
+          end
+        "
+      end
+    end
+    
+    def trigger_field_callback(order, action)
+      method = "#{order}_#{action}"
+      fields.each do |name, field|
+        field.send(method, self) if field.respond_to?(method)
+      end
+    end
+    
+    
     private
       def ensure_field_is_valid(name)
         raise Yodel::UnknownField, "Unknown field <#{name}>" unless field?(name)

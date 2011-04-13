@@ -5,11 +5,19 @@ module Yodel
   # updated. This is not an exhaustive list of ways to mutate an array,
   # just some common methods used in Yodel already.
   class ChangeSensitiveArray
-    attr_reader :array    
+    attr_reader :array
     def initialize(record, field, array)
       @record = record
       @field = field
       @array = array
+    end
+    
+    def inspect
+      @array.inspect
+    end
+    
+    def to_a
+      @array
     end
     
     def push(value)
@@ -37,9 +45,19 @@ module Yodel
       @array[index] = value
     end
     
+    def each(&block)
+      @array.each(&block)
+    end
+    
+    def method_missing(name, *args, &block)
+      @array.send(name, *args, &block)
+    end
+    
     private
       def notify!
-        @record.changed!(@field)
+        return if @notified
+        @record.try(:changed!, @field)
+        @notified = true
       end
   end
 end

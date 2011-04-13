@@ -1,15 +1,15 @@
 class EmailModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model 'Email', inherits: 'Record' do |model|
-      model.add_field :name, String
-      model.add_field :from, String
-      model.add_field :to, String
-      model.add_field :cc, String
-      model.add_field :bcc, String
-      model.add_field :subject, String
-      model.add_field :text_body, Text
-      model.add_field :html_body, HTMLCode
-      model.klass = 'Yodel::Email'
+    site.records.create_model :emails do |emails|
+      add_field :name, :string
+      add_field :from, :string
+      add_field :to, :string
+      add_field :cc, :string
+      add_field :bcc, :string
+      add_field :subject, :string
+      add_field :text_body, :text
+      add_field :html_body, :html
+      emails.record_class_name = 'Yodel::Email'
     end
     
     # template password reset email

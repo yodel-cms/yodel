@@ -1,5 +1,15 @@
 module Yodel
   class TimeField < Field
+    def before_create(record)
+      return unless name == 'created_at' || name == 'updated_at'
+      record.set(name, Time.now.utc)
+    end
+
+    def before_update(record)
+      return unless name == 'updated_at'
+      record.set(name, Time.now.utc)
+    end
+    
     def typecast(value, record)
       value.nil? ? nil : Time.at(value)
     end
@@ -9,10 +19,8 @@ module Yodel
     end
     
     def from_json(value, record)
-      # FIXME: ensure all required values exist in the value hash
-      time = Time.new(value['year'], value['month'], value['day'],
-                      value['hour'], value['min'], value['sec']).utc
-      record.set_raw(name, time)
+      nil unless ['year', 'month', 'day', 'hour', 'min', 'sec'].all? {|field| value.key?(field)}
+      Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], value['sec']).utc
     end
   end
 end

@@ -1,32 +1,32 @@
 class LayoutModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model 'Layout', inherits: 'Record' do |model|
-      model.add_field :name, String, required: true, index: true
-      model.add_field :mime_type, String, required: true, index: true
+    site.records.create_model :layouts do |layouts|
+      add_field :name, :string, required: true, index: true
+      add_field :mime_type, :string, required: true, index: true
       
-      model.allowed_children = []
-      model.allowed_parents = []
-      model.searchable = false
-      model.klass = 'Yodel::Layout'
+      layouts.allowed_children = []
+      layouts.allowed_parents = []
+      layouts.searchable = false
+      layouts.record_class_name = 'Yodel::Layout'
     end
     
-    site.models.create_model 'PersistentLayout', inherits: 'Layout' do |model|
-      model.add_field :markup, HTMLCode, required: true
-      model.add_field :pages, Many, of: 'Page', foreign_key: 'page_layout_record'
+    site.layouts.create_model :persistent_layouts do |persistent_layouts|
+      add_field :markup, :html, required: true
+      many      :pages, store: false, foreign_key: 'page_layout_record'
       
-      model.allowed_children = ['PersistentLayout']
-      model.allowed_parents = ['PersistentLayout']
-      model.searchable = false
-      model.klass = 'Yodel::PersistentLayout'
+      persistent_layouts.allowed_children = [persistent_layouts]
+      persistent_layouts.allowed_parents = [persistent_layouts]
+      persistent_layouts.searchable = false
+      persistent_layouts.record_class_name = 'Yodel::PersistentLayout'
     end
     
-    site.models.create_model 'FileLayout', inherits: 'Layout' do |model|
-      model.add_field :path, String, required: true
+    site.layouts.create_model :file_layouts do |file_layouts|
+      add_field :path, :string, required: true
       
-      model.allowed_children = ['FileLayout']
-      model.allowed_parents = ['FileLayout']
-      model.searchable = false
-      model.klass = 'Yodel::FileLayout'
+      file_layouts.allowed_children = [file_layouts]
+      file_layouts.allowed_parents = [file_layouts]
+      file_layouts.searchable = false
+      file_layouts.record_class_name = 'Yodel::FileLayout'
     end
   end
   

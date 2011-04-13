@@ -1,5 +1,5 @@
 module Yodel
   class FilteredTextField < TextField
-    include FilterMixin
+    include Yodel::FilterMixin
   end
 end

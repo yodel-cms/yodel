@@ -10,7 +10,7 @@ module Yodel
     end
   
     def from_json(value, record)
-      record.set_raw(name, !!value)
+      !!value
     end
   end
 end

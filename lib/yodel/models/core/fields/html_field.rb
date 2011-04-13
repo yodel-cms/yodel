@@ -1,7 +1,7 @@
 module Yodel
   class HTMLField < TextField
     def search_terms_set(html)
-      String.search_terms_set(to_text(html))
+      super(to_text(html))
     end
 
     def to_text(html)

@@ -20,12 +20,19 @@ component 'yodel' do
       :'::Yodel::PersistentLayout',
       :'::Yodel::FileLayout'
     ]
+    file 'models/core/fields/html_field.rb', provides: :'::Yodel::HTMLField'
+    
+    # TODO: need to have a subfolder here
+    file 'models/core/validations/excluded_from_validation.rb', preload: true
+    file 'models/core/validations/excludes_combination_validation.rb', preload: true
+    file 'models/core/validations/format_validation.rb', preload: true
+    file 'models/core/validations/included_in_validation.rb', preload: true
+    file 'models/core/validations/includes_combination_validation.rb', preload: true
+    file 'models/core/validations/length_validation.rb', preload: true
+    file 'models/core/validations/required_validation.rb', preload: true
+    file 'models/core/validations/unique_validation.rb', preload: true
   end
   
-  folder 'types', nested_namespaces: false, preload: true do
-    file 'css.rb', provides: :CSS
-    file 'html.rb', provides: :HTML
-    file 'html_code.rb', provides: :HTMLCode
-    #file 'object_id.rb', provides: :'::BSON::ObjectId'
-  end
+  # object extensions for json conversion
+  folder 'types', nested_namespaces: false, preload: true
 end

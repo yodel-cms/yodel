@@ -1,11 +1,15 @@
 module Yodel
   class StringField < Field
     def search_terms_set(str)
-      str.gsub(/\W+/, ' ').split
+      str.to_s.gsub(/\W+/, ' ').split
+    end
+    
+    def untypecast(value, record)
+      value.nil? ? nil : value.to_s
     end
     
     def from_json(value, record)
-      record.set_raw(name, value.to_s)
+      value.to_s
     end
   end
 end

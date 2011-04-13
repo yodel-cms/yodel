@@ -1,49 +1,28 @@
 class SearchPageModelMigration < Yodel::Migration
   def self.up(site)
-    site.models.create_model 'SearchPage', inherits: 'Page' do |model|
-      model.add_field :conditions, Embedded, fields: [
-        {
-          name: :field,
-          type: String
-        },
-        {
-          name: :value,
-          type: String
-        },
-        {
-          name: :type,
-          type: String
-        },
-        {
-          name: :operator,
-          type: Enum,
-          values: ['Equals', 'Not Equal', 'Greater Than', 'Less Than', 'Greater Than or Equal To', 'Less Than or Equal To', 'In']
-        }
-      ]
-      model.add_field :sort, String, searchable: false
-      model.add_field :limit, Integer
-      model.add_field :skip, Integer
-      model.add_field :type, Reference, to: 'Model', default: nil
-      model.add_field :user_conditions, Embedded, fields: [
-        {
-          name: :field,
-          type: String
-        },
-        {
-          name: :as,
-          type: String
-        },
-        {
-          name: :type,
-          type: String
-        },
-        {
-          name: :operator,
-          type: Enum,
-          values: ['Equals', 'Not Equal', 'Greater Than', 'Less Than', 'Greater Than or Equal To', 'Less Than or Equal To', 'In']
-        }
-      ], default: [{field: 'search_keywords', type: 'String', as: 'query', operator: 'In'}]
-      model.klass = 'Yodel::SearchPage'
+    operators = [ 'Equals', 'Not Equal', 'Greater Than',
+                  'Less Than', 'Greater Than or Equal To',
+                  'Less Than or Equal To', 'In']
+                  
+    site.pages.create_model :search_pages do |search_pages|
+      add_field :sort, :string, searchable: false
+      add_field :limit, :integer
+      add_field :skip, :integer
+      one       :type, model: :model
+      
+      embed_many :conditions do
+        add_field :field, :string
+        add_field :value, :string
+        add_field :operator, :enum, options: operators
+      end
+      
+      embed_many :user_conditions, default: [{field: 'search_keywords', as: 'query', operator: 'In'}] do
+        add_field :field, :string
+        add_field :as, :string
+        add_field :operator, :enum, options: operators
+      end
+      
+      search_pages.record_class_name = 'Yodel::SearchPage'
     end
   end
   

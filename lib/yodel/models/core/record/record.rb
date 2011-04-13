@@ -1,12 +1,13 @@
 module Yodel
-  class Record < MongoModel
-    collection    'records'
-    attr_reader   :model, :mixins
+  class Record < Yodel::SiteRecord
+    collection    :records
+    attr_reader   :model_record, :mixins
     attr_accessor :real_record
 
     def initialize(model, site, values={})
+      @model_record = model
       @site = site
-      @model  = create_eigenmodel(model, values)
+      @model  = load_model(model, values)
       @mixins = create_mixin_instances(values)
       super(site, values)
 
@@ -18,7 +19,39 @@ module Yodel
     end
 
     def to_str
-      "#<#{self.model.name}: #{id}>"
+      "#<#{model.name}: #{id}>"
+    end
+    
+    def default_values
+      super.merge({'model' => model_record.id})
+    end
+    
+    def collection
+      Yodel::Record.collection
+    end    
+    
+    
+    # ----------------------------------------
+    # Permissions
+    # ----------------------------------------
+    def user_allowed_to?(user, action)
+      model.user_allowed_to?(user, action, model)
+    end
+  
+    def user_allowed_to_view?(user)
+      model.user_allowed_to?(user, :view, model)
+    end
+  
+    def user_allowed_to_update?(user)
+      model.user_allowed_to?(user, :update, model)
+    end
+  
+    def user_allowed_to_delete?(user)
+      model.user_allowed_to?(user, :delete, model)
+    end
+  
+    def user_allowed_to_create?(user)
+      model.user_allowed_to?(user, :create, model)
     end
 
     
@@ -26,34 +59,26 @@ module Yodel
     # Modelling
     # ----------------------------------------
     def fields
-      model.all_record_fields
-    end
-    
-    def default_values
-      { '_model' => model.name,
-        '_parent_id' => nil,
-        '_index' => nil,
-        '_eigenmodel' => []
-      }.merge(super)
+      @fields ||= @model.all_record_fields
     end
     
     def inspect_hash
-      {model: model_name, parent: parent_id, index: index}.merge(super)
+      {model: model_record, parent: parent, index: index}.merge(super)
     end
   
-    def create_eigenmodel(model, values)
-      if values.key?('_eigenmodel') && !values['_eigenmodel'].empty?
-        model # FIXME: generate once off model instance for this record
-      else
+    def load_model(model, values)
+      if values['eigenmodel'].nil?
         model
+      else
+        model # fixme: load eigenmodel
       end
     end
   
     def create_mixin_instances(values)
-      return [] if model.nil?
-      model.mixins.collect do |model_name|
-        mixin_model = site.model(model_name)
-        mixin_model.klass.new(mixin_model, values, site)
+      return [] if @model.nil?
+      @model.mixins.collect do |model_id|
+        mixin_model = site.models.find(model_id)
+        mixin_model.record_class.new(mixin_model, values, site)
       end.compact
     end
   
@@ -89,6 +114,10 @@ module Yodel
         end
       end
     end
+    
+    def default_child_model
+      model.default_child_model
+    end
         
     # def add_field(name, type, options={})
     #   name = name.to_s
@@ -106,27 +135,6 @@ module Yodel
     
     
     # ----------------------------------------
-    # Accessors
-    # ----------------------------------------
-    def model_name;     @values['_model']; end
-    def parent_id=(i);  @values['_parent_id'] = i; end
-    def parent_id;      @values['_parent_id']; end
-    def index=(i);      @values['_index'] = i; end
-    def index;          @values['_index']; end
-    
-    # parent acts as an association
-    def parent
-      return nil if model.nil?
-      @parent ||= model.unscoped.first(_id: @values['_parent_id'])
-    end
-    
-    def parent=(parent_record)
-      @values['_parent_id'] = parent_record.nil? ? nil : parent_record.id
-      @parent = parent_record
-    end
-
-    
-    # ----------------------------------------
     # Hierarchical methods
     # ----------------------------------------
     # insertion and deletion to maintin the integrity of the 'index' field
@@ -142,15 +150,15 @@ module Yodel
     # FIXME: these need to be atomic ops over the whole set of children
     def insert_in_siblings(new_index)
       remove_from_siblings if index
-      siblings.where(:_index.gte => new_index).each do |sibling|
-        sibling.increment!(:_index)
+      siblings.where(:index.gte => new_index).each do |sibling|
+        sibling.increment!(:index)
       end
       self.index = new_index
     end
 
     def remove_from_siblings
-      siblings.where(:_index.gte => index).each do |sibling|
-        sibling.increment!(:_index, -1)
+      siblings.where(:index.gte => index).each do |sibling|
+        sibling.increment!(:index, -1)
       end
       self.index = nil
       self.parent = nil
@@ -158,17 +166,17 @@ module Yodel
     
     # Children of this record (other records which have this record as a parent)
     def children
-      model.unscoped.where(_parent_id: id).order('_index asc')
+      model.unscoped.where(parent: id).order('index asc')
     end
         
     # Siblings of this record (other records with the same parent)
     def siblings
-      unless parent_id.nil?
-        model.unscoped.where(:_parent_id => parent_id, :_id.ne => id).order('_index asc')
+      unless parent.nil?
+        model.unscoped.where(:parent => get_raw('parent'), :_id.ne => id).order('index asc')
       else
         # A parent ID of nil indicates this record is the root of a tree. Since there
         # are multiple trees (including the model tree), a sibling query makes no sense.
-        model.unscoped.where(:_id => id)
+        model.unscoped.where(:nonexistant_field => 'true')
       end
     end
     
@@ -185,7 +193,7 @@ module Yodel
     
     # True if this record has no parent
     def root?
-      parent_id.nil?
+      parent.nil?
     end
     
     
@@ -197,15 +205,11 @@ module Yodel
       return unless model.searchable?
       search_terms = Set.new
       
-      each_field_with_options do |field|
+      fields.each do |name, field|
         # TODO: we should cache somewhere which types do and do not contain the search_terms_set
         # method; this can also be used to automatically populate the searchable option on fields
-        type = Object.module_eval(field.type)
-        next if field.searchable == false || !type.respond_to?(:search_terms_set)
-        
-        value = get_field(field.name)
-        next if value.nil?
-        search_terms.merge(type.search_terms_set(value).collect(&:downcase))
+        next unless field.searchable? && field.respond_to?(:search_terms_set)
+        search_terms.merge(field.search_terms_set(get(field.name)).collect(&:downcase))
       end
       
       self.search_keywords = search_terms.to_a

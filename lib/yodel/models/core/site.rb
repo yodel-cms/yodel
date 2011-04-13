@@ -16,6 +16,11 @@ module Yodel
       @document = document || DEFAULT_DOCUMENT
       @cached_records = {}
       @cached_models = {}
+      
+      # static models
+      @models = Yodel::Model.scoped_for(self)
+      @cached_models['Model'] = @cached_models['models'] = @models
+      @cached_models['Trigger'] = @cached_models['triggers'] = Yodel::Trigger.scoped_for(self)
     end
     
     
@@ -39,7 +44,7 @@ module Yodel
     # TODO: a better interface is site.options.name.option; site.options.pages.permalink_character
     def option(path)
       component, option = path.split('.')
-      options[component].try(:fetch, 'options', nil).try(:fetch, option, nil).try(:fetch, 'value', nil)
+      options[component].try(:fetch, option, nil).try(:fetch, 'value', nil)
     end
     
     
@@ -112,7 +117,7 @@ module Yodel
       return nil if model_id.nil?
       
       # perform a lookup; nil will be returned if the model doesn't exist
-      model = Yodel::Model.find_by(self, _id: model_id)
+      model = @models.find(model_id)
       @cached_models[name] = model
       @cached_models[model.name] = model
       @cached_records[model.id] = model

@@ -19,12 +19,12 @@ module Yodel
     # could change on every update of the page).
     before_validation :assign_permalink
     def assign_permalink
-      return unless (title_changed? && title?) || (!title.nil? && @document['title'].nil?)
+      return unless (title_changed? && title?) || (!title.nil? && values['title'].nil?)
       
       # until we detect changes to fields used by cached functions, force a refresh of the value
-      generate_unloaded_field('title') if field_options('title').type == 'Function'
+      generate_unloaded_field('title') if field('title').type == 'Function'
       
-      base_permalink = title.parameterize(site.option('pages.permalink_character'))
+      base_permalink = title.parameterize(site.option('pages.permalink_character') || '-')
       suffix = ''
       count  = 0
       
@@ -138,7 +138,7 @@ module Yodel
       
       # process the response and set headers
       response.write mime_type.process(data)
-      response['Content-Type'] = mime_type.default_mime_type
+      response['Content-Type'] = "#{mime_type.default_mime_type}; charset=utf-8"
       
       # write the flash to the session if appropriate
       @flash.finalize if @flash
@@ -241,13 +241,10 @@ module Yodel
       binding
     end
     
-    def user_permitted_to?(action)
-      group = get_field("#{action}_group")
-      
-      # users are permitted if no group is provided, or the group contains the user
-      return true if group.nil? || group.permitted?(current_user, self)
-      
-      # otherwise the user is not permitted to perform the action
+    def user_allowed_to?(user, action)
+      allowed = super
+      return true if allowed
+
       session[:redirect_to_after_login] = self.path
       response.redirect site.login_pages.first.path
       flash[:permission_denied] = action
@@ -257,14 +254,14 @@ module Yodel
     # show
     respond_to :get do
       with :html do
-        return unless user_permitted_to?(:view)
+        return unless user_allowed_to?(:view)
         render_or_default(:html) do
           "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
         end
       end
       
       with :json do
-        return unless user_permitted_to?(:view)
+        return unless user_allowed_to?(:view)
         render_or_default(:json) do
           to_json
         end
@@ -274,13 +271,13 @@ module Yodel
     # destroy
     respond_to :delete do
       with :html do
-        return unless user_permitted_to?(:delete)
+        return unless user_allowed_to?(:delete)
         response.redirect parent ? parent.path : '/'
         destroy
       end
       
       with :json do
-        return unless user_permitted_to?(:delete)
+        return unless user_allowed_to?(:delete)
         destroy
         {success: true}
       end
@@ -289,7 +286,7 @@ module Yodel
     # update
     respond_to :put do
       with :html do
-        return unless user_permitted_to?(:update)
+        return unless user_allowed_to?(:update)
         
         # update the page assuming a form created by to_form
         path_was = path
@@ -305,7 +302,7 @@ module Yodel
       end
       
       with :json do
-        return unless user_permitted_to?(:update)
+        return unless user_allowed_to?(:update)
         from_json(JSON.parse(params['record']))
         success = save
         render_or_default(:json) do
@@ -319,7 +316,7 @@ module Yodel
     # create child
     respond_to :post do
       with :html do
-        return unless user_permitted_to?(:create)
+        return unless user_allowed_to?(:create)
         new_page = default_child_model.new
         new_page.parent = self
         new_page.from_form(params)
@@ -340,7 +337,7 @@ module Yodel
       end
       
       with :json do
-        return unless user_permitted_to?(:create)
+        return unless user_allowed_to?(:create)
         new_page = default_child_model.new
         new_page.parent = self
         new_page.from_json(params['record'])
