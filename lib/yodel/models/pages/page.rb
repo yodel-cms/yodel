@@ -29,7 +29,7 @@ module Yodel
       count  = 0
       
       # ensure other pages don't have the same path as this page
-      page_siblings = siblings
+      page_siblings = siblings.select {|record| record.respond_to?(:permalink)}
       while page_siblings.any? {|page| page.permalink == base_permalink + suffix}
         count += 1
         suffix = "_#{count}"
@@ -226,7 +226,7 @@ module Yodel
     end
     
     def content
-      @content ||= get_field('content')
+      @content ||= get('content')
     end
     
     def set_content(content)
@@ -241,8 +241,8 @@ module Yodel
       binding
     end
     
-    def user_allowed_to?(user, action)
-      allowed = super
+    def user_allowed_to?(action)
+      allowed = super(current_user, action)
       return true if allowed
 
       session[:redirect_to_after_login] = self.path

@@ -18,14 +18,13 @@ module Yodel
       {site_id: site_id}.merge(super)
     end
     
-    def perform_reload(id)
-      load_mongo_document(_id: id)
+    def perform_reload(params)
+      document = load_mongo_document(_id: params[:id])
+      initialize(params[:site], document)
     end
     
-    def reload
-      _site = site
-      document = super
-      initialize(_site, document)
+    def prepare_reload_params
+      super.tap {|vals| vals[:site] = site}
     end
   end
 end

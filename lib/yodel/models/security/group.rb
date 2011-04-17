@@ -2,7 +2,7 @@ module Yodel
   class Group < Record
     def match_user_on_record?(user, record)
       return false if user.nil?
-      user.raw_values['groups'].include? id
+      user.values['groups'].include? id
     end
     
     def permitted?(user, record)

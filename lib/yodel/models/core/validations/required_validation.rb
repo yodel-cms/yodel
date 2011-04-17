@@ -1,12 +1,11 @@
 module Yodel
   class RequiredValidation < Validation
-    def self.validate(field, value, record, errors)
-      return unless field.required?
-      errors[field] << self if value.blank?
+    def self.validate(params, field, name, value, record, errors)
+      errors[field] << new(params, name) if (value.blank? && !value.is_a?(FalseClass))
     end
   
-    def self.describe(field)
-      "#{field.name.humanize} is required"
+    def describe
+      "#{field} is required"
     end
   end
 end

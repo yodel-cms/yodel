@@ -1,5 +1,12 @@
 module Yodel
   module ManyAssociation
+    def search_terms_set(record)
+      return [] unless include_in_search_keywords?
+      record.get(name).collect do |embedded_record|
+        embedded_record.search_terms
+      end.flatten
+    end
+    
     def before_destroy(record)
       if @options['destroy'] == true
         record.get(name).each(&:destroy)
@@ -7,25 +14,7 @@ module Yodel
     end
     
     def typecast(value, record)
-      return Yodel::ChangeSensitiveArray.new(record, name, []) if value.blank?
-      raise "ManyAssociation values must be enumerable (#{name})" unless value.respond_to?(:each)
       Yodel::ChangeSensitiveArray.new(record, name, all(value, record))
-    end
-    
-    def untypecast(value, record)
-      return nil if value.blank?
-      raise "ManyAssociation values must be enumerable (#{name})" unless value.respond_to?(:each)
-      
-      store = record.get_raw(name)
-      clear(store, record)
-      value.each do |associated_record|
-        associate(associated_record, store, record)
-      end
-      store
-    end
-    
-    def default
-      @options['default'] || []
     end
   end
 end

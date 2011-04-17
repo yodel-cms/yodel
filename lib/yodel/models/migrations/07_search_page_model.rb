@@ -8,16 +8,16 @@ class SearchPageModelMigration < Yodel::Migration
       add_field :sort, :string, searchable: false
       add_field :limit, :integer
       add_field :skip, :integer
-      one       :type, model: :model
+      add_one   :type, model: :model
       
-      embed_many :conditions do
-        add_field :field, :string
+      add_embed_many :conditions do
+        add_field :name, :string
         add_field :value, :string
         add_field :operator, :enum, options: operators
       end
       
-      embed_many :user_conditions, default: [{field: 'search_keywords', as: 'query', operator: 'In'}] do
-        add_field :field, :string
+      add_embed_many :user_conditions, default: [{name: 'search_keywords', as: 'query', operator: 'In'}] do
+        add_field :name, :string
         add_field :as, :string
         add_field :operator, :enum, options: operators
       end

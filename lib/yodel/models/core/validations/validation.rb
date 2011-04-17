@@ -1,17 +1,36 @@
 module Yodel
   class Validation
-    @validations = []
-  
-    def self.validate(field, value, record, errors)
-      @validations.each {|validation| validation.validate(field, value, record, errors)}
+    attr_accessor :params, :field
+    
+    def self.validate(type, params, field, name, value, record, errors)
+      validation = case type
+      when 'excluded_from'
+        Yodel::ExcludedFromValidation
+      when 'excludes_combinations'
+        Yodel::ExcludesCombinationsValidation
+      when 'format'
+        Yodel::FormatValidation
+      when 'included_in'
+        Yodel::IncludedInValidation
+      when 'includes_combinations'
+        Yodel::IncludesCombinationsValidation
+      when 'length'
+        Yodel::LengthValidation
+      when 'required'
+        Yodel::RequiredValidation
+      when 'unique'
+        Yodel::UniqueValidation
+      end
+      validation.validate(params, field, name, value, record, errors)
+    end
+    
+    def initialize(params, field)
+      @params = params
+      @field = field
     end
   
-    def self.describe(field)
-      "#{field.name.humanize} is invalid"
-    end
-  
-    def self.inherited(validation)
-      @validations << validation
+    def describe
+      "#{field} is invalid"
     end
   end
 end

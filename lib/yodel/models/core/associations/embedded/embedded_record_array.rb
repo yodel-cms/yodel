@@ -1,7 +1,7 @@
 module Yodel
   class EmbeddedRecordArray < Yodel::ChangeSensitiveArray
-    def new
-      Yodel::EmbeddedRecord.new(@field, @record)
+    def new(values={})
+      Yodel::EmbeddedRecord.new(@field, @record).tap {|record| record.update(values, false)}
     end
     
     private

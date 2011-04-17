@@ -18,6 +18,7 @@ module Yodel
       form_for(record_model.new, options, &block)
     end
     
+    # FIXME: need to include auth checks
     
     # FIXME: a lot of this code is duplicated between html/json, need a way to
     # extract common code to something like

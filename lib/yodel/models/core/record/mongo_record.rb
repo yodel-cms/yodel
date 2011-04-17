@@ -34,8 +34,9 @@ module Yodel
       false
     end
     
-    def perform_reload(id)
-      initialize(load_mongo_document(_id: id))
+    def perform_reload(params)
+      document = load_mongo_document(_id: params[:id])
+      initialize(document)
     end
   
     def load_mongo_document(scope)

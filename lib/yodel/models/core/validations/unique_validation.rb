@@ -1,12 +1,11 @@
 module Yodel
   class UniqueValidation < Validation
-    def self.validate(field, value, record, errors)
-      return unless field.unique?
-      errors[field] << self if record.model.exists?(field.name => value, :_id.ne => record.id)
+    def self.validate(params, field, name, value, record, errors)
+      errors[field] << new(params, name) if record.model.exists?(field.name => value, :_id.ne => record.id)
     end
   
-    def self.describe(field)
-      "#{field.name.humanize} must be unique"
+    def describe
+      "#{field} must be unique"
     end
   end
 end

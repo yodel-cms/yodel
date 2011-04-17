@@ -4,6 +4,7 @@ module Yodel
     
     # TODO: this should automatically be generated
     TYPES = {
+      'alias' => Yodel::AliasField,
       'array' => Yodel::ArrayField,
       'boolean' => Yodel::BooleanField,
       'date' => Yodel::DateField,
@@ -13,10 +14,12 @@ module Yodel
       'fields' => Yodel::FieldsField,
       'filtered_string' => Yodel::FilteredStringField,
       'filtered_text' => Yodel::FilteredTextField,
+      'function' => Yodel::FunctionField,
       'hash' => Yodel::HashField,
       'html' => Yodel::HTMLField,
       'integer' => Yodel::IntegerField,
       'password' => Yodel::PasswordField,
+      'self' => Yodel::SelfField,
       'string' => Yodel::StringField,
       'tags' => Yodel::TagsField,
       'text' => Yodel::TextField,
@@ -46,16 +49,15 @@ module Yodel
     # searchable => true/false
     # protected => true/false (unable to mass assign to this field if true)
     # section => string (nil or a section name used in admin)
-    # required => true/false
-    # unique => true/false
-    # length => [N, N] (range)
-    # format => '/regex/'
-    # included_in => array of values
     #
     # Some field types may have other options, such as embedded fields.
     def initialize(name, options={})
       @name = name
-      @options = options.stringify_keys
+      @options = options
+    end
+    
+    def to_str
+      "#<#{self.class.name} #{name}>"
     end
   
     def display?
@@ -82,16 +84,29 @@ module Yodel
       @options['index'] == true
     end
     
+    def inherited?
+      @options['inherited'] == true
+    end
+    
     def numeric?
       false
+    end
+    
+    def include_in_search_keywords?
+      @options['include_in_search_keywords'] == true
     end
   
     def method_missing(name, *args, &block)
       @options[name.to_s]
     end
   
-    def validate(value, record, errors)
-      Yodel::Validation.validate(self, value, record, errors)
+    def validate(record, errors)
+      return if @options['validations'].blank?
+      value = record.get(name)
+      field_name = name.humanize
+      @options['validations'].each do |type, params|
+        Yodel::Validation.validate(type, params, self, field_name, value, record, errors)
+      end
     end
     
     # Convert from an untypecast (raw) representation of a value to a

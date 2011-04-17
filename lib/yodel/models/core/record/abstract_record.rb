@@ -41,7 +41,12 @@ module Yodel
     end
   
     def default_values
-      fields.each_with_object({}) {|(name, field), defaults| defaults[name] = field.default}
+      fields.each_with_object({}) do |(name, field), defaults|
+        default_value = field.default
+        unless default_value.nil? && field.strip_nil?
+          defaults[name] = default_value
+        end
+      end
     end
     
     
@@ -56,9 +61,20 @@ module Yodel
     
     def inspect
       values = inspect_hash.collect do |name, value|
-        "#{name}: #{value.respond_to?(:to_str) ? value.to_str : value.inspect}"
+        if value.is_a?(Array) || value.is_a?(Yodel::ChangeSensitiveArray)
+          value = "[#{value.collect {|element| inspect_value(element)}.join(', ')}]"
+        elsif value.is_a?(Hash) || value.is_a?(Yodel::ChangeSensitiveHash)
+          value = "{#{value.to_hash.collect {|key, value| "#{key.to_s}: #{inspect_value(value)}"}.join(', ')}}"
+        else
+          value = inspect_value(value)
+        end
+        "#{name}: #{value}"
       end
       "#<#{self.class.name} #{values.join(', ')}>"
+    end
+    
+    def inspect_value(value)
+      value.respond_to?(:to_str) && !value.is_a?(String) ? value.to_str : value.inspect.to_s
     end
   
     def to_str
@@ -126,8 +142,9 @@ module Yodel
     def set_meta(name, value)
       @values[name] = value
     end
-  
+    
     def present?(name)
+      # FIXME: this doesn't work for many/one store: false
       ensure_field_is_valid(name)
       !get(name).blank?
     end
@@ -235,6 +252,7 @@ module Yodel
       raise Yodel::DestroyedRecord if destroyed?
       values.stringify_keys!
       values.each do |name, value|
+        ensure_field_is_valid(name)
         if field(name).protected?
           raise Yodel::MassAssignment, "Cannot mass assign #{field}"
         else
@@ -246,11 +264,15 @@ module Yodel
   
     def reload
       return if new? || destroyed?
-      _id = id
+      reload_params = prepare_reload_params
       
       # remove all instance variables and re-initialise
       instance_variables.each {|var| remove_instance_variable(var)}
-      perform_reload(_id)
+      perform_reload(reload_params)
+    end
+    
+    def prepare_reload_params
+      {id: id}
     end
   
   
@@ -303,12 +325,12 @@ module Yodel
       run_validation_callbacks do
         @errors = Hash.new {|hash, key| hash[key] = []}
         unless new?
-          @changed.each {|name, value| field(name).validate(value, self, @errors)}
+          @changed.each {|name, value| field(name).validate(self, @errors)}
         else
-          fields.each {|name, field| field.validate(get(field.name), self, @errors)}
+          fields.each {|name, field| field.validate(self, @errors)}
         end
-        @errors.empty?
       end
+      @errors.empty?
     end
     
     def errors?
@@ -333,6 +355,23 @@ module Yodel
       fields.each do |name, field|
         field.send(method, self) if field.respond_to?(method)
       end
+    end
+    
+    
+    # ----------------------------------------
+    # Search
+    # ----------------------------------------
+    def search_terms
+      search_terms = Set.new
+      
+      fields.each do |name, field|
+        # TODO: we should cache somewhere which types do and do not contain the search_terms_set
+        # method; this can also be used to automatically populate the searchable option on fields
+        next unless field.searchable? && field.respond_to?(:search_terms_set)
+        search_terms.merge(field.search_terms_set(self).collect(&:downcase))
+      end
+      
+      search_terms.to_a
     end
     
     

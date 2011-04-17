@@ -7,6 +7,12 @@ module Yodel
     # records are destroyed as part of the parent anyway
     undef :before_destroy
     
+    def search_terms_set(record)
+      record.get(name).collect do |embedded_record|
+        embedded_record.search_terms
+      end.flatten
+    end
+    
     def options
       super.merge({'type' => 'many_embedded'})
     end
@@ -31,10 +37,26 @@ module Yodel
       store.delete(embedded_record)
     end
     
+    def untypecast(value, record)
+      return nil if value.blank?
+      raise "ManyEmbeddedAssociation values must be enumerable (#{name})" unless value.respond_to?(:each)
+      
+      store = record.get_raw(name)
+      clear(store, record)
+      value.each do |associated_record|
+        associate(associated_record, store, record)
+      end
+      store
+    end
+    
+    def default
+      @options['default'] || []
+    end
+    
     def typecast(value, record)
       return Yodel::EmbeddedRecordArray.new(record, self, []) if value.blank?
       raise "ManyEmbedded values must be enumerable (#{name})" unless value.respond_to?(:each)
-      Yodel::EmbeddedRecordArray.new(record, name, all(value, record))
+      Yodel::EmbeddedRecordArray.new(record, self, all(value, record))
     end
   end
 end

@@ -1,7 +1,7 @@
 module Yodel
   class Association < Field    
-    def validate(value, record, errors)
-      true
+    def validate(record, errors)
+      # noop
     end
     
     def json_action(action, value, record)

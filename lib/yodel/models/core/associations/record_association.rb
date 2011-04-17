@@ -7,8 +7,7 @@ module Yodel
       end
       
       def foreign_key(record)
-        @foreign_key ||= (options['foreign_key'] || record.try(:model_name).to_s.underscore)
-        @foreign_key or raise "Records with no model name must specify a foreign_key on query associations"
+        @foreign_key ||= (options['foreign_key'] || model_name.to_s.underscore)
       end
       
       def model_name

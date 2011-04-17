@@ -1,13 +1,12 @@
 module Yodel
   class ExcludedFromValidation < Validation
-    def self.validate(field, value, record, errors)
-      prohibited_values = field.excluded_from
-      return if prohibited_values.blank?
-      errors[field] << self if prohibited_values.include?(value)
+    def self.validate(params, field, name, value, record, errors)
+      prohibited_values = params['prohibited_values']
+      errors[field] << new(prohibited_values, name) if prohibited_values.include?(value)
     end
   
-    def self.describe(field)
-      "#{field.name.humanize} must not be: #{field.excluded_from.join(', ')}"
+    def describe
+      "#{field} must not be: #{params.join(', ')}"
     end
   end
 end

@@ -3,13 +3,14 @@ class UserModelMigration < Yodel::Migration
     site.records.create_model :users do |users|
       add_field :first_name, :string, searchable: false
       add_field :last_name, :string, searchable: false
-      add_field :email, :email, required: true, unique: true, searchable: false
-      add_field :username, :string, required: true, index: true, unique: true, searchable: false
-      add_field :password, :password, required: true, searchable: false
+      add_field :email, :email, validations: {required: {}, unique: {}}, searchable: false
+      add_field :username, :string, index: true, validations: {required: {}, unique: {}}, searchable: false
+      add_field :password, :password, validations: {required: {}}, searchable: false
       add_field :password_salt, :string, display: false, searchable: false
-      many      :groups, default: [site.groups['Users'].id]
+      add_many  :groups, default: [site.groups['Users'].id]
+      add_field :owner, :self
       
-      #add_field :name, Function, fn: '"#{first_name} #{last_name}".strip'
+      add_field :name, :function, fn: 'format("{{first_name}} {{last_name}}").strip()'
       users.icon = '/admin/images/user_icon.png'
       users.record_class_name = 'Yodel::User'
     end

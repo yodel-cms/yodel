@@ -36,9 +36,7 @@ module Yodel
     
     private
       def notify!
-        return if @notified
         @record.try(:changed!, @field)
-        @notified = true
       end
   end
 end

@@ -6,8 +6,8 @@ module Yodel
     
     def field(name, type, options={})
       type = type.to_s
-      options.stringify_keys!
-      fields[name.to_s] = Yodel::Field.field_from_type(type).new(name.to_s, {'type' => type}.merge(options))
+      options = deep_stringify_keys({'type' => type}.merge(options))
+      fields[name.to_s] = Yodel::Field.field_from_type(type).new(name.to_s, options)
     end
     alias :add_field :field
     
@@ -24,15 +24,27 @@ module Yodel
     alias :add_embed_one :embed_one
     
     def many(name, options={})
-      type = (options[:store] == false) ? 'many_query' : 'many_store'
+      type = query_association?(options) ? 'many_query' : 'many_store'
       field(name, type, options)
     end
     alias :add_many :many
     
     def one(name, options={})
-      type = (options[:store] == false) ? 'one_query' : 'one_store'
+      type = query_association?(options) ? 'one_query' : 'one_store'
       field(name, type, options)
     end
     alias :add_one :one
+    
+    
+    protected
+      def query_association?(options)
+        options[:store] == false || [:foreign_key, :extends, :through].any? {|opt| options[opt].present?}
+      end
+      
+      def deep_stringify_keys(hash)
+        hash.each_with_object({}) do |(key, value), new_hash|
+          new_hash[key.to_s] = (value.respond_to?(:to_hash) ? deep_stringify_keys(value) : value)
+        end
+      end
   end
 end

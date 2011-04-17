@@ -1,7 +1,7 @@
 module Yodel
   class StringField < Field
-    def search_terms_set(str)
-      str.to_s.gsub(/\W+/, ' ').split
+    def search_terms_set(record)
+      record.get(name).to_s.gsub(/\W+/, ' ').split
     end
     
     def untypecast(value, record)

@@ -5,6 +5,6 @@ module Yodel
     
     def untypecast(value, record)
       value.respond_to?(:id) ? value.id : nil
-    end    
+    end
   end
 end

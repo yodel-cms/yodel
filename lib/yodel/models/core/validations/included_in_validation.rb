@@ -1,13 +1,12 @@
 module Yodel
   class IncludedInValidation < Validation
-    def self.validate(field, value, record, errors)
-      valid_values = field.included_in
-      return if valid_values.blank?
-      errors[field] << self unless valid_values.include?(value)
+    def self.validate(params, field, name, value, record, errors)
+      valid_values = params['valid_values']
+      errors[field] << new(valid_values, name) unless valid_values.include?(value)
     end
   
-    def self.describe(field)
-      "#{field.name.humanize} must be one of: #{field.included_in.join(', ')}"
+    def describe
+      "#{field} must be one of: #{params.join(', ')}"
     end
   end
 end

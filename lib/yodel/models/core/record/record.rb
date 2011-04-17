@@ -1,7 +1,7 @@
 module Yodel
   class Record < Yodel::SiteRecord
     collection    :records
-    attr_reader   :model_record, :mixins
+    attr_reader   :model_record, :model, :mixins
     attr_accessor :real_record
 
     def initialize(model, site, values={})
@@ -19,16 +19,25 @@ module Yodel
     end
 
     def to_str
-      "#<#{model.name}: #{id}>"
+      "#<#{model_record.name}: #{id}>"
     end
     
     def default_values
-      super.merge({'model' => model_record.id})
+      super.merge({'model' => model.id})
     end
     
     def collection
       Yodel::Record.collection
-    end    
+    end
+    
+    def perform_reload(params)
+      document = load_mongo_document(_id: params[:id])
+      initialize(params[:model], params[:site], document)
+    end
+    
+    def prepare_reload_params
+      super.tap {|vals| vals[:model] = @model}
+    end
     
     
     # ----------------------------------------
@@ -63,22 +72,34 @@ module Yodel
     end
     
     def inspect_hash
-      {model: model_record, parent: parent, index: index}.merge(super)
+      {model: model, parent: parent, index: index}.merge(super)
     end
   
     def load_model(model, values)
-      if values['eigenmodel'].nil?
-        model
-      else
-        model # fixme: load eigenmodel
-      end
+      return model if values['eigenmodel'].nil?
+      eigenmodel = site.models.find(values['eigenmodel'])
+      values['eigenmodel'] = nil if eigenmodel.nil?
+      eigenmodel || model
+    end
+    
+    def create_eigenmodel
+      return eigenmodel if eigenmodel?
+      new_eigenmodel = model.create_model("#{id}_eigenmodel")
+      self.eigenmodel = new_eigenmodel
+      @model = new_eigenmodel
+      save
+    end
+    
+    def remove_eigenmodel
+      eigenmodel.destroy if eigenmodel?
+      self.eigenmodel = nil
+      save
     end
   
     def create_mixin_instances(values)
       return [] if @model.nil?
-      @model.mixins.collect do |model_id|
-        mixin_model = site.models.find(model_id)
-        mixin_model.record_class.new(mixin_model, values, site)
+      @model.mixins.collect do |mixin_model|
+        mixin_model.record_class.new(mixin_model, site, values)
       end.compact
     end
   
@@ -97,7 +118,7 @@ module Yodel
         mixin.extend SingleForwardable
         mixin.real_record = self
         mixin.def_delegators :@real_record, :save, :save_without_validation, :destroy, :update,
-                                            :reload, :all_fields, :to_json, :from_json
+                                            :reload, :fields
       
         # delegate mixin instance methods (if custom classes are used) to the mixin
         # so mixing in user to a page makes the page appear to have user methods
@@ -115,23 +136,28 @@ module Yodel
       end
     end
     
-    def default_child_model
-      model.default_child_model
+    
+    # ----------------------------------------
+    # Callbacks
+    # ----------------------------------------
+    # extend callbacks to work with mixins
+    Yodel::Model::CALLBACKS.each do |callback|
+      Yodel::Model::ORDERS.each do |order|
+        eval "
+          def run_#{order}_#{callback}_callbacks
+            #{order}_completed = self.class._#{order}_#{callback}_callbacks.dup
+            super
+          
+            mixins.collect {|mixin| mixin.class._#{order}_#{callback}_callbacks}.flatten.each do |callback|
+              unless #{order}_completed.include?(callback)
+                send callback
+                #{order}_completed << callback
+              end
+            end
+          end
+        "
+      end
     end
-        
-    # def add_field(name, type, options={})
-    #   name = name.to_s
-    #   Yodel::Model.add_field(name, type, eigenmodel, options)
-    #   @document[name] = options['default'] || options[:default]
-    #   @typecast[name] = type.from_mongo(self, name, @document[name])
-    # end
-    # 
-    # def remove_field(name)
-    #   Yodel::Model.remove_field(name, eigenmodel)
-    #   @document.delete(name)
-    #   @typecast.delete(name)
-    #   @changed.delete(name)
-    # end
     
     
     # ----------------------------------------
@@ -140,6 +166,7 @@ module Yodel
     # insertion and deletion to maintin the integrity of the 'index' field
     before_validation :append_to_siblings
     before_destroy    :remove_from_siblings
+    before_destroy    :destroy_children
     
     def append_to_siblings
       return unless new?
@@ -164,15 +191,14 @@ module Yodel
       self.parent = nil
     end
     
-    # Children of this record (other records which have this record as a parent)
-    def children
-      model.unscoped.where(parent: id).order('index asc')
+    def destroy_children
+      children.each(&:destroy)
     end
         
     # Siblings of this record (other records with the same parent)
     def siblings
       unless parent.nil?
-        model.unscoped.where(:parent => get_raw('parent'), :_id.ne => id).order('index asc')
+        model.unscoped.where(:parent => parent.try(:id), :_id.ne => id).order('index asc')
       else
         # A parent ID of nil indicates this record is the root of a tree. Since there
         # are multiple trees (including the model tree), a sibling query makes no sense.
@@ -203,16 +229,7 @@ module Yodel
     before_save :update_search_keywords
     def update_search_keywords
       return unless model.searchable?
-      search_terms = Set.new
-      
-      fields.each do |name, field|
-        # TODO: we should cache somewhere which types do and do not contain the search_terms_set
-        # method; this can also be used to automatically populate the searchable option on fields
-        next unless field.searchable? && field.respond_to?(:search_terms_set)
-        search_terms.merge(field.search_terms_set(get(field.name)).collect(&:downcase))
-      end
-      
-      self.search_keywords = search_terms.to_a
+      self.search_keywords = search_terms
     end
   end
 end

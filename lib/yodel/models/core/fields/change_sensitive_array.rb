@@ -49,15 +49,25 @@ module Yodel
       @array.each(&block)
     end
     
+    def collect(&block)
+      @array.collect(&block)
+    end
+    
+    def count(*item, &block)
+      @array.count(*item, &block)
+    end
+    
+    def size
+      @array.size
+    end
+    
     def method_missing(name, *args, &block)
       @array.send(name, *args, &block)
     end
     
     private
       def notify!
-        return if @notified
         @record.try(:changed!, @field)
-        @notified = true
       end
   end
 end

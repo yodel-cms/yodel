@@ -36,6 +36,7 @@ module Yodel
       end
       
       def associated(store, record)
+        return nil if store.nil?
         record.site.model(model_name).first(_id: store)
       end
   end

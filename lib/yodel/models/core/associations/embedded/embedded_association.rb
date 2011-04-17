@@ -3,7 +3,7 @@ module Yodel
     include Yodel::AbstractModel
     
     def fields_field
-      @fields_field ||= FieldsField.new(name)
+      @fields_field ||= Yodel::FieldsField.new(name)
     end
     
     def fields
@@ -14,12 +14,8 @@ module Yodel
       @options.merge({'fields' => fields_field.untypecast(fields, nil)})
     end
     
-    def add_field(name, type, options={})
-      field(name, type, options)
-    end
-    
-    def validate(value, record, errors)
-      Yodel::EmbeddedRecordsValidation.validate(self, value, record, errors)
+    def validate(record, errors)
+      Yodel::EmbeddedRecordsValidation.validate(self, record.get(name), record, errors)
       super
     end
     
@@ -44,7 +40,7 @@ module Yodel
         return [] if store.blank?
         store = [store] unless store.respond_to?(:collect)
         store.collect do |values|
-          EmbeddedRecord.new(self, record, values)
+          Yodel::EmbeddedRecord.new(self, record, values)
         end
       end
   end

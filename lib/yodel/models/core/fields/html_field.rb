@@ -1,7 +1,7 @@
 module Yodel
   class HTMLField < TextField
-    def search_terms_set(html)
-      super(to_text(html))
+    def search_terms_set(record)
+      to_text(record.get(name)).gsub(/\W+/, ' ').split
     end
 
     def to_text(html)

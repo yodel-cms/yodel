@@ -3,24 +3,19 @@ class RecordModelMigration < Yodel::Migration
     records = Yodel::Model.new(site, name: 'Record')
     records.modify do |records|
       # identity, hierarchy and search
-      add_field :name, :string, required: true
-      add_field :index, :integer, required: true
+      add_many  :children, model: :record, foreign_key: 'parent', order: 'index asc'
+      add_field :index, :integer, validations: {required: {}}
+      add_one   :owner, model: :user
+      add_field :name, :string, validations: {required: {}}
       add_field :show_in_search, :boolean, default: true
       add_field :search_keywords, :array, of: :string
-      add_field :search_title, :string, default: nil
-      
+      add_field :search_title, :string
+
       # modelling
-      embed_one :eigenmodel
-      one       :parent, model: :record
-      one       :model, model: :model
-      one       :child_model, model: :model
+      add_one   :eigenmodel, model: :model, destroy: true
+      add_one   :parent, model: :record, index: true
+      add_one   :model, index: true
       records.descendants = [records]
-      
-      # security
-      one   :view_group, model: :group
-      one   :update_group, model: :group
-      one   :delete_group, model: :group
-      one   :create_group, model: :group
     end
 
     site.model_types['records'] = records.id

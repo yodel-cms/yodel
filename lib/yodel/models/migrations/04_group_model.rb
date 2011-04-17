@@ -1,8 +1,8 @@
 class GroupModelMigration < Yodel::Migration
   def self.up(site)
     site.records.create_model :groups do |groups|
-      add_field :name, :string, required: true
-      many      :users, store: false, foreign_key: 'groups'
+      add_field :name, :string, validations: {required: {}}
+      add_many  :users, store: false
       groups.icon = '/admin/images/group_icon.png'
       groups.record_class_name = 'Yodel::Group'
     end

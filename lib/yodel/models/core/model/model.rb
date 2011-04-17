@@ -2,17 +2,17 @@ module Yodel
   class Model < Yodel::SiteRecord
     attr_reader :unscoped, :record_class
     collection  :models
-    
+        
     # ----------------------------------------
     # Fields
     # ----------------------------------------
-    field :name, :string, required: true
-    field :record_fields, :fields, required: true
+    field :name, :string, validations: {required: {}}
+    field :record_fields, :fields, validations: {required: {}}
     field :triggers, :array
     field :functions, :hash
-    field :icon, :string
-    field :record_class_name, :string, default: 'Record'
-    field :searchable, :boolean, default: true
+    field :icon, :string, inherited: true
+    field :record_class_name, :string, default: 'Record', inherited: true
+    field :searchable, :boolean, default: true, inherited: true
     field :indexes, :array, of: :strings
     
     
@@ -21,15 +21,16 @@ module Yodel
     # ----------------------------------------
     many  :mixins, model: :model
     many  :descendants, model: :model
-    many  :allowed_children, model: :model
-    many  :allowed_parents, model: :model
+    many  :allowed_children, model: :model, inherited: true
+    many  :allowed_parents, model: :model, inherited: true
     one   :parent, model: :model
-    one   :view_group, model: :group
-    one   :update_group, model: :group
-    one   :delete_group, model: :group
-    one   :create_group, model: :group
-    one   :default_child_model, model: :model
-    many  :children, model: :model, store: false, foreign_key: 'parent'
+    one   :view_group, model: :group, inherited: true
+    one   :update_group, model: :group, inherited: true
+    one   :delete_group, model: :group, inherited: true
+    one   :create_group, model: :group, inherited: true
+    many  :children, model: :model, foreign_key: 'parent'
+    one   :default_child_model, model: :model, inherited: true
+    one   :new_child_page, model: :page, inherited: true
     
     
     def initialize(site, values={})
@@ -93,39 +94,6 @@ module Yodel
     
     
     # ----------------------------------------
-    # Callbacks
-    # ----------------------------------------
-    # extend callbacks to work with mixins
-    CALLBACKS.each do |callback|
-      eval "
-        def run_before_#{callback}_callbacks
-          before_completed = self.class._before_#{callback}_callbacks.dup
-          super
-          
-          mixins.collect {|mixin| mixin.class._before_#{callback}_callbacks}.flatten.each do |callback|
-            unless before_completed.include?(callback)
-              send callback
-              before_completed << callback
-            end
-          end
-        end
-      
-        def run_after_#{callback}_callbacks
-          after_completed = self.class._after_#{callback}_callbacks.dup
-          super
-          
-          mixins.collect {|mixin| mixin.class._after_#{callback}_callbacks}.flatten.each do |callback|
-            unless after_completed.include?(callback)
-              send callback
-              after_completed << callback
-            end
-          end
-        end
-      "
-    end
-    
-    
-    # ----------------------------------------
     # Hierarchy
     # ----------------------------------------
     def ancestors
@@ -142,8 +110,8 @@ module Yodel
     # the inheritance tree for this model, any parents, and any mixins (and their mixins)
     def parents_and_mixins
       models = parent.try(:parents_and_mixins) || []
-      mixins.each do |mixin_name|
-        models |= site.model(mixin_name).parents_and_mixins
+      mixins.each do |mixin_model|
+        models |= mixin_model.parents_and_mixins
       end
       models << self
     end
@@ -235,6 +203,7 @@ module Yodel
     end
     
     # TODO: modify_field
+    # TODO: ensure field name != a public method name
     
     def add_field(name, type, options={})
       name = name.to_s
@@ -246,7 +215,7 @@ module Yodel
       
       # add the field to the model and subclasses
       field_type = Yodel::Field.field_from_type(type.to_s)
-      field = field_type.new(name, options.merge(type: type.to_s))
+      field = field_type.new(name, deep_stringify_keys(options.merge(type: type.to_s)))
       Yodel::RecordIndex.add_index_for_field(self, field) if field.index?
       record_fields[name] = field
     end
@@ -256,6 +225,14 @@ module Yodel
       raise Yodel::InvalidModelField.new("Unknown field name") if field.nil?
       RecordIndex.remove_index_for_field(self, field) if field.index?
     end
+    
+    # TODO: remove copy of this method when abstract_model is mixed in
+    def deep_stringify_keys(hash)
+      hash.each_with_object({}) do |(key, value), new_hash|
+        new_hash[key.to_s] = (value.respond_to?(:to_hash) ? deep_stringify_keys(value) : value)
+      end
+    end
+    
     
     # TODO: modify versions of the association methods
     
@@ -278,7 +255,7 @@ module Yodel
     end
     
     def add_many(name, options={})
-      type = (options[:store] == false) ? 'many_query' : 'many_store'
+      type = query_association?(options) ? 'many_query' : 'many_store'
       add_field(name, type, options)
     end
     
@@ -287,12 +264,16 @@ module Yodel
     end
     
     def add_one(name, options={})
-      type = (options[:store] == false) ? 'one_query' : 'one_store'
+      type = query_association?(options) ? 'one_query' : 'one_store'
       add_field(name, type, options)
     end
     
     def remove_one(name)
       remove_field(name)
+    end
+    
+    def query_association?(options)
+      options[:store] == false || [:foreign_key, :extends, :through].any? {|opt| options[opt].present?}
     end
     
     def add_index(name, *fields)
@@ -321,10 +302,13 @@ module Yodel
       
       # create a new instance of model
       child = self.class.new(site)
-      child.name = name.camelcase
+      child.name = name.camelcase.singularize
       child.parent = self
-      child.record_class_name = record_class_name
-      child.save
+      
+      # inherited fields
+      fields.each do |name, field|
+        child.set(name, get(name)) if field.inherited?
+      end
       
       # insert the model in to the site models list
       class_name = name.classify
@@ -334,14 +318,16 @@ module Yodel
       
       # append the model to ancestor descendant lists (these are used in queries to
       # restrict the type of records returned, e.g pages.all => _model: ['Page', ...]
-      child.add_descendant(child)
-      child.instance_exec(child, &block) if block_given?
-      child.save
+      child.tap do |child|
+        child.add_descendant(child)
+        child.instance_exec(child, &block) if block_given?
+        child.save
+      end
     end
     
     # Add a new mixin to this model
     def add_mixin(model)
-      raise Yodel::InvalidMixin.new("#{model_name} already mixed in to this model") if mixins.include?(model)
+      raise Yodel::InvalidMixin.new("#{model.name} already mixed in to this model") if mixins.include?(model)
       raise Yodel::InvalidMixin.new("Mixin cannot be a parent") if ancestors.include?(model)
       
       # for all intents and purposes, by mixing in a model, we are a subtype of that model

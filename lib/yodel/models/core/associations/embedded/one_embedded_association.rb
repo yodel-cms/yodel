@@ -3,6 +3,14 @@ module Yodel
     include Yodel::EmbeddedAssociation
     include Yodel::OneAssociation
     
+    # remove OneAssociation's destroy behaviour since embedded
+    # records are destroyed as part of the parent anyway
+    undef :before_destroy
+    
+    def search_terms_set(record)
+      record.get(name).search_terms
+    end
+    
     def default
       @options['default'] || Yodel::EmbeddedRecord.new(self, nil).default_values
     end

@@ -1,8 +1,8 @@
 module Yodel
   class LengthValidation < Validation
-    def self.validate(field, value, record, errors)
-      return if field.length.blank?
-      min, max = field.length
+    def self.validate(params, field, name, value, record, errors)
+      length = params['length']
+      min, max = length
     
       if min == 0
         valid = (value.size <= max)
@@ -12,18 +12,18 @@ module Yodel
         valid = (value.size >= min) && (value.size <= max)
       end
     
-      errors[field] << self unless valid
+      errors[field] << new(length, name) unless valid
     end
   
-    def self.describe(field)
-      min, max = field.length
+    def describe
+      min, max = params
 
       if min == 0
-        "#{field.name.humanize} is too long (maximum length is #{max} characters)"
+        "#{field} is too long (maximum length is #{max} characters)"
       elsif max == 0
-        "#{field.name.humanize} is too short (minimum length is #{min} characters)"
+        "#{field} is too short (minimum length is #{min} characters)"
       else
-        "#{field.name.humanize} must be between #{min} and #{max} characters"
+        "#{field} must be between #{min} and #{max} characters"
       end
     end
   end

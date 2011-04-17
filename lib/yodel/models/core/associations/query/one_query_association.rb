@@ -4,8 +4,6 @@ module Yodel
     include Yodel::OneAssociation
     
     def untypecast(value, record)
-      return nil unless value.respond_to?(:set_meta)
-      associate(value, nil, record)
       nil
     end
   end
