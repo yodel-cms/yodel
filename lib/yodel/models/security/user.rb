@@ -22,7 +22,7 @@ module Yodel
     
     # check if a plain text password matches the hashed, salted password
     def passwords_match?(password)
-      self.password == hash(password) ? self : nil
+      self.password_was == hash(password) ? self : nil
     end
     
     # create and set a new password for this user, returning the new plain text password

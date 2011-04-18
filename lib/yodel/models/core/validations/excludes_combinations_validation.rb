@@ -9,8 +9,8 @@ module Yodel
     end
   
     def describe
-      combinations = params.collect(&:to_s).join(', ')
-      "cannot contain these combinations: #{combinations}"
+      combinations = params.collect.with_index {|combo, index| "#{index + 1}. #{combo.to_sentence}"}
+      "may not be in these combinations: #{combinations.to_sentence(two_words_connector: ', and ')}"
     end
   end
 end

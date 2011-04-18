@@ -5,7 +5,7 @@ module Yodel
         credentials = {username_field => params[username_field], password_field => params[password_field]}
         
         if login(credentials)
-          path = session.delete(:redirect_to_after_login) || redirect_to.try(:path) || request.referrer || '/'
+          path = redirect_to.try(:path) || session.delete(:redirect_to_after_login) || request.referrer || '/'
           response.redirect path
         else
           flash.now(:login_failed, true)

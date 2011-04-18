@@ -44,23 +44,23 @@ module Yodel
     # Permissions
     # ----------------------------------------
     def user_allowed_to?(user, action)
-      model.user_allowed_to?(user, action, model)
+      model.user_allowed_to?(user, action, self)
     end
   
     def user_allowed_to_view?(user)
-      model.user_allowed_to?(user, :view, model)
+      model.user_allowed_to?(user, :view, self)
     end
   
     def user_allowed_to_update?(user)
-      model.user_allowed_to?(user, :update, model)
+      model.user_allowed_to?(user, :update, self)
     end
   
     def user_allowed_to_delete?(user)
-      model.user_allowed_to?(user, :delete, model)
+      model.user_allowed_to?(user, :delete, self)
     end
   
     def user_allowed_to_create?(user)
-      model.user_allowed_to?(user, :create, model)
+      model.user_allowed_to?(user, :create, self)
     end
 
     
@@ -110,7 +110,7 @@ module Yodel
     
       mixins.each_with_index do |mixin, index|
         # reassign the mixin object's instance vars
-        %w{@model @new @site @values @typecast @changed}.each do |var|
+        %w{@model @new @site @values @typecast @changed @errors @stash}.each do |var|
           mixin.instance_variable_set(var, instance_variable_get(var))
         end
       

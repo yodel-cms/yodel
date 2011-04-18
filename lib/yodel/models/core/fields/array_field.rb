@@ -25,6 +25,7 @@ module Yodel
       end
       
       record.set_raw(name, array)
+      record.changed!(name)
     end
   
     def typecast(value, record)
@@ -39,6 +40,13 @@ module Yodel
     
     def from_json(value, record)
       return [] if value.blank?
+      if value.is_a?(String)
+        if value.include?(',')
+          value = value.split(',')
+        else
+          value = value.split(' ')
+        end
+      end
       process(value.to_a, record, :from_json)
     end
     

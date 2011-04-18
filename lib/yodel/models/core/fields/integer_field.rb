@@ -11,6 +11,7 @@ module Yodel
       when 'increment'
         record.increment!(name, value.to_i)
       end
+      record.changed!(name)
     end
     
     def untypecast(value, record)

@@ -1,12 +1,14 @@
 module Yodel
   class AbstractRecord
-    attr_reader   :values, :typecast, :changed, :errors
+    attr_reader   :values, :typecast, :changed, :errors, :stash
     
     def initialize(values={})
       @new      = values.blank?
       @values   = default_values.merge(values.stringify_keys) # FIXME: don't merge here; default || values
       @typecast = {} # typecast versions of original document values
       @changed  = {} # typecast versions of changed values
+      @stash    = {} # values of unknown fields set by from_json
+      @errors   = Yodel::Errors.new
     end
     
     
@@ -89,19 +91,26 @@ module Yodel
   
     def from_json(values)
       values.each do |name, value|
-        next unless field?(name)
-        current_field = field(name)
-        
-        # action hashes allow operations on fields such as append, increment
-        if value.is_a?(Hash) && value.key?(:_action) && value.key?(:_value)
-          current_field.json_action(value.delete(:_action), value.delete(:_value), self)
+        if field?(name)
+          current_field = field(name)
+          raise Yodel::MassAssignment, "Cannot mass assign #{field}" if current_field.protected?
         else
-          set_raw(name, current_field.from_json(value, self))
+          @stash[name] = value
+          next
         end
         
-        changed!(name)
+        # action hashes allow operations on fields such as append, increment
+        if value.is_a?(Hash) && value.key?('_action') && value.key?('_value')
+          current_field.json_action(value.delete('_action'), value.delete('_value'), self)
+        else
+          catch :ignore_value do
+            processed_value = current_field.from_json(value, self)
+            set(name, processed_value)
+            #changed!(name)
+          end
+        end
       end
-    
+      
       save
     end
   
@@ -164,7 +173,11 @@ module Yodel
   
     def field_was(name)
       ensure_field_is_valid(name)
-      @typecast[name]
+      if @typecast.key?(name)
+        @typecast[name]
+      else
+        typecast_value(name)
+      end
     end
     
     def increment!(name, value=1)
@@ -236,7 +249,8 @@ module Yodel
       
       if succeeded
         @new = false
-        @changed = {}
+        @changed.clear
+        @stash.clear
       end
       succeeded
     end
@@ -325,7 +339,7 @@ module Yodel
       # validate all fields for new records; we know saved records should be
       # valid so we can limit testing to the set of changed fields only
       run_validation_callbacks do
-        @errors = Yodel::Errors.new {|hash, key| hash[key] = []}
+        @errors.clear
         unless new?
           @changed.each {|name, value| field(name).validate(self, @errors)}
         else

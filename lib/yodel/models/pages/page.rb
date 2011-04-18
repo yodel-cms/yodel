@@ -2,15 +2,6 @@ module Yodel
   class Page < Record
     include Yodel::Authentication
     
-    def flash
-      @flash ||= Yodel::Flash.new(session)
-    end
-    
-    def form_for(record, action, options={}, &block)
-      Yodel::FormBuilder.new(record, action, options, &block).render
-    end
-    
-    
     # ----------------------------------------
     # Paths and permalinks
     # ----------------------------------------
@@ -75,7 +66,76 @@ module Yodel
       paragraphs[index..-1].collect {|p| p.to_s}.join('')
     end
     
-        
+    def flash
+      @flash ||= Yodel::Flash.new(session)
+    end
+    
+    def form_for(record, action, options={}, &block)
+      Yodel::FormBuilder.new(record, action, options, &block).render
+    end
+    
+    def form_for_page(options={}, &block)
+      options[:method] = new? ? 'post' : 'put'
+      form_for(self, path_was, options, &block)
+    end
+    
+    def immediately(action, options={})
+      action_record = options.delete(:record)
+      action_path = options.delete(:path)
+      
+      # remaining options are field mutations
+      fields = fields_to_json(options)
+      
+      # perform the action directly on a record
+      if action_path.nil?
+        action_record ||= self
+        action_record.from_json(fields)
+        action_record.save
+        ''
+      else
+        Hpricot::Elem.new('script', {}, [
+          Hpricot::Text.new(action_to_javascript(action, action_path, fields))
+        ])
+      end
+    end
+    
+    def on_click(action, options={}, &block)
+      # on_click requires child elements
+      return '' unless block_given?
+      
+      # determine the path and fields of the request
+      action_record = options.delete(:record) || self
+      action_path   = options.delete(:path) || action_record.path
+      fields        = fields_to_json(options)
+      
+      Ember::Template.wrap_content_block(block) do |content|
+        Hpricot::Elem.new('span', {
+          'class' => 'yodel-remote-action',
+          'data-action' => CGI.escape_html(action_to_javascript(action, action_path, fields))
+        }, [Hpricot::Text.new(content.join)])
+      end
+    end
+    
+    def fields_to_json(fields)
+      fields.each_with_object({}) do |(key, value), hash|
+        field_action = value.keys.first.to_s
+        field_value = value[value.keys.first]
+        hash[key.to_s] = {'_action' => field_action, '_value' => field_value}
+      end
+    end
+    private :fields_to_json
+    
+    def action_to_javascript(action, path, fields)
+      case action
+      when :update
+        "Yodel.Records.update('#{path}', #{fields.to_json});"
+      when :delete
+        "Yodel.Records.delete('#{path}');"
+      end
+    end
+    private :action_to_javascript
+    
+    
     # ----------------------------------------
     # Response content
     # ----------------------------------------
@@ -181,11 +241,6 @@ module Yodel
     # ----------------------------------------
     # Default request handling
     # ----------------------------------------
-    def form_for_page(options={}, &block)
-      options[:method] = new? ? 'post' : 'put'
-      form_for(self, path, options, &block)
-    end
-    
     def delete_button(text, options={})
       attributes = ""
       if options[:confirm]
@@ -290,23 +345,38 @@ module Yodel
         
         # update the page assuming a form created by to_form
         path_was = path
-        from_form(params)
+        success = from_json(params)
         
         # updating the page can change its url
-        if save && path != path_was
+        if success && (path != path_was)
+          flash[:performed_update] = true
+          flash[:update_successful] = success
           response.redirect path
         else
-          flash.now(:update_successful, true)
-          render
+          flash.now(:performed_update, true)
+          flash.now(:update_successful, success)
+          render_or_default(:html) do
+            "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
+          end
         end
       end
       
       with :json do
         return unless user_allowed_to?(:update)
-        from_json(JSON.parse(params['record']))
-        success = save
-        render_or_default(:json) do
-          to_json
+        if params.key?('record')
+          values = JSON.parse(params['record'])
+        else
+          values = params
+        end
+        
+        if from_json(values)
+          render_or_default(:json) do
+            {success: true, record: self}
+          end
+        else
+          render_or_default(:json) do
+            {success: false, errors: errors}
+          end
         end
       end
     end
@@ -319,9 +389,8 @@ module Yodel
         return unless user_allowed_to?(:create)
         new_page = model.default_child_model.new
         new_page.parent = self
-        new_page.from_json(params)
         
-        if new_page.save
+        if new_page.from_json(params)
           flash[:create_successful] = true
           response.redirect new_page.path
         else
@@ -340,9 +409,14 @@ module Yodel
         return unless user_allowed_to?(:create)
         new_page = model.default_child_model.new
         new_page.parent = self
-        new_page.from_json(params)
         
-        if new_page.save
+        if params.key?('record')
+          values = JSON.parse(params['record'])
+        else
+          values = params
+        end
+        
+        if new_page.from_json(values)
           new_page.render_or_default(:json) do
             {success: true, record: new_page}
           end

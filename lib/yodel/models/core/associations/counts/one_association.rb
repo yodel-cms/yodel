@@ -2,7 +2,7 @@ module Yodel
   module OneAssociation
     def search_terms_set(record)
       return [] unless include_in_search_keywords?
-      record.get(name).search_terms
+      record.get(name).try(:search_terms) || []
     end
     
     def before_destroy(record)

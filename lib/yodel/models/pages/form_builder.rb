@@ -17,56 +17,60 @@ module Yodel
     
     
     def field(name, options={}, &block)
-      name = @prefix ? "#{@prefix}[][#{name}]" : name.to_s
-      field = @record.field(name)
-      value = @record.get(name)
+      invalid = @record.errors.key?(name.to_s)
+      field_name = name.to_s
+      field = @record.field(field_name)
+      input_name = (options.delete(:name) || field_name).to_s
+      input_name = "#{@prefix}[][#{input_name}]" if @prefix
+      value = options.delete(:value) || @record.get(field_name)
       type = options.delete(:as) || field.default_input_type
       
       case type
-      when :text
-        element = Hpricot::Elem.new('input', {:type => 'text', :value => value})
-      when :password
-        element = Hpricot::Elem.new('input', {:type => 'password', :value => value})
-      when :hidden
-        element = Hpricot::Elem.new('input', {:type => 'hidden', :value => value})
-      when :text_area
-        element = Hpricot::Elem.new('textarea', {}, [Hpricot::Text.new(value)])
+      when :text, :password, :hidden
+        value = nil if type == :password
+        element = build_element(:input, {type: type.to_s, value: value.to_s})
+      when :textarea
+        element = build_element(:textarea, {}, value.to_s)
       when :radio
-        true_button   = Hpricot::Elem.new('input', {:type => 'radio', :name => name, :value => 'true'})
-        false_button  = Hpricot::Elem.new('input', {:type => 'radio', :name => name, :value => 'true'})
-        true_text     = Hpricot::Text.new(options.delete(:true) || 'Yes')
-        false_text    = Hpricot::Text.new(options.delete(:false) || 'No')
-        element = Hpricot::Elem.new('span', {}, [true_text, true_button, false_text, false_button])        
-        if !!value
-          true_button.set_attribute('checked', 'checked')
-        else
-          false_button.set_attribute('checked', 'checked')
-        end
+        base = {type: 'radio', name: input_name}
+        true_button   = build_element(:input, base.merge(condition('checked', value, ['true', true])))
+        false_button  = build_element(:input, base.merge(condition('checked', value, ['false', false])))
+        true_text     = options.delete(:true) || 'Yes'
+        false_text    = options.delete(:false) || 'No'
+        element = build_element(:span, {}, [true_text, true_button, false_text, false_button])
+      when :enum
+        element = build_select(value, field.options['options'], field.show_blank, field.blank_text)
+      when :store_one
+        element = build_select(value, field.record_options(@record), field.show_blank, field.blank_text)
       when :embedded
         value.each do |document|
-          self.class.new(document, {embedded_record: field, prefix: name, id: @id}, &block).render
+          self.class.new(document, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
         end
         
         if options.delete(:blank_record)
-          self.class.new(value.new, {embedded_record: field, blank_record: true, prefix: name, id: @id}, &block).render
+          self.class.new(value.new, @action, {embedded_record: field, blank_record: true, prefix: name, id: @id}, &block).render
         end
+        
+        buffer = Ember::Template.buffer_from_block(@block)
+        buffer << build_element(:input, {'type' => 'hidden', 'data-field' => input_name}).to_s
       end
       
       element.tap do |element|
-        element.set_attribute(:id, name)
-        element.set_attribute(:name, name)
+        element.set_attribute(:id, input_name)
+        element.set_attribute(:name, input_name)
+        element.set_attribute(:class, invalid ? 'invalid' : (@record.new? ? 'new' : 'valid'))
         element.set_attribute(:placeholder, field.placeholder || '')
-        element.set_attribute('data-field', name)
+        element.set_attribute('data-field', input_name)
         options.each do |name, value|
           element.set_attribute(name.to_s, value)
         end
-      end
+      end if element
     end
     
     
     def label(name, text=nil, options={})
-      text ||= name.humanize
-      Hpricot::Elem.new('label', {:for => name.to_s}, [Hpricot::Text.new(text)])
+      text ||= name.to_s.humanize
+      build_element(:label, {:for => name.to_s}, text)
     end
 
     
@@ -85,7 +89,7 @@ module Yodel
       valid_text    = options.delete(:valid).to_s
       invalid_text  = options.delete(:invalid).to_s
       
-      if @record.errors.nil?
+      if @record.errors.empty?
         state = 'new'
         message = new_text
       elsif handles.any? {|name| @record.errors.key?(name)}
@@ -93,7 +97,7 @@ module Yodel
         unless invalid_text.blank?
           message = invalid_text
         else
-          message = handles.collect {|name| @record.errors[name].collect(&:describe)}.flatten.join(', ')
+          message = handles.collect {|name| @record.errors.summarise[name]}.compact.join(', ')
         end
       else
         state = 'valid'
@@ -183,6 +187,35 @@ module Yodel
             Hpricot::Text.new("}"),
           ])
         end
+      end
+      
+      def build_element(tag, params, content=[])
+        content = [content] unless content.respond_to?(:to_a)
+        content = content.to_a.collect {|item| item.is_a?(String) ? Hpricot::Text.new(item): item}
+        Hpricot::Elem.new(tag.to_s, params, content)
+      end
+      
+      def condition(name, value, options)
+        options = [options] unless options.respond_to?(:to_a)
+        {value: options.first}.tap do |attributes|
+          attributes[name] = name if options.to_a.include?(value)
+        end
+      end
+      
+      def build_select(value, options, show_blank, blank_text)
+        select_options = options.collect do |option|
+          if option.is_a?(Array)
+            option_name, option_value = option
+          else
+            option_name = option_value = option
+          end
+          build_element(:option, condition('selected', value, option_value), option_name.to_s)
+        end
+        if show_blank
+          blank_text = blank_text || 'Other'
+          select_options.unshift(build_element(:option, condition('selected', value.to_s, ''), blank_text))
+        end
+        build_element(:select, {}, select_options)
       end
   end
 end

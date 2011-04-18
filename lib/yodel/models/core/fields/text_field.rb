@@ -1,7 +1,7 @@
 module Yodel
   class TextField < StringField
     def default_input_type
-      :text_area
+      :textarea
     end
   end
 end

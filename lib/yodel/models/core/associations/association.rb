@@ -18,12 +18,15 @@ module Yodel
       when 'clear'
         clear(store, record)
       end
+      
+      record.changed!(name)
     end
     
     def from_json(value, record)
       store = record.get_raw(name)
       clear(store, record)
       process_json_items(value, record, store, :associate)
+      record.get_raw(name)
     end
     
     

@@ -93,7 +93,7 @@ module Yodel
     end
     
     def include_in_search_keywords?
-      @options['include_in_search_keywords'] == true
+      @options.key?('include_in_search_keywords')
     end
   
     def method_missing(name, *args, &block)

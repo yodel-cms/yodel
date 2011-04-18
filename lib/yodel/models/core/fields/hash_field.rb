@@ -24,6 +24,7 @@ module Yodel
       end
       
       record.set_raw(name, hash)
+      record.changed!(name)
     end
   
     def typecast(value, record)

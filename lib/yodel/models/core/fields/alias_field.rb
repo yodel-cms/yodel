@@ -1,5 +1,5 @@
 module Yodel
-  class AliasField < Field
+  class AliasField < Field    
     # FIXME: assignments don't work; alias = val won't be saved
     # FIXME: changes to the original value aren't observed;
     # original = val_1, alias => val_1; original = val_2; alias => val_1

@@ -66,6 +66,8 @@ module Yodel
         else
           if tokens.first == START_PARAMS_TOKEN
             instructions << [token] + parse(tokens)
+          elsif token.to_i.to_s == token
+            instructions << ['int', token]
           else
             instructions << ['field', token]
           end
@@ -96,6 +98,8 @@ module Yodel
         collect(context, params.first)
       when 'majority'
         majority(context, params.first)
+      when 'count'
+        count(context, params.first)
       when 'invert'
         invert(context)
       when 'unique'
@@ -118,10 +122,16 @@ module Yodel
         format(context, params.first)
       when 'set'
         set_field(context, params[0], params[1])
+      when 'min'
+        min(context, params[0], params[1])
+      when 'max'
+        max(context, params[0], params[1])
         
       # literals
       when 'string'
         params.first
+      when 'int'
+        params.first.to_i
       end
     end
     
@@ -155,6 +165,14 @@ module Yodel
 
         valid = context.count {|item| execute(item, field)}
         valid >= (context.size - valid)
+      end
+      
+      def count(context, field)
+        unless context.respond_to?(:size) && context.respond_to?(:count)
+          raise "Count context must be enumerable"
+        end
+
+        context.count {|item| execute(item, field)}
       end
 
       def invert(context)
@@ -215,6 +233,18 @@ module Yodel
         str.gsub(/{{\s*(\w+)\s*}}/) do |field|
           context.get($1)
         end
+      end
+      
+      # TODO: add call styles to min and max:
+      # items.min(index)
+      # items.collect(index).min
+      # min(one, two)
+      def min(context, one, two)
+        [execute(context, one), execute(context, two)].min        
+      end
+      
+      def max(context, one, two)
+        [execute(context, one), execute(context, two)].max
       end
   end
 end

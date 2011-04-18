@@ -19,12 +19,14 @@ module Yodel
       super
     end
     
+    def default_input_type
+      :embedded
+    end
     
     private
       def process_json_item(embedded_record, store, record)
-        #associated_record = model.find(BSON::ObjectId.from_string(raw_id))
-        #(associated_record.model_name == model_name) ? associated_record : nil
-        embedded_record
+        return unless embedded_record.respond_to?(:to_hash)
+        Yodel::EmbeddedRecord.new(self, record, {}).tap {|new_record| new_record.from_json(embedded_record)}
       end
       
       def clear(store, record)

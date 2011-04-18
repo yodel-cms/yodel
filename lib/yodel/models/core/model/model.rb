@@ -97,11 +97,12 @@ module Yodel
     # Hierarchy
     # ----------------------------------------
     def ancestors
-      next_parent = parent
+      next_parent = self
       Enumerator.new do |models|
-        break if next_parent.nil?
-        models.yield next_parent
-        next_parent = next_parent.parent
+        while next_parent
+          models.yield next_parent
+          next_parent = next_parent.parent
+        end
       end
     end
     

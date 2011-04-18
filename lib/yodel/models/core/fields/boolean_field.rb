@@ -11,10 +11,18 @@ module Yodel
       when 'toggle'
         record.set_raw(name, !record.get(name))
       end
+      
+      record.changed!(name)
     end
   
     def from_json(value, record)
-      !!value
+      if value == 'true'
+        true
+      elsif value == 'false'
+        false
+      else
+        !!value
+      end
     end
   end
 end

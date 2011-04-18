@@ -20,6 +20,8 @@ module Yodel
         Yodel::RequiredValidation
       when 'unique'
         Yodel::UniqueValidation
+      when 'password_confirmation'
+        Yodel::PasswordConfirmationValidation
       end
       validation.validate(params, field, name, value, record, errors)
     end

@@ -7,17 +7,20 @@ module Yodel
     
     def self.validate(field, records, record, errors)
       records = [records] unless records.respond_to?(:to_a)
-      record_errors = records.to_a.collect {|embedded| embedded.valid? ? nil : embedded.errors}
-      errors[field.name] << new(nil, record_errors) unless record_errors.compact.empty?
+      embedded_errors = Yodel::Errors.new
+      records.to_a.each_with_index do |embedded_record, index|
+        embedded_errors[index] = embedded_record.valid? ? nil : embedded_record.errors
+      end
       
-      field.fields.each do |name, field|
-        next unless field.set_validations
+      field.fields.each do |name, embedded_field|
+        next unless embedded_field.set_validations
         set_value = records.to_a.collect {|embedded| embedded.get(name)}.uniq
-        set_name = name.pluralize.humanize
-        field.set_validations.each do |type, params|
-          Yodel::Validation.validate(type, params, field, set_name, set_value, record, errors)
+        embedded_field.set_validations.each do |type, params|
+          Yodel::Validation.validate(type, params, embedded_field, name, set_value, record, embedded_errors)
         end
       end
+      
+      errors[field.name] = embedded_errors unless embedded_errors.empty?
     end
   
     def describe

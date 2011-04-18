@@ -25,5 +25,9 @@ module Yodel
     # 
     #   Hpricot::Elem.new('select', {name: field.name}, select_options)
     # end
+    
+    def default_input_type
+      :enum
+    end
   end
 end
