@@ -11,7 +11,7 @@ module Yodel
       end
       
       def foreign_key(record)
-        @foreign_key ||= (options['foreign_key'] || model_name.to_s.underscore)
+        @foreign_key ||= (options['foreign_key'] || model_name.to_s.underscore) # FIXME: should be foreign_key || record.model.name.underscore
       end
       
       def model_name

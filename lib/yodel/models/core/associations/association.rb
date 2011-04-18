@@ -26,7 +26,7 @@ module Yodel
       store = record.get_raw(name)
       clear(store, record)
       process_json_items(value, record, store, :associate)
-      record.get_raw(name)
+      record.get(name)
     end
     
     

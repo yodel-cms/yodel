@@ -13,10 +13,11 @@ module Yodel
     end
     
     def from_json(hash, record)
-      return {} unless hash.is_a?(Hash)
-      hash.each_with_object({}) do |(name, options), fields|
-        fields[name.to_s] = Field.from_options(name, options).options
-      end
+      # return {} unless hash.is_a?(Hash)
+      #       hash.each_with_object({}) do |(name, options), fields|
+      #         fields[name.to_s] = Field.from_options(name, options).options
+      #       end
+      fields_from_hash(hash, record)
     end
     
     private
