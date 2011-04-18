@@ -1,5 +1,5 @@
 source 'http://rubygems.org'
-gem 'impromptu',      '~> 1.5.2'
+gem 'impromptu',      '~> 1.5.3'
 gem 'rack',           '~> 1.0'
 gem 'mongo',          '~> 1.2.4'
 gem 'bson',           '~> 1.2.4'

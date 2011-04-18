@@ -24,13 +24,16 @@ module Yodel
       validation.validate(params, field, name, value, record, errors)
     end
     
-    def initialize(params, field)
+    def initialize(params)
       @params = params
-      @field = field
     end
   
     def describe
-      "#{field} is invalid"
+      "is invalid"
+    end
+    
+    def to_json(*a)
+      describe.to_json(*a)
     end
   end
 end

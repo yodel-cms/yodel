@@ -9,7 +9,9 @@ module Yodel
           response.redirect path
         else
           flash.now(:login_failed, true)
-          render
+          render_or_default(:html) do
+            "<p>Sorry, your account could not be found</p>"
+          end
         end
       end
       

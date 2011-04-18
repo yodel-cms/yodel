@@ -6,8 +6,8 @@ module Yodel
       @flash ||= Yodel::Flash.new(session)
     end
     
-    def form_for(record, options={}, &block)
-      Yodel::FormBuilder.new(record, options, &block).render
+    def form_for(record, action, options={}, &block)
+      Yodel::FormBuilder.new(record, action, options, &block).render
     end
     
     
@@ -24,15 +24,16 @@ module Yodel
       # until we detect changes to fields used by cached functions, force a refresh of the value
       generate_unloaded_field('title') if field('title').type == 'Function'
       
-      base_permalink = title.parameterize(site.option('pages.permalink_character') || '-')
+      permalink_character = site.option('pages.permalink_character') || '-'
+      base_permalink = title.parameterize(permalink_character)
       suffix = ''
       count  = 0
       
       # ensure other pages don't have the same path as this page
-      page_siblings = siblings.select {|record| record.respond_to?(:permalink)}
+      page_siblings = siblings.all.select {|record| record.field?('permalink')}
       while page_siblings.any? {|page| page.permalink == base_permalink + suffix}
         count += 1
-        suffix = "_#{count}"
+        suffix = "#{permalink_character}#{count}"
       end
       
       # set the page's permalink, then construct its path and reset any child paths
@@ -182,8 +183,7 @@ module Yodel
     # ----------------------------------------
     def form_for_page(options={}, &block)
       options[:method] = new? ? 'post' : 'put'
-      options[:action] = path
-      form_for(self, options, &block)
+      form_for(self, path, options, &block)
     end
     
     def delete_button(text, options={})
@@ -317,9 +317,9 @@ module Yodel
     respond_to :post do
       with :html do
         return unless user_allowed_to?(:create)
-        new_page = default_child_model.new
+        new_page = model.default_child_model.new
         new_page.parent = self
-        new_page.from_form(params)
+        new_page.from_json(params)
         
         if new_page.save
           flash[:create_successful] = true
@@ -338,12 +338,18 @@ module Yodel
       
       with :json do
         return unless user_allowed_to?(:create)
-        new_page = default_child_model.new
+        new_page = model.default_child_model.new
         new_page.parent = self
-        new_page.from_json(params['record'])
-        success = new_page.save
-        new_page.render_or_default(:json) do
-          new_page.to_json
+        new_page.from_json(params)
+        
+        if new_page.save
+          new_page.render_or_default(:json) do
+            {success: true, record: new_page}
+          end
+        else
+          new_page.render_or_default(:json) do
+            {success: false, errors: new_page.errors}
+          end
         end
       end
     end

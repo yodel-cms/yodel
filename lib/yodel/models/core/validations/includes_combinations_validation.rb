@@ -5,12 +5,12 @@ module Yodel
       combinations.each do |included_combination|
         return if included_combination.all? {|required| value.include?(required)}
       end
-      errors[field] << new(combinations, name)
+      errors[field.name] << new(combinations)
     end
   
     def describe
       combinations = params.collect(&:to_s).join(', ')
-      "#{field} must contain one of these combinations: #{combinations}"
+      "must contain one of these combinations: #{combinations}"
     end
   end
 end

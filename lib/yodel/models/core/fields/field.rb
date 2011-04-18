@@ -109,6 +109,10 @@ module Yodel
       end
     end
     
+    def default_input_type
+      :text
+    end
+    
     # Convert from an untypecast (raw) representation of a value to a
     # more complex version of the same value. For instance, BigDecimals
     # are stored as strings, but are BigDecimal objects when typecast.

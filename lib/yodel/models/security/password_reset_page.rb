@@ -19,7 +19,9 @@ module Yodel
     respond_to :get do
       with :html do
         @email = params['email']
-        render
+        render_or_default(:html) do
+          "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
+        end
       end
     end
     
@@ -38,7 +40,9 @@ module Yodel
         end
         
         @email = email
-        render
+        render_or_default(:html) do
+          "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
+        end
       end
       
       with :json do

@@ -6,6 +6,10 @@ module Yodel
     def strip_nil?
       true
     end
+    
+    def default_input_type
+      nil
+    end
 
     def validate(record, errors)
       # noop

@@ -15,7 +15,7 @@ module Yodel
     # ----------------------------------------
     def eql?(other)
       other.respond_to?(:id) && other.id == self.id &&
-      other.class.name == self.class.name
+      other.is_a?(AbstractRecord)
     end
   
     alias :== :eql?
@@ -89,7 +89,7 @@ module Yodel
   
     def from_json(values)
       values.each do |name, value|
-        ensure_field_is_valid(name)
+        next unless field?(name)
         current_field = field(name)
         
         # action hashes allow operations on fields such as append, increment
@@ -98,6 +98,8 @@ module Yodel
         else
           set_raw(name, current_field.from_json(value, self))
         end
+        
+        changed!(name)
       end
     
       save
@@ -323,7 +325,7 @@ module Yodel
       # validate all fields for new records; we know saved records should be
       # valid so we can limit testing to the set of changed fields only
       run_validation_callbacks do
-        @errors = Hash.new {|hash, key| hash[key] = []}
+        @errors = Yodel::Errors.new {|hash, key| hash[key] = []}
         unless new?
           @changed.each {|name, value| field(name).validate(self, @errors)}
         else

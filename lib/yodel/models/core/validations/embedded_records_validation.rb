@@ -1,14 +1,14 @@
 module Yodel
   class EmbeddedRecordsValidation < Validation
-    def initialize(params, field, errors)
-      super(params, field)
+    def initialize(params, errors)
+      super(params)
       @errors = errors
     end
     
     def self.validate(field, records, record, errors)
       records = [records] unless records.respond_to?(:to_a)
       record_errors = records.to_a.collect {|embedded| embedded.valid? ? nil : embedded.errors}
-      errors[field] << new(nil, field, record_errors) unless record_errors.compact.empty?
+      errors[field.name] << new(nil, record_errors) unless record_errors.compact.empty?
       
       field.fields.each do |name, field|
         next unless field.set_validations
@@ -22,7 +22,7 @@ module Yodel
   
     def describe
       # FIXME: don't just call inspect here, format correctly using describe calls
-      "#{field} has these errors: #{@errors.inspect}}"
+      "has these errors: #{@errors.inspect}}"
     end
   end
 end

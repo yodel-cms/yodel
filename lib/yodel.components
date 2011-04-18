@@ -7,6 +7,7 @@ component 'yodel' do
   # require active support extensions individually to keep fit and lean
   requires  'active_support/core_ext/object/blank', 'active_support/core_ext/object/try'
   requires  'active_support/inflector', 'active_support/core_ext/hash/keys'
+  requires  'active_support/core_ext/array/conversions'
   
   # rack extensions
   folder    'middleware'
@@ -24,5 +25,8 @@ component 'yodel' do
   end
   
   # object extensions for json conversion
-  folder 'types', nested_namespaces: false, preload: true
+  #requires 'yodel/types/date', 'yodel/types/object_id', 'yodel/types/time'
+  folder 'types', nested_namespaces: false do
+    file 'object_id.rb', provides: :'::BSON::ObjectId'
+  end
 end

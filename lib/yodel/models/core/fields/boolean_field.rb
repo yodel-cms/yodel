@@ -1,5 +1,9 @@
 module Yodel
   class BooleanField < Field
+    def default_input_type
+      :radio
+    end
+    
     def json_action(action, value, record)
       case action
       when 'set'

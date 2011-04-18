@@ -134,7 +134,7 @@ module Yodel
       end
 
       def get_field(context, name)
-        context.get(name)
+        name == 'self' ? context : context.get(name)
       end
       
       def set_field(context, field, value)
@@ -208,6 +208,8 @@ module Yodel
         context.to_s.strip
       end
 
+      # TODO: currently substitutions that span multiple record will fail e.g
+      # {{name}} will work but {{record.name}} won't
       def format(context, str)
         str = execute(context, str)
         str.gsub(/{{\s*(\w+)\s*}}/) do |field|

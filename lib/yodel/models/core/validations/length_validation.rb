@@ -12,18 +12,18 @@ module Yodel
         valid = (value.size >= min) && (value.size <= max)
       end
     
-      errors[field] << new(length, name) unless valid
+      errors[field.name] << new(length) unless valid
     end
   
     def describe
       min, max = params
 
       if min == 0
-        "#{field} is too long (maximum length is #{max} characters)"
+        "is too long (maximum length is #{max} characters)"
       elsif max == 0
-        "#{field} is too short (minimum length is #{min} characters)"
+        "is too short (minimum length is #{min} characters)"
       else
-        "#{field} must be between #{min} and #{max} characters"
+        "must be between #{min} and #{max} characters"
       end
     end
   end

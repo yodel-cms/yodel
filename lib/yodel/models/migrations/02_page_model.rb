@@ -4,7 +4,7 @@ class PageModelMigration < Yodel::Migration
       # core page attributes
       add_field :permalink, :string, validations: {required: {}}, index: true, searchable: false, display: false
       add_field :path, :string, validations: {required: {}}, index: true, searchable: false, display: false
-      add_field :created, :time, display: false
+      add_field :created_at, :time, display: false
       add_field :title, :string, validations: {required: {}}
       add_field :content, :html
       
