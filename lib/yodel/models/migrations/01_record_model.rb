@@ -6,7 +6,7 @@ class RecordModelMigration < Yodel::Migration
       add_many  :children, model: :record, foreign_key: 'parent', order: 'index asc'
       add_field :index, :integer, validations: {required: {}}
       add_one   :owner, model: :user
-      add_field :name, :string, validations: {required: {}}
+      add_field :name, :string
       add_field :show_in_search, :boolean, default: true
       add_field :search_keywords, :array, of: :string
       add_field :search_title, :string

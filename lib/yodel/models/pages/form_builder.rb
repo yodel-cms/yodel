@@ -39,9 +39,9 @@ module Yodel
         false_text    = options.delete(:false) || 'No'
         element = build_element(:span, {}, [true_text, true_button, false_text, false_button])
       when :enum
-        element = build_select(value, field.options['options'], field.show_blank, field.blank_text)
+        element = build_select(value, field.options['options'], show_blank: field.show_blank, blank_text: field.blank_text)
       when :store_one
-        element = build_select(value, field.record_options(@record), field.show_blank, field.blank_text)
+        element = build_select(value, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
       when :embedded
         value.each do |document|
           self.class.new(document, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
@@ -196,24 +196,53 @@ module Yodel
       end
       
       def condition(name, value, options)
-        options = [options] unless options.respond_to?(:to_a)
+        options = [options] unless options.respond_to?(:to_a) && !options.is_a?(BSON::ObjectId)
         {value: options.first}.tap do |attributes|
           attributes[name] = name if options.to_a.include?(value)
         end
       end
       
-      def build_select(value, options, show_blank, blank_text)
-        select_options = options.collect do |option|
-          if option.is_a?(Array)
-            option_name, option_value = option
-          else
-            option_name = option_value = option
-          end
-          build_element(:option, condition('selected', value, option_value), option_name.to_s)
+      def build_select(current_value, values, options={})
+        show_blank = options[:show_blank]
+        blank_text = options[:blank_text]
+        group_by = options[:group_by]
+        name_field = options[:name_field]
+        value_field = options[:value_field]
+        
+        group_by_field = group_by.is_a?(Hash) ? group_by.keys.first : group_by
+        
+        if group_by_field
+          select_options = Hash.new {|hash, key| hash[key] = []}
+        else
+          select_options = []
         end
+        
+        values.each do |value|
+          if name_field && value_field
+            option_name = value.send(name_field).to_s
+            option_value = value.send(value_field).to_s
+          else
+            option_name = option_value = value.to_s
+          end
+          element = build_element(:option, condition('selected', current_value, option_value), option_name)
+          
+          if group_by_field
+            key = value.send(group_by_field).to_s
+            select_options[key] << element
+          else
+            select_options << element
+          end
+        end
+        
+        if group_by_field
+          select_options = group_by[group_by_field].collect do |group_value, group_name|
+            build_element(:optgroup, {label: group_name}, select_options[group_value])
+          end
+        end
+        
         if show_blank
           blank_text = blank_text || 'Other'
-          select_options.unshift(build_element(:option, condition('selected', value.to_s, ''), blank_text))
+          select_options.unshift(build_element(:option, condition('selected', current_value.to_s, ''), blank_text))
         end
         build_element(:select, {}, select_options)
       end

@@ -14,8 +14,7 @@ module Yodel
     def record_options(record)
       query = model(record).where()
       query = query.sort(@options['order'].to_s) if @options['order']
-      p query
-      query.all.collect {|record| [record.name, record.id.to_s]}
+      query.all
     end
   end
 end
