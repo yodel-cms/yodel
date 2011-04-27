@@ -21,6 +21,7 @@ module Yodel
       @models = Yodel::Model.scoped_for(self)
       @cached_models['Model'] = @cached_models['models'] = @models
       @cached_models['Trigger'] = @cached_models['triggers'] = Yodel::Trigger.scoped_for(self)
+      @cached_models['Task'] = @cached_models['tasks'] = Yodel::Task.scoped_for(self)
     end
     
     

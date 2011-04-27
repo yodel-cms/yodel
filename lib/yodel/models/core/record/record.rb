@@ -159,6 +159,47 @@ module Yodel
       end
     end
     
+    before_validation :run_record_before_validation_callbacks
+    def run_record_before_validation_callbacks
+      model.run_record_before_validation_callbacks(self)
+    end
+
+    after_validation :run_record_after_validation_callbacks
+    def run_record_after_validation_callbacks
+      model.run_record_after_validation_callbacks(self)
+    end
+
+    before_save :run_record_before_save_callbacks
+    def run_record_before_save_callbacks
+      model.run_record_before_save_callbacks(self)
+    end
+
+    after_save :run_record_after_save_callbacks
+    def run_record_after_save_callbacks
+      model.run_record_after_save_callbacks(self)
+    end
+
+    before_create :run_record_before_create_callbacks
+    def run_record_before_create_callbacks
+      model.run_record_before_create_callbacks(self)
+    end
+
+    after_create :run_record_after_create_callbacks
+    def run_record_after_create_callbacks
+      model.run_record_after_create_callbacks(self)
+    end
+
+    before_update :run_record_before_update_callbacks
+    def run_record_before_update_callbacks
+      model.run_record_before_update_callbacks(self)
+    end
+
+    after_update :run_record_after_update_callbacks
+    def run_record_after_update_callbacks
+      model.run_record_after_update_callbacks(self)
+    end
+    
+    
     
     # ----------------------------------------
     # Hierarchical methods

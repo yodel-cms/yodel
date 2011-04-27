@@ -14,6 +14,14 @@ module Yodel
     field :record_class_name, :string, default: 'Record', inherited: true
     field :searchable, :boolean, default: true, inherited: true
     field :indexes, :array, of: :strings
+    field :record_before_validation_callbacks, :array, of: :strings, inherited: true
+    field :record_after_validation_callbacks, :array, of: :strings, inherited: true
+    field :record_before_save_callbacks, :array, of: :strings, inherited: true
+    field :record_after_save_callbacks, :array, of: :strings, inherited: true
+    field :record_before_create_callbacks, :array, of: :strings, inherited: true
+    field :record_after_create_callbacks, :array, of: :strings, inherited: true
+    field :record_before_update_callbacks, :array, of: :strings, inherited: true
+    field :record_after_update_callbacks, :array, of: :strings, inherited: true
     
     
     # ----------------------------------------
@@ -43,6 +51,43 @@ module Yodel
     
     def to_str
       "#<Model: #{name}>"
+    end
+
+    
+    # ----------------------------------------
+    # Callbacks
+    # ----------------------------------------
+    # TODO: use loops like in abstract record to write these functions
+    def run_record_before_validation_callbacks(record)
+      record_before_validation_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_after_validation_callbacks(record)
+      record_after_validation_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_before_save_callbacks(record)
+      record_before_save_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_after_save_callbacks(record)
+      record_after_save_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_before_create_callbacks(record)
+      record_before_create_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+
+    def run_record_after_create_callbacks(record)
+      record_after_create_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_before_update_callbacks(record)
+      record_before_update_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_after_update_callbacks(record)
+      record_after_update_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
     end
 
     

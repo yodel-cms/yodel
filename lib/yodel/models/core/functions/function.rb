@@ -2,9 +2,13 @@ module Yodel
   class Function
     attr_accessor :instructions, :source
     
-    def initialize(source)
-      @source = source
-      @instructions = compile(source)
+    def initialize(param)
+      if param.is_a?(String)
+        @source = param
+        @instructions = compile(param)
+      else
+        @instructions = param
+      end
     end
     
     def inspect(instruction=nil)
@@ -34,7 +38,7 @@ module Yodel
     SINGLE_QUOTE_TOKEN  = "'"
 
     def compile(source)
-      tokens = source.scan(/\w+|\.|\(|\)|,|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/)
+      tokens = source.scan(/[\w\-\+]+|\.|\(|\)|,|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/)
       parse(tokens)
     end
 
@@ -85,7 +89,7 @@ module Yodel
     # ----------------------------------------
     # Execution
     # ----------------------------------------
-    def execute(context, instruction=nil)
+    def execute(context, instruction=nil, parent_context = nil)
       instruction ||= self.instructions.first
       name, *params = instruction
 
@@ -121,11 +125,19 @@ module Yodel
       when 'format'
         format(context, params.first)
       when 'set'
-        set_field(context, params[0], params[1])
+        parent_context ||= context
+        set_field(context, parent_context, params[0], params[1])
+      when 'update'
+        parent_context ||= context
+        update_field(context, parent_context, params[0], params[1])
       when 'min'
         min(context, params[0], params[1])
       when 'max'
         max(context, params[0], params[1])
+      when 'increment'
+        increment(context, params[0], params[1])
+      when 'each'
+        each(context, params.first)
         
       # literals
       when 'string'
@@ -137,8 +149,9 @@ module Yodel
     
     protected
       def chain(context, methods)
+        parent_context = context
         methods.each do |method|
-          context = execute(context, method)
+          context = execute(context, method, parent_context)
         end
         context
       end
@@ -147,15 +160,35 @@ module Yodel
         name == 'self' ? context : context.get(name)
       end
       
-      def set_field(context, field, value)
+      def set_field(context, parent_context, field, value)
+        field = execute(parent_context, field)
+        value = execute(parent_context, value)
+        context.set(field, value)
+      end
+      
+      def update_field(context, parent_context, field, value)
+        set_field(context, parent_context, field, value)
+        context.save
+      end
+      
+      def increment(context, field, value)
         field = execute(context, field)
         value = execute(context, value)
-        context.set(field, value)
+        puts "-------------------------------------"
+        p context.inspect
+        puts "..... #{field}: #{value}"
+        context.increment!(field, value)
+        p context.inspect
       end
 
       def collect(context, field)
         raise "Context to collect must respond to collect" unless context.respond_to?(:collect)
         context.collect {|item| execute(item, field)}
+      end
+      
+      def each(context, statement)
+        raise "Context to each must respond to each" unless context.respond_to?(:each)
+        context.each {|item| execute(item, statement)}
       end
 
       def majority(context, field)
@@ -216,9 +249,9 @@ module Yodel
 
       def binary_if(context, condition, true_exp, false_exp)
         if execute(context, condition)
-          execute(context, true_exp)
+          execute(context, true_exp) if true_exp
         else
-          execute(context, false_exp)
+          execute(context, false_exp) if false_exp
         end
       end
 

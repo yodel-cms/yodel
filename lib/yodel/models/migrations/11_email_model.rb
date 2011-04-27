@@ -9,6 +9,7 @@ class EmailModelMigration < Yodel::Migration
       add_field :subject, :string
       add_field :text_body, :text
       add_field :html_body, :html
+      add_field :html_layout, :string
       emails.record_class_name = 'Yodel::Email'
     end
     
