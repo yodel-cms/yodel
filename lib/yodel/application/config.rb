@@ -38,7 +38,7 @@ module Yodel
       self.attachments_directory_name ||= 'attachments'
       
       # directories
-      self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..')
+      self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..') # FIXME: not true when a gem
       self.public_directories         << self.root.join(self.public_directory_name)
       self.layout_directories         << self.root.join(self.layouts_directory_name)
       
@@ -49,7 +49,7 @@ module Yodel
       # TODO: switch to log4r and log to a file and stdout
       # TODO: also switch rack to use this logger for requests
       # logging
-      self.logger                     ||= Logger.new('yodel.log')
+      self.logger                     ||= Logger.new(self.root.join('yodel.log'))
       self.sev_threshold              ||= Logger::DEBUG
     end
   end
