@@ -17,6 +17,7 @@ gem 'json',           '~> 1.5.1'
 gem 'rack-contrib',   '~> 1.1.0'
 gem 'linguistics',    '~> 1.0.8'
 gem 'activemerchant'
+gem 'activemerchant-payway', git: 'https://github.com/thefrontiergroup/activemerchant-payway.git'
 
 group :development do
   gem 'shoulda', '>= 0'

@@ -1,10 +1,23 @@
+GIT
+  remote: https://github.com/thefrontiergroup/activemerchant-payway.git
+  revision: eb6e712e71abd7cce506a794f7a67b8e298b5b0f
+  specs:
+    activemerchant-payway (0.0.2)
+      activemerchant (>= 1.9.1)
+
 GEM
   remote: http://rubygems.org/
   specs:
     RubyInline (3.8.6)
       ZenTest (~> 4.3)
     ZenTest (4.5.0)
+    activemerchant (1.13.0)
+      activesupport (>= 2.3.8)
+      braintree (>= 2.0.0)
+      builder (>= 2.0.0)
     activesupport (3.0.5)
+    braintree (2.10.0)
+      builder
     bson (1.2.4)
     bson_ext (1.2.4)
     builder (2.1.2)
@@ -46,6 +59,8 @@ PLATFORMS
 
 DEPENDENCIES
   RubyInline (~> 3.8.6)
+  activemerchant
+  activemerchant-payway!
   activesupport (~> 3.0.3)
   bson (~> 1.2.4)
   bson_ext (~> 1.2.4)

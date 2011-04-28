@@ -17,12 +17,12 @@ module Yodel
     before_save :hash_password
     def hash_password
       return unless password_changed? && password? && password_salt?
-      self.password = hash(password)
+      self.password = hashed_password(password)
     end
     
     # check if a plain text password matches the hashed, salted password
     def passwords_match?(password)
-      self.password_was == hash(password) ? self : nil
+      self.password_was == hashed_password(password) ? self : nil
     end
     
     # create and set a new password for this user, returning the new plain text password
@@ -33,7 +33,7 @@ module Yodel
     end
 
     protected
-      def hash(password)
+      def hashed_password(password)
         Digest::SHA1.hexdigest("#{password_salt}:#{password}")
       end
   end

@@ -168,7 +168,7 @@ module Yodel
     def changed!(name)
       ensure_field_is_valid(name)
       return if @changed.key?(name)
-      @changed[name] = get(name)
+      @changed[name] = get(name).dup
     end
   
     def field_was(name)

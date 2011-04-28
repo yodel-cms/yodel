@@ -105,61 +105,64 @@ module Yodel
     # ----------------------------------------
     # Execution
     # ----------------------------------------
-    def execute(context, instruction=nil, parent_context = nil)
+    def execute(context, instruction=nil, parent_context=nil)
       instruction ||= self.instructions.first
       name, *params = instruction
+      parent_context ||= context
 
       case name
       when 'chain'
-        chain(context, params)
+        chain(context, parent_context, params)
       when 'field'
-        get_field(context, params.first)
+        get_field(context, parent_context, params.first)
       when 'changed'
-        changed(context, params.first)
+        changed(context, parent_context, params.first)
+      when 'previous_value'
+        previous_value(context, parent_context, params.first)
       when 'collect'
-        collect(context, params.first)
+        collect(context, parent_context, params.first)
       when 'majority'
-        majority(context, params.first)
+        majority(context, parent_context, params.first)
       when 'count'
-        count(context, params.first)
+        count(context, parent_context, params.first)
       when 'invert'
         invert(context)
       when 'unique'
-        unique(context, params.first)
+        unique(context, parent_context, params.first)
       when 'average'
-        average(context, params)
+        average(context, parent_context, params)
       when 'present'
         present(context)
       when 'blank'
         blank(context)
       when 'sum'
-        sum(context, params)
+        sum(context, parent_context, params)
       when 'round'
         round(context)
       when 'if'
-        binary_if(context, params[0], params[1], params[2])
+        binary_if(context, parent_context, params[0], params[1], params[2])
       when 'strip'
         strip(context)
       when 'format'
-        format(context, params.first)
+        format(context, parent_context, params.first)
       when 'set'
-        parent_context ||= context
         set_field(context, parent_context, params[0], params[1])
       when 'update'
-        parent_context ||= context
         update_field(context, parent_context, params[0], params[1])
       when 'min'
-        min(context, params[0], params[1])
+        min(context, parent_context, params[0], params[1])
       when 'max'
-        max(context, params[0], params[1])
+        max(context, parent_context, params[0], params[1])
       when 'increment'
-        increment(context, params[0], params[1])
+        increment(context, parent_context, params[0], params[1])
+      when 'complement'
+        complement(context, parent_context, params[0], params[1])
       when 'each'
-        each(context, params.first)
+        each(context, parent_context, params.first)
       when 'deliver'
-        deliver_email(context, params[0], params[1])
+        deliver_email(context, parent_context, params[0], params[1])
       when 'call_api'
-        call_api(context, params[0], params[1])
+        call_api(context, parent_context, params[0], params[1])
         
       # literals
       when 'string'
@@ -167,33 +170,44 @@ module Yodel
       when 'int'
         params.first.to_i
       when 'hash'
-        Hash[params.collect {|entry| execute(context, entry)}]
+        Hash[params.collect {|entry| execute(context, entry, parent_context)}]
       when 'entry'
-        [execute(context, params.first), execute(context, params.last)]
+        [execute(context, params.first, parent_context), execute(context, params.last, parent_context)]
       end
     end
     
     protected
-      def chain(context, methods)
-        parent_context = context
+      def chain(context, parent_context, methods)
+        #parent_context = context
         methods.each do |method|
           context = execute(context, method, parent_context)
         end
         context
       end
 
-      def get_field(context, name)
-        name == 'self' ? context : context.get(name)
+      def get_field(context, parent_context, name)
+        case name
+        when 'self'
+          context
+        when 'root'
+          parent_context
+        else
+          context.get(name)
+        end
+      end
+      
+      def previous_value(context, parent_context, name)
+        context.field_was(execute(context, name, parent_context))
       end
       
       # TODO: change format from changed('name') to name.changed
-      def changed(context, name)
-        context.changed?(execute(context, name))
+      def changed(context, parent_context, name)
+        context.changed?(execute(context, name, parent_context))
       end
       
       def set_field(context, parent_context, field, value)
-        field = execute(parent_context, field)
-        value = execute(parent_context, value)
+        field = execute(parent_context, field, parent_context)
+        value = execute(parent_context, value, parent_context)
         context.set(field, value)
       end
       
@@ -202,48 +216,48 @@ module Yodel
         context.save
       end
       
-      def increment(context, field, value)
-        field = execute(context, field)
-        value = execute(context, value)
+      def increment(context, parent_context, field, value)
+        field = execute(context, field, parent_context)
+        value = execute(context, value, parent_context)
         context.increment!(field, value)
       end
 
-      def collect(context, field)
+      def collect(context, parent_context, field)
         raise "Context to collect must respond to collect" unless context.respond_to?(:collect)
-        context.collect {|item| execute(item, field)}
+        context.collect {|item| execute(item, field, parent_context)}
       end
       
-      def each(context, statement)
+      def each(context, parent_context, statement)
         raise "Context to each must respond to each" unless context.respond_to?(:each)
-        context.each {|item| execute(item, statement)}
+        context.each {|item| execute(item, statement, parent_context)}
       end
 
-      def majority(context, field)
+      def majority(context, parent_context, field)
         unless context.respond_to?(:size) && context.respond_to?(:count)
           raise "Majority context must be enumerable"
         end
 
-        valid = context.count {|item| execute(item, field)}
+        valid = context.count {|item| execute(item, field, parent_context)}
         valid >= (context.size - valid)
       end
       
-      def count(context, field)
+      def count(context, parent_context, field)
         unless context.respond_to?(:size) && context.respond_to?(:count)
           raise "Count context must be enumerable"
         end
 
-        context.count {|item| execute(item, field)}
+        context.count {|item| execute(item, field, parent_context)}
       end
 
       def invert(context)
         !context
       end
 
-      def unique(context, field)
-        collect(context, field).uniq
+      def unique(context, parent_context, field)
+        collect(context, parent_context, field).uniq
       end
 
-      def average(context, params)
+      def average(context, parent_context, params)
         if context.respond_to?(:collect) && context.respond_to?(:size) && params.size == 1
           count = context.size
         else
@@ -251,7 +265,7 @@ module Yodel
         end
         
         return 0.0 if count == 0
-        sum(context, params).to_f / count.to_f
+        sum(context, parent_context, params).to_f / count.to_f
       end
 
       def present(context)
@@ -262,23 +276,30 @@ module Yodel
         context.blank?
       end
 
-      def sum(context, params)
+      def sum(context, parent_context, params)
         if context.respond_to?(:collect) && params.size == 1
-          collect(context, params.first).inject(&:+)
+          collect(context, parent_context, params.first).inject(&:+)
         else
-          params.collect {|method| execute(context, method)}.inject(&:+)
+          params.collect {|method| execute(context, method, parent_context)}.inject(&:+)
         end
+      end
+      
+      def complement(context, parent_context, set1, set2)
+        set1 = execute(context, set1, parent_context)
+        set2 = execute(context, set2, parent_context)
+        raise "Sets must be iterable" unless set1.respond_to?(:to_a) && set2.respond_to?(:to_a)
+        set2.to_a - set1.to_a
       end
 
       def round(context)
         context.to_f.round
       end
 
-      def binary_if(context, condition, true_exp, false_exp)
-        if execute(context, condition)
-          execute(context, true_exp) if true_exp
+      def binary_if(context, parent_context, condition, true_exp, false_exp)
+        if execute(context, condition, parent_context)
+          execute(context, true_exp, parent_context) if true_exp
         else
-          execute(context, false_exp) if false_exp
+          execute(context, false_exp, parent_context) if false_exp
         end
       end
 
@@ -286,23 +307,23 @@ module Yodel
         context.to_s.strip
       end
       
-      def deliver_email(context, name, hash)
+      def deliver_email(context, parent_context, name, hash)
         raise "Context of deliver_email must respond to site" unless context.respond_to?(:site)
-        email = context.site.emails[execute(context, name)]
-        email.deliver(execute(context, hash))
+        email = context.site.emails[execute(context, name, parent_context)]
+        email.deliver(execute(context, hash, parent_context))
       end
       
-      def call_api(context, name, hash)
+      def call_api(context, parent_context, name, hash)
         raise "Context of call_api must respond to site" unless context.respond_to?(:site)
-        api = context.site.api_calls[execute(context, name)]
-        api.call(execute(context, hash))
+        api = context.site.api_calls[execute(context, name, parent_context)]
+        api.call(execute(context, hash, parent_context))
       end
 
-      def format(context, str)
-        str = execute(context, str)
+      def format(context, parent_context, str)
+        str = execute(context, str, parent_context)
         str.gsub(/{{\s*([\w\.]+)\s*}}/) do |field|
           fn = Yodel::Function.new($1)
-          fn.execute(context)
+          fn.execute(context, nil, parent_context)
         end
       end
       
@@ -310,12 +331,12 @@ module Yodel
       # items.min(index)
       # items.collect(index).min
       # min(one, two)
-      def min(context, one, two)
-        [execute(context, one), execute(context, two)].min        
+      def min(context, parent_context, one, two)
+        [execute(context, one, parent_context), execute(context, two, parent_context)].min        
       end
       
-      def max(context, one, two)
-        [execute(context, one), execute(context, two)].max
+      def max(context, parent_context, one, two)
+        [execute(context, one, parent_context), execute(context, two, parent_context)].max
       end
   end
 end

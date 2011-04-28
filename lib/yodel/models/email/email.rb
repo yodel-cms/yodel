@@ -26,7 +26,8 @@ module Yodel
       
       # email headers
       %w{to from cc bcc subject}.each do |param|
-        mail.send("#{param}=", options[param] || options[param.to_sym] || self.send(param))
+        options[param] ||= options[param.to_sym] || self.send(param)
+        mail.send("#{param}=", options[param])
       end
       render_binding = binding
       

@@ -25,6 +25,11 @@ module Yodel
       @hash.delete(key)
     end
     
+    def clear
+      notify!
+      @hash.clear
+    end
+    
     def []=(key, value)
       notify!
       @hash[key] = value
@@ -32,6 +37,13 @@ module Yodel
     
     def method_missing(name, *args, &block)
       @hash.send(name, *args, &block)
+    end
+    
+    # See ChangeSensitiveArray#dup for an explanation of this method
+    def dup
+      copy = Yodel::ChangeSensitiveHash.new(@record.dup, @field.dup, @hash.dup)
+      @record.typecast[@field] = copy
+      self
     end
     
     private

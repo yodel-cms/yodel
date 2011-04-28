@@ -13,7 +13,7 @@ module Yodel
       return nil if value.blank?
       raise "ManyStoreAssociation values must be enumerable (#{name})" unless value.respond_to?(:each)
       
-      store = record.get_raw(name)
+      store = record.get_raw(name) || []
       store.clear
       value.each do |associated_record|
         store << associated_record.id

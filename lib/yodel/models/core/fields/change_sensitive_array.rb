@@ -25,6 +25,11 @@ module Yodel
       @array.push(value)
     end
     
+    def clear
+      notify!
+      @array.clear
+    end
+    
     def pop
       notify!
       @array.pop
@@ -63,6 +68,17 @@ module Yodel
     
     def method_missing(name, *args, &block)
       @array.send(name, *args, &block)
+    end
+    
+    # Calling changed! on @record will call dup on this array before any mutating
+    # operation has been performed. We need to store the original unedited version
+    # in typecast (the 'was' value), then return this array since the mutating
+    # operation is being performed on it. Since dup returns self, the array being
+    # operated on will be stored in @record.changed, and be modified by the op.
+    def dup
+      copy = Yodel::ChangeSensitiveArray.new(@record.dup, @field.dup, @array.dup)
+      @record.typecast[@field] = copy
+      self
     end
     
     private
