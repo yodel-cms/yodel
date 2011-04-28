@@ -298,12 +298,11 @@ module Yodel
         api.call(execute(context, hash))
       end
 
-      # TODO: currently substitutions that span multiple record will fail e.g
-      # {{name}} will work but {{record.name}} won't
       def format(context, str)
         str = execute(context, str)
-        str.gsub(/{{\s*(\w+)\s*}}/) do |field|
-          context.get($1)
+        str.gsub(/{{\s*([\w\.]+)\s*}}/) do |field|
+          fn = Yodel::Function.new($1)
+          fn.execute(context)
         end
       end
       
