@@ -199,6 +199,16 @@ module Yodel
       model.run_record_after_update_callbacks(self)
     end
     
+    before_destroy :run_record_before_destroy_callbacks
+    def run_record_before_destroy_callbacks
+      model.run_record_before_destroy_callbacks(self)
+    end
+
+    after_destroy :run_record_after_destroy_callbacks
+    def run_record_after_destroy_callbacks
+      model.run_record_after_destroy_callbacks(self)
+    end
+    
     
     
     # ----------------------------------------

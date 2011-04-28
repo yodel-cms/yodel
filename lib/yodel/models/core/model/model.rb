@@ -22,6 +22,8 @@ module Yodel
     field :record_after_create_callbacks, :array, of: :strings, inherited: true
     field :record_before_update_callbacks, :array, of: :strings, inherited: true
     field :record_after_update_callbacks, :array, of: :strings, inherited: true
+    field :record_before_destroy_callbacks, :array, of: :strings, inherited: true
+    field :record_after_destroy_callbacks, :array, of: :strings, inherited: true
     
     
     # ----------------------------------------
@@ -88,6 +90,14 @@ module Yodel
     
     def run_record_after_update_callbacks(record)
       record_after_update_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_before_destroy_callbacks(record)
+      record_before_destroy_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
+    end
+    
+    def run_record_after_destroy_callbacks(record)
+      record_after_destroy_callbacks.each {|fn| Yodel::Function.new(fn).execute(record)}
     end
 
     

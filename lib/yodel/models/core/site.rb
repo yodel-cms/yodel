@@ -48,6 +48,10 @@ module Yodel
       options[component].try(:fetch, option, nil).try(:fetch, 'value', nil)
     end
     
+    def log
+      @log ||= Yodel::Log.new(self)
+    end
+    
     
     # ----------------------------------------
     # Database

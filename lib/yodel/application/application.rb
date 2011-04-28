@@ -33,6 +33,11 @@ module Yodel
         Yodel.config.logger.warn ""
       end
       
+      # FIXME: for production, load layouts once
+      if Yodel.env.production?
+        Yodel::Site.all.each {|site| Yodel::Layout.reload_layouts(site)}
+      end
+      
       # initialise a rack endpoint
       run Yodel::RequestHandler.new
       @app = to_app

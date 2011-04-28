@@ -18,8 +18,11 @@ module Yodel
     def execute
       case self.type
       when 'deliver_email'
-        email = site.emails.find(params.delete('id'))
+        email = site.emails.find(params.delete('_id'))
         email.perform_delivery(params)
+      when 'call_api'
+        api_call = site.api_calls.find(params.delete('_id'))
+        api_call.perform_call(params)
       end
     end
   end

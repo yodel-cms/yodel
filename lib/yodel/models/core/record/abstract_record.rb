@@ -3,7 +3,7 @@ module Yodel
     attr_reader   :values, :typecast, :changed, :errors, :stash
     
     def initialize(values={})
-      @new      = values.blank?
+      @new      = values.blank? # FIXME: this isn't true - values should be able to be provided as defaults; check for id in values here?
       @values   = default_values.merge(values.stringify_keys) # FIXME: don't merge here; default || values
       @typecast = {} # typecast versions of original document values
       @changed  = {} # typecast versions of changed values

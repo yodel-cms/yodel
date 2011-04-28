@@ -48,7 +48,10 @@ module Yodel
         # sub-layouts in folders with the same name as the layout
         Dir.glob(File.join(path, "*.{#{mime_type_extensions}}")).each do |file_path|
           name = File.basename(file_path, File.extname(file_path))
-          raise Yodel::DuplicateLayout if site.layouts.exists?(name: name, mime_type: mime_type_name)
+          if site.layouts.exists?(name: name, mime_type: mime_type_name)
+            other_layout = site.layouts.where(name: name, mime_type: mime_type_name).first
+            raise Yodel::DuplicateLayout, file_path, other_layout.path
+          end
           
           layout = site.file_layouts.new
           layout.name = name

@@ -24,7 +24,7 @@ module Yodel
       # attempt to find a matching page for this request
       page = site.pages.where(path: path).first
       return fail_with "Path (#{request.path}) not found for this site (#{site.name})." if page.nil?
-      Yodel::Layout.reload_layouts(site) #if Yodel.env.development? # FIXME: implement production caching
+      Yodel::Layout.reload_layouts(site) if Yodel.env.development? # FIXME: implement production caching
       page.respond_to_request(request, response, mime_type)
       response.finish
     end

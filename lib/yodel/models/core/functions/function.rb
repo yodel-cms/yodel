@@ -33,18 +33,23 @@ module Yodel
     CALL_TOKEN          = '.'
     START_PARAMS_TOKEN  = '('
     END_PARAMS_TOKEN    = ')'
+    START_HASH_TOKEN    = '{'
+    END_HASH_TOKEN      = '}'
     PARAM_DELIM_TOKEN   = ','
+    HASH_DELIM_TOKEN    = ':'
+    ENTRY_FLAG          = '!'
     DOUBLE_QUOTE_TOKEN  = '"'
     SINGLE_QUOTE_TOKEN  = "'"
 
     def compile(source)
-      tokens = source.scan(/[\w\-\+]+|\.|\(|\)|,|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/)
+      tokens = source.scan(/[\w\-\+]+|\.|\(|\)|\{|\}|:|,|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/)
       parse(tokens)
     end
 
     def parse(tokens)
       params = false
       chain  = false
+      hash   = false
       instructions = []
 
       until tokens.empty?
@@ -58,8 +63,20 @@ module Yodel
         when END_PARAMS_TOKEN
           tokens.unshift(END_PARAMS_TOKEN) unless params
           break
+        when ENTRY_FLAG
+          hash = true
+          instructions << ['entry'] + parse(tokens)
+        when START_HASH_TOKEN
+          tokens.unshift(ENTRY_FLAG)
+          instructions << ['hash'] + parse(tokens)
+        when END_HASH_TOKEN
+          tokens.unshift(END_HASH_TOKEN) if hash
+          break
+        when HASH_DELIM_TOKEN
+          instructions += parse(tokens)
         when PARAM_DELIM_TOKEN
-          if params
+          if params || hash
+            tokens.unshift(ENTRY_FLAG) if hash
             instructions += parse(tokens)
           else
             tokens.unshift(PARAM_DELIM_TOKEN)
@@ -85,7 +102,6 @@ module Yodel
       end
     end
     
-    
     # ----------------------------------------
     # Execution
     # ----------------------------------------
@@ -98,6 +114,8 @@ module Yodel
         chain(context, params)
       when 'field'
         get_field(context, params.first)
+      when 'changed'
+        changed(context, params.first)
       when 'collect'
         collect(context, params.first)
       when 'majority'
@@ -138,12 +156,20 @@ module Yodel
         increment(context, params[0], params[1])
       when 'each'
         each(context, params.first)
+      when 'deliver'
+        deliver_email(context, params[0], params[1])
+      when 'call_api'
+        call_api(context, params[0], params[1])
         
       # literals
       when 'string'
         params.first
       when 'int'
         params.first.to_i
+      when 'hash'
+        Hash[params.collect {|entry| execute(context, entry)}]
+      when 'entry'
+        [execute(context, params.first), execute(context, params.last)]
       end
     end
     
@@ -160,6 +186,11 @@ module Yodel
         name == 'self' ? context : context.get(name)
       end
       
+      # TODO: change format from changed('name') to name.changed
+      def changed(context, name)
+        context.changed?(execute(context, name))
+      end
+      
       def set_field(context, parent_context, field, value)
         field = execute(parent_context, field)
         value = execute(parent_context, value)
@@ -174,11 +205,7 @@ module Yodel
       def increment(context, field, value)
         field = execute(context, field)
         value = execute(context, value)
-        puts "-------------------------------------"
-        p context.inspect
-        puts "..... #{field}: #{value}"
         context.increment!(field, value)
-        p context.inspect
       end
 
       def collect(context, field)
@@ -257,6 +284,18 @@ module Yodel
 
       def strip(context)
         context.to_s.strip
+      end
+      
+      def deliver_email(context, name, hash)
+        raise "Context of deliver_email must respond to site" unless context.respond_to?(:site)
+        email = context.site.emails[execute(context, name)]
+        email.deliver(execute(context, hash))
+      end
+      
+      def call_api(context, name, hash)
+        raise "Context of call_api must respond to site" unless context.respond_to?(:site)
+        api = context.site.api_calls[execute(context, name)]
+        api.call(execute(context, hash))
       end
 
       # TODO: currently substitutions that span multiple record will fail e.g
