@@ -4,6 +4,7 @@ class UserModelMigration < Yodel::Migration
       add_field :first_name, :string
       add_field :last_name, :string
       add_field :email, :email, validations: {required: {}, unique: {}}, searchable: false
+      add_field :oauth_id, :string, index: true, searchable: false
       add_field :username, :string, index: true, validations: {required: {}, unique: {}}, searchable: false
       add_field :password, :password, validations: {required: {}}, searchable: false
       add_field :password_salt, :string, display: false, searchable: false

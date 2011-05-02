@@ -17,6 +17,15 @@ class SecurityPageModelsMigration < Yodel::Migration
       add_field :email_field, :string, validations: {required: {}}, default: 'email'
       password_reset_pages.record_class_name = 'Yodel::PasswordResetPage'
     end
+    
+    site.pages.create_model :facebook_login_pages do |facebook_login_pages|
+      add_field :callback_uri, :string
+      add_field :app_id, :string
+      add_field :app_secret, :string
+      add_one   :join_page, model: :page
+      add_one   :after_login_page, model: :page
+      facebook_login_pages.record_class_name = 'Yodel::FacebookLoginPage'
+    end
   end
   
   def self.down(site)

@@ -3,6 +3,7 @@ component 'yodel' do
   requires  'json', 'image_science', 'rack/contrib', 'forwardable'
   requires  'bigdecimal', 'date', 'ostruct', 'linguistics', 'mail'
   requires  'bson', 'net/http', 'activemerchant', 'activemerchant-payway'
+  requires  'open-uri'
   
   # require active support extensions individually to keep fit and lean
   requires  'active_support/core_ext/object/blank', 'active_support/core_ext/object/try'
