@@ -282,6 +282,12 @@ module Yodel
       RecordIndex.remove_index_for_field(self, field) if field.index?
     end
     
+    def modify_field(name, options={}, &block)
+      field = record_fields[name.to_s]
+      field.options.merge!(options) unless options.empty?
+      yield field if block_given?
+    end
+    
     # TODO: remove copy of this method when abstract_model is mixed in
     def deep_stringify_keys(hash)
       hash.each_with_object({}) do |(key, value), new_hash|

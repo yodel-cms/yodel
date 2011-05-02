@@ -11,6 +11,10 @@ module Yodel
     end
     alias :add_field :field
     
+    def modify_field(name, options={})
+      fields[name.to_s].options.merge!(options)
+    end
+    
     def embed_many(name, options={}, &block)
       embedded_field = field(name, 'many_embedded', options)
       embedded_field.instance_exec(embedded_field, &block) if block_given?
