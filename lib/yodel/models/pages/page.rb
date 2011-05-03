@@ -221,7 +221,8 @@ module Yodel
     def status(code)
       response.status = code
     end
-
+    
+    # FIXME: make layout take a string or symbol param, remove .to_s from render_or_default, change blog.rb layout to use a symbol not string, check all other calls to layout() and change appropriately
     # Determine the first best layout to be used by this page for rendering
     def layout(mime_type)
       # if we're in production we'll have a reference to a layout record

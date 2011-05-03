@@ -17,6 +17,15 @@ module Yodel
             JSON.generate(data)
           end
         end
+        
+        mime_type :atom do
+          extensions 'atom'
+          mime_types 'application/atom+xml'
+          layout_processor :eval
+          builder do
+            Builder::XmlMarkup.new
+          end
+        end
       end
       
     end
