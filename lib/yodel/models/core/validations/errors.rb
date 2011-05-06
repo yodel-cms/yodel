@@ -31,6 +31,11 @@ module Yodel
       @summary = nil
     end
     
+    # errors on a collection
+    def <<(error)
+      self['_'] << error
+    end
+    
     def summarise
       @summary ||= @errors.each_with_object({}) do |(field, errors), hash|
         if errors.respond_to?(:summarise)

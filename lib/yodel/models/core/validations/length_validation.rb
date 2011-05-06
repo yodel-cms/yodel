@@ -19,11 +19,11 @@ module Yodel
       min, max = params
 
       if min == 0
-        "is too long (maximum length is #{max} characters)"
+        "is too long (maximum length is #{max})"
       elsif max == 0
-        "is too short (minimum length is #{min} characters)"
+        "is too short (minimum length is #{min})"
       else
-        "must be between #{min} and #{max} characters"
+        "must be between #{min} and #{max}"
       end
     end
   end

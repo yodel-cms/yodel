@@ -16,7 +16,7 @@ module Yodel
     
     def validate(record, errors)
       Yodel::EmbeddedRecordsValidation.validate(self, record.get(name), record, errors)
-      super
+      super(record, errors)
     end
     
     def default_input_type

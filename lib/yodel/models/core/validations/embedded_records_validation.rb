@@ -6,12 +6,14 @@ module Yodel
     end
     
     def self.validate(field, records, record, errors)
+      # embedded record validations
       records = [records] unless records.respond_to?(:to_a)
       embedded_errors = Yodel::Errors.new
       records.to_a.each_with_index do |embedded_record, index|
         embedded_errors[index] = embedded_record.valid? ? nil : embedded_record.errors
       end
       
+      # field set validations
       field.fields.each do |name, embedded_field|
         next unless embedded_field.set_validations
         set_value = records.to_a.collect {|embedded| embedded.get(name)}.uniq
