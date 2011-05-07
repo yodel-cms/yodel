@@ -13,6 +13,10 @@ module Yodel
     def id
       @values['_id']
     end
+    
+    def set_id(new_id)
+      @values['_id'] = new_id
+    end
 
     def default_values
       super.merge({'_id' => Yodel::PrimaryKeyFactory.pk})

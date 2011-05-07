@@ -15,6 +15,10 @@ module Yodel
       fields[name.to_s].options.merge!(options)
     end
     
+    def remove_field(name)
+      fields.delete(name.to_s)
+    end
+    
     def embed_many(name, options={}, &block)
       embedded_field = field(name, 'many_embedded', options)
       embedded_field.instance_exec(embedded_field, &block) if block_given?

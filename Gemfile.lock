@@ -1,6 +1,6 @@
 GIT
-  remote: https://github.com/thefrontiergroup/activemerchant-payway.git
-  revision: eb6e712e71abd7cce506a794f7a67b8e298b5b0f
+  remote: https://github.com/willcannings/activemerchant-payway.git
+  revision: 9508a8bebbf8ec3505834b52d0280572bdb6c335
   specs:
     activemerchant-payway (0.0.2)
       activemerchant (>= 1.9.1)

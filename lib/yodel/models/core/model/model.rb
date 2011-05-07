@@ -285,7 +285,7 @@ module Yodel
     def modify_field(name, options={}, &block)
       field = record_fields[name.to_s]
       field.options.merge!(options) unless options.empty?
-      yield field if block_given?
+      field.instance_exec(field, &block) if block_given?
     end
     
     # TODO: remove copy of this method when abstract_model is mixed in

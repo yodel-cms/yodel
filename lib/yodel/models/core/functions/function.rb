@@ -137,6 +137,8 @@ module Yodel
         blank(context)
       when 'sum'
         sum(context, parent_context, params)
+      when 'multiply'
+        multiply(context, parent_context, params)
       when 'round'
         round(context)
       when 'if'
@@ -281,6 +283,14 @@ module Yodel
           collect(context, parent_context, params.first).inject(&:+)
         else
           params.collect {|method| execute(context, method, parent_context)}.inject(&:+)
+        end
+      end
+      
+      def multiply(context, parent_context, params)
+        if context.respond_to?(:collect) && params.size == 1
+          collect(context, parent_context, params.first).inject(&:*)
+        else
+          params.collect {|method| execute(context, method, parent_context)}.inject(&:*)
         end
       end
       
