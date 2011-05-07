@@ -9,8 +9,12 @@ module Yodel
     end
   
     def describe
-      combinations = params.collect.with_index {|combo, index| "#{index + 1}. #{combo.to_sentence}"}
-      "may not be in these combinations: #{combinations.to_sentence(two_words_connector: ', and ')}"
+      if params.size > 1
+        combinations = params.collect.with_index {|combo, index| "#{index + 1}. #{combo.to_sentence}"}
+      else
+        combinations = [params.first.to_sentence]
+      end
+      "may not contain #{combinations.size == 1 ? 'this' : 'these'} combination#{'s' if combinations.size > 1}: #{combinations.to_sentence(two_words_connector: ', and ')}"
     end
   end
 end

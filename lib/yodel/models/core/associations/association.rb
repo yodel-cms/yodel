@@ -1,9 +1,5 @@
 module Yodel
-  class Association < Field    
-    def validate(record, errors)
-      # noop
-    end
-    
+  class Association < Field
     def json_action(action, value, record)
       store = record.get_raw(name)
       

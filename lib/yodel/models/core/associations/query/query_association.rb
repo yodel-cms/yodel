@@ -9,6 +9,10 @@ module Yodel
       end
     end
     
+    def validate(record, errors)
+      # noop
+    end
+    
     def default
       nil
     end

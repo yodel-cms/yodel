@@ -10,6 +10,10 @@ module Yodel
       end
     end
     
+    def validate(record, errors)
+      # noop
+    end
+    
     def unassociate(associated_record, store, record)
       if store.is_a?(Array)
         store.delete(associated_record.id)
