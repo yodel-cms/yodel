@@ -4,8 +4,8 @@ module Yodel
     DELAYED_WORKERS = 1
     
     def self.run
-      immediate_queue = Yodel::Queue.new(due: nil)
-      delayed_queue = Yodel::Queue.new(due: {'$ne' => nil})
+      immediate_queue = Yodel::Queue.new(true)
+      delayed_queue = Yodel::Queue.new(false)
 
       immediate_workers = []
       delayed_workers = []

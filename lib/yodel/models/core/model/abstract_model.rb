@@ -12,7 +12,10 @@ module Yodel
     alias :add_field :field
     
     def modify_field(name, options={})
-      fields[name.to_s].options.merge!(options)
+      field = fields[name.to_s]
+      field.options = field.options.dup.merge(deep_stringify_keys(options))
+      field.instance_exec(field, &block) if block_given?
+      changed!('record_fields') if respond_to?(:changed!)
     end
     
     def remove_field(name)

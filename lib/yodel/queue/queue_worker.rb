@@ -14,7 +14,6 @@ module Yodel
           task = @queue.pop
           sleep(PAUSE_DURATION) and next if task.nil?
           task.execute
-          task.destroy
           @stats_thread.processed_task
         end
       end
