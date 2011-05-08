@@ -143,6 +143,10 @@ module Yodel
         round(context)
       when 'if'
         binary_if(context, parent_context, params[0], params[1], params[2])
+      when 'greater_than'
+        greater_than(context, parent_context, params.first)
+      when 'less_than'
+        less_than(context, parent_context, params.first)
       when 'strip'
         strip(context)
       when 'format'
@@ -311,6 +315,16 @@ module Yodel
         else
           execute(context, false_exp, parent_context) if false_exp
         end
+      end
+      
+      def greater_than(context, parent_context, value)
+        value = execute(parent_context, value, parent_context)
+        context > value
+      end
+      
+      def less_than(context, parent_context, value)
+        value = execute(parent_context, value, parent_context)
+        context < value
       end
 
       def strip(context)
