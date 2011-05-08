@@ -22,7 +22,12 @@ module Yodel
       # setup middleware
       use Rack::NestedParams
       use Rack::MethodOverride
-      use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret, domain: '.threadex.com.au'
+      if Yodel.env.development?
+        use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
+      else
+        # FIXME: need to do this once per site
+        use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret, domain: '.threadex.com.au'
+      end
       Yodel.initialise_middleware_with_app(self)
       
       # check for any remaining migrations
