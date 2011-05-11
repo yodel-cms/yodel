@@ -33,7 +33,7 @@ module Yodel
         if user
           name = user.name
           new_password = user.reset_password
-          site.emails[:password_reset].deliver_email to: user.email, new_password: new_password, first_name: user.first_name
+          site.emails[:password_reset].deliver to: user.email, new_password: new_password, first_name: user.first_name
           self.reset = true
         else
           self.failed_email_lookup = true
