@@ -275,6 +275,22 @@ module Yodel
     
     
     # ----------------------------------------
+    # Rendering
+    # ----------------------------------------
+    def content
+      @content
+    end
+    
+    def set_content(content)
+      @content = content
+    end
+    
+    def get_binding
+      binding
+    end
+    
+    
+    # ----------------------------------------
     # Search
     # ----------------------------------------
     before_save :update_search_keywords

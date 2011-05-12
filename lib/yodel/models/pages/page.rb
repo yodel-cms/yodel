@@ -281,20 +281,16 @@ module Yodel
       yield
     end
     
-    def content
-      @content ||= get('content')
-    end
-    
     def set_content(content)
       @content = content
     end
     
-    def page
-      self
+    def content
+      @content ||= get('content')
     end
     
-    def get_binding
-      binding
+    def page
+      self
     end
     
     def user_allowed_to?(action)
