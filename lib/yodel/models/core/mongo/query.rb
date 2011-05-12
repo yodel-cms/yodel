@@ -9,6 +9,10 @@ module Yodel
       super(collection, scope)
     end
     
+    def distinct(key)
+      record = collection.distinct(key, criteria.to_hash)
+    end
+    
     # TODO: we only cache queries where _id, _site_id, and model are present; _id on
     # its own is a strong enough restriction, so why can't we cache all queries with id?
     # the query may not match (extra restrictions), but for quries that do match, we
