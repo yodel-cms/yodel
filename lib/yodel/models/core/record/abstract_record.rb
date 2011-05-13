@@ -121,7 +121,12 @@ module Yodel
     def id
       object_id
     end
-  
+    
+    def clear_key(name)
+      @changed.delete(name)
+      @typecast.delete(name)
+    end
+    
     def get(name)
       ensure_field_is_valid(name)
       return @changed[name] if @changed.key?(name)

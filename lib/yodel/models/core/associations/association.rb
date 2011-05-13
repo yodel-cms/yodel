@@ -28,7 +28,7 @@ module Yodel
     
     private
       def process_json_items(items, record, store, method)
-        items = [items] unless items.respond_to?(:each)
+        items = [items] unless items.is_a?(Array)
         items.each do |raw_item|
           item = process_json_item(raw_item, store, record)
           next if item.nil?

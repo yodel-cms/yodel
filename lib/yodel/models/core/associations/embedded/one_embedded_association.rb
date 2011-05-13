@@ -43,7 +43,7 @@ module Yodel
       def associate(embedded_record, store, record)
         raise "Associated record must be an Embedded Record" unless embedded_record.is_a?(EmbeddedRecord)
         embedded_record.save
-        store = embedded_record.values
+        record.set(name, embedded_record)
       end
   end
 end
