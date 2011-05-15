@@ -1,7 +1,7 @@
 module Yodel
   class RecordProxyPage < Page
     def record
-      @record ||= record_model.find(params['id'])
+      @record ||= record_model.find(BSON::ObjectId.from_string(params['id']))
     end
     
     def record=(record)
