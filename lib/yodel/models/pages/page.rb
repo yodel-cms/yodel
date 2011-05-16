@@ -76,7 +76,9 @@ module Yodel
     
     def form_for_page(options={}, &block)
       options[:method] = new? ? 'post' : 'put'
-      form_for(self, path_was, options, &block)
+      form_path = path_was
+      form_path += '.json' if options[:remote]
+      form_for(self, form_path, options, &block)
     end
     
     def immediately(action, options={})

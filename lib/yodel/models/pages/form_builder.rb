@@ -186,7 +186,7 @@ module Yodel
           function_name = "#{@id}_#{name}"
           instance_variable_set("@#{name}_function", function_name)
           Hpricot::Elem.new('script', {}, [
-            Hpricot::Text.new("function #{function_name}(#{parameter}){"),
+            Hpricot::Text.new("#{function_name} = function(#{parameter}){"),
             Hpricot::Text.new(content.join),
             Hpricot::Text.new("}"),
           ])
