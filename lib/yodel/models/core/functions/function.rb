@@ -155,6 +155,8 @@ module Yodel
         less_than(context, parent_context, params.first)
       when 'less_than_or_equal_to'
         less_than_or_equal_to(context, parent_context, params.first)
+      when 'not_equal'
+        not_equal(context, parent_context, params.first)
       when 'and'
         binary_and(context, parent_context, params[0], params[1])
       when 'or'
@@ -380,6 +382,11 @@ module Yodel
       def less_than_or_equal_to(context, parent_context, value)
         value = execute(parent_context, value, parent_context)
         context <= value
+      end
+      
+      def not_equal(context, parent_context, value)
+        value = execute(parent_context, value, parent_context)
+        context != value
       end
       
       def binary_and(context, parent_context, operand1, operand2)
