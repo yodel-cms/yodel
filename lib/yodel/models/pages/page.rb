@@ -224,13 +224,20 @@ module Yodel
     
     # FIXME: make layout take a string or symbol param, remove .to_s from render_or_default, change blog.rb layout to use a symbol not string, check all other calls to layout() and change appropriately
     # Determine the first best layout to be used by this page for rendering
-    def layout(mime_type)
+    def layout(mime_type, editing=false)
       # if we're in production we'll have a reference to a layout record
       #return page_layout_record if page_layout_record # FIXME: implement layout caching
       
       # try and return a layout by name or by the name of the page's class
-      layout = site.layouts.where(name: page_layout, mime_type: mime_type).first
-      layout = site.layouts.where(name: model.name.underscore, mime_type: mime_type).first unless layout
+      layout_name = editing ? edit_layout : page_layout
+      layout = site.layouts.where(name: layout_name, mime_type: mime_type).first
+      
+      unless layout
+        layout_name = model.name.underscore
+        layout_name = "edit_#{layout_name}" if editing
+        layout = site.layouts.where(name: layout_name, mime_type: mime_type).first
+      end
+      
       return layout if layout
       
       # otherwise fall back to the parent's layout
@@ -276,7 +283,8 @@ module Yodel
     
     def render_or_default(mime_type, &block)
       @content ||= content
-      layout(mime_type.to_s).render(self)
+      editing = @_request && params && params['action'] == 'edit'
+      layout(mime_type.to_s, editing).render(self)
     rescue Yodel::LayoutNotFound
       yield
     end

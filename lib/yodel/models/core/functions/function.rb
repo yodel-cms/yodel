@@ -115,6 +115,8 @@ module Yodel
         chain(context, parent_context, params)
       when 'field'
         get_field(context, parent_context, params.first)
+      when 'find'
+        find_record(context, parent_context, params[0], params[1])
       when 'changed'
         changed(context, parent_context, params.first)
       when 'previous_value'
@@ -131,6 +133,8 @@ module Yodel
         unique(context, parent_context, params.first)
       when 'average'
         average(context, parent_context, params)
+      when 'as_a_percentage_of'
+        as_a_percentage_of(context, parent_context, params.first)
       when 'present'
         present(context)
       when 'blank'
@@ -145,8 +149,16 @@ module Yodel
         binary_if(context, parent_context, params[0], params[1], params[2])
       when 'greater_than'
         greater_than(context, parent_context, params.first)
+      when 'greater_than_or_equal_to'
+        greater_than_or_equal_to(context, parent_context, params.first)
       when 'less_than'
         less_than(context, parent_context, params.first)
+      when 'less_than_or_equal_to'
+        less_than_or_equal_to(context, parent_context, params.first)
+      when 'and'
+        binary_and(context, parent_context, params[0], params[1])
+      when 'or'
+        binary_or(context, parent_context, params[0], params[1])
       when 'strip'
         strip(context)
       when 'format'
@@ -200,6 +212,23 @@ module Yodel
         else
           context.get(name)
         end
+      rescue
+        nil
+      end
+      
+      def find_record(context, parent_context, model_name, key)
+        raise "Parent context of find_record must respond to site" unless parent_context.respond_to?(:site)
+        model_name = execute(context, model_name, parent_context)
+        key = execute(context, key, parent_context)
+        model = parent_context.site.model_by_plural_name(model_name)
+        
+        if key == 'id'
+          value = BSON::ObjectId.from_string(context)
+        else
+          value = context
+        end
+        
+        model.where(key => value).first
       end
       
       def previous_value(context, parent_context, name)
@@ -251,8 +280,12 @@ module Yodel
         unless context.respond_to?(:size) && context.respond_to?(:count)
           raise "Count context must be enumerable"
         end
-
-        context.count {|item| execute(item, field, parent_context)}
+        
+        if field.nil?
+          context.size
+        else
+          context.count {|item| execute(item, field, parent_context)}
+        end
       end
 
       def invert(context)
@@ -272,6 +305,18 @@ module Yodel
         
         return 0.0 if count == 0
         sum(context, parent_context, params).to_f / count.to_f
+      end
+      
+      def as_a_percentage_of(context, parent_context, count)
+        count = execute(context, count, parent_context)
+        context = context.to_f
+        count = count.to_f
+        
+        if context == 0 || count == 0
+          return 0
+        else
+          (context / count) * 100
+        end
       end
 
       def present(context)
@@ -325,6 +370,38 @@ module Yodel
       def less_than(context, parent_context, value)
         value = execute(parent_context, value, parent_context)
         context < value
+      end
+      
+      def greater_than_or_equal_to(context, parent_context, value)
+        value = execute(parent_context, value, parent_context)
+        context >= value
+      end
+        
+      def less_than_or_equal_to(context, parent_context, value)
+        value = execute(parent_context, value, parent_context)
+        context <= value
+      end
+      
+      def binary_and(context, parent_context, operand1, operand2)
+        operand1 = execute(context, operand1, parent_context)
+        
+        if operand2
+          operand2 = execute(context, operand2, parent_context)
+          operand1 && operand2
+        else
+          context && operand1
+        end
+      end
+      
+      def binary_or(context, parent_context, operand1, operand2)
+        operand1 = execute(context, operand1, parent_context)
+        
+        if operand2
+          operand2 = execute(context, operand2, parent_context)
+          operand1 || operand2
+        else
+          context || operand1
+        end
       end
 
       def strip(context)

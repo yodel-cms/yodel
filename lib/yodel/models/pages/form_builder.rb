@@ -67,6 +67,10 @@ module Yodel
       end if element
     end
     
+    def record
+      @record
+    end
+    
     
     def label(name, text=nil, options={})
       text ||= name.to_s.humanize
