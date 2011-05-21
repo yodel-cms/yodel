@@ -163,6 +163,8 @@ module Yodel
         binary_and(context, parent_context, params[0], params[1])
       when 'or'
         binary_or(context, parent_context, params[0], params[1])
+      when 'include'
+        set_include(context, parent_context, params.first)
       when 'strip'
         strip(context)
       when 'format'
@@ -213,6 +215,11 @@ module Yodel
           context
         when 'root'
           parent_context
+        # TODO: these should be caught as booleans instead of being treated as field names
+        when 'true'
+          true
+        when 'false'
+          false
         else
           context.get(name)
         end
@@ -360,6 +367,12 @@ module Yodel
         set2 = execute(context, set2, parent_context)
         raise "Sets must be iterable" unless set1.respond_to?(:to_a) && set2.respond_to?(:to_a)
         set2.to_a - set1.to_a
+      end
+      
+      def set_include(context, parent_context, item)
+        item = execute(context, item, parent_context)
+        raise "Context must respond to include?" unless context.respond_to?(:include?)
+        context.include?(item)
       end
 
       def round(context)

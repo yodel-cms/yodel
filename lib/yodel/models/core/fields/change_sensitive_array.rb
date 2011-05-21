@@ -66,6 +66,10 @@ module Yodel
       @array.size
     end
     
+    def include?(item)
+      @array.include?(item)
+    end
+    
     def method_missing(name, *args, &block)
       @array.send(name, *args, &block)
     end
