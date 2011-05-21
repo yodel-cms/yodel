@@ -141,6 +141,8 @@ module Yodel
         blank(context)
       when 'sum'
         sum(context, parent_context, params)
+      when 'subtract'
+        subtract(context, parent_context, params)
       when 'multiply'
         multiply(context, parent_context, params)
       when 'round'
@@ -331,17 +333,25 @@ module Yodel
 
       def sum(context, parent_context, params)
         if context.respond_to?(:collect) && params.size == 1
-          collect(context, parent_context, params.first).inject(&:+)
+          collect(context, parent_context, params.first).compact.inject(&:+)
         else
-          params.collect {|method| execute(context, method, parent_context)}.inject(&:+)
+          params.collect {|method| execute(context, method, parent_context)}.compact.inject(&:+)
+        end
+      end
+      
+      def subtract(context, parent_context, params)
+        if context.respond_to?(:collect) && params.size == 1
+          collect(context, parent_context, params.first).compact.inject(&:-)
+        else
+          params.collect {|method| execute(context, method, parent_context)}.compact.inject(&:-)
         end
       end
       
       def multiply(context, parent_context, params)
         if context.respond_to?(:collect) && params.size == 1
-          collect(context, parent_context, params.first).inject(&:*)
+          collect(context, parent_context, params.first).compact.inject(&:*)
         else
-          params.collect {|method| execute(context, method, parent_context)}.inject(&:*)
+          params.collect {|method| execute(context, method, parent_context)}.compact.inject(&:*)
         end
       end
       
