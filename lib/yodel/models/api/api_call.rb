@@ -5,7 +5,6 @@ module Yodel
     end
     
     def perform_call(data)
-      puts "RUNNING API: #{name}"
       data = decode_data_hash(data)
       mime = Yodel.mime_types[mime_type.to_sym]
       headers = {'Content-Type' => mime.default_mime_type}
@@ -30,7 +29,6 @@ module Yodel
           # FIXME: implement
         end
         response = http.request(request, payload)
-        p response.body
         Yodel::Function.new(function).execute(binding)
       end
     end
