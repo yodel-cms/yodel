@@ -31,7 +31,7 @@ module Yodel
       
       # parse the accept string and try to match by mime type. The accept
       # header looks like: application/xml,text/html;q=0.9
-      accept.split(',').each do |mime_type|
+      accept.to_s.split(',').each do |mime_type|
         name = mime_type.split(';').first
         return @mime_types[name] if @mime_types.has_key?(name)
       end
