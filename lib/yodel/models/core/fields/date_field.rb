@@ -22,3 +22,5 @@ class DateField < Field
     Time.new(value['year'], value['month'], value['day'])
   end
 end
+
+Field::TYPES['date'] = DateField

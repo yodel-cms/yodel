@@ -24,3 +24,5 @@ class BooleanField < Field
     end
   end
 end
+
+Field::TYPES['boolean'] = BooleanField

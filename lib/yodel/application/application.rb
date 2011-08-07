@@ -1,9 +1,17 @@
+Dir.chdir(File.dirname(__FILE__)) do
+  require 'yodel_config'
+  require 'environment'
+  require 'request_handler'
+  require 'yodel'  
+  require $settings_file unless $settings_file.nil?
+  Yodel.config.merge_defaults!
+end
+
 class Application < Rack::Builder
   def initialize
     super
     
     # boot
-    Yodel.config.merge_defaults!
     Yodel.load_extensions
     Dir.chdir(Yodel.config.root)
     

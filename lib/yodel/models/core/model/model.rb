@@ -1,3 +1,8 @@
+require 'record/site_record'
+require 'model/abstract_model'
+require 'model/mongo_model'
+require 'model/site_model'
+
 class Model < SiteRecord
   attr_reader :unscoped, :record_class
   collection  :models

@@ -50,3 +50,5 @@ class HashField < Field
       end
     end
 end
+
+Field::TYPES['hash'] = HashField

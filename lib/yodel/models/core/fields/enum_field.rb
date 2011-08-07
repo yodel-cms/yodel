@@ -29,3 +29,5 @@ class EnumField < StringField
     :enum
   end
 end
+
+Field::TYPES['enum'] = EnumField

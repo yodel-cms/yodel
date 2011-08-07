@@ -21,3 +21,5 @@ class IntegerField < Field
     value.to_i
   end
 end
+
+Field::TYPES['integer'] = IntegerField

@@ -15,3 +15,5 @@ class DecimalField < Field
     BigDecimal.new(value.to_s).to_s
   end
 end
+
+Field::TYPES['decimal'] = DecimalField

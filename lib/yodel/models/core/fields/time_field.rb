@@ -22,3 +22,5 @@ class TimeField < Field
     Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], value['sec']).utc
   end
 end
+
+Field::TYPES['time'] = TimeField

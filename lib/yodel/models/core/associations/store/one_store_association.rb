@@ -16,3 +16,5 @@ class OneStoreAssociation < Association
     query.all
   end
 end
+
+Field::TYPES['one_store'] = OneStoreAssociation

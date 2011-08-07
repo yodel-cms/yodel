@@ -60,3 +60,5 @@ class ArrayField < Field
       end
     end
 end
+
+Field::TYPES['array'] = ArrayField

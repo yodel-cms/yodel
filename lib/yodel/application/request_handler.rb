@@ -2,9 +2,6 @@ class RequestHandler
   PATH_FORMAT_REGEX = /^(?<path>.*?)(\.(?<format>\w+))?$/
   
   def call(env)
-    # in development all yodel files, extensions, and application files are reloaded each request
-    Impromptu.update if Yodel.env.development?
-    
     # find the site this request is for
     request  = Rack::Request.new(env)
     response = Rack::Response.new

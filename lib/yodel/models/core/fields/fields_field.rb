@@ -27,3 +27,5 @@ class FieldsField < Field
       end
     end
 end
+
+Field::TYPES['fields'] = FieldsField

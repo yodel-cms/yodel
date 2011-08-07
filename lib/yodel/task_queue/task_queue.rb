@@ -1,3 +1,10 @@
+Dir.chdir(File.dirname(__FILE__)) do
+  require 'queue_daemon'
+  require 'queue_worker'
+  require 'stats_thread'
+  require 'task'
+end
+
 class TaskQueue
   MAX_TASK_ATTEMPTS = 5
   

@@ -1,3 +1,5 @@
+require 'model/abstract_model'
+
 module MongoModel
   include AbstractModel
   

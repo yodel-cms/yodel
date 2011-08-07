@@ -58,3 +58,5 @@ class ManyEmbeddedAssociation < Association
     EmbeddedRecordArray.new(record, self, all(value, record))
   end
 end
+
+Field::TYPES['many_embedded'] = ManyEmbeddedAssociation

@@ -6,3 +6,5 @@ class OneQueryAssociation < Association
     nil
   end
 end
+
+Field::TYPES['one_query'] = OneQueryAssociation

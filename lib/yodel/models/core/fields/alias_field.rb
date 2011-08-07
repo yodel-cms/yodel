@@ -28,3 +28,5 @@ class AliasField < Field
     nil
   end
 end
+
+Field::TYPES['alias'] = AliasField

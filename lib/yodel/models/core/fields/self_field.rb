@@ -23,3 +23,5 @@ class SelfField < Field
     nil
   end
 end
+
+Field::TYPES['self'] = SelfField

@@ -11,3 +11,5 @@ class StringField < Field
     value.to_s
   end
 end
+
+Field::TYPES['string'] = StringField

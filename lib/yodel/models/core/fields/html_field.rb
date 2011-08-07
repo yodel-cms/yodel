@@ -7,3 +7,5 @@ class HTMLField < TextField
     Hpricot(html.to_s).search('//text()').collect(&:to_s).collect(&:strip).join(' ').strip
   end
 end
+
+Field::TYPES['html'] = HTMLField

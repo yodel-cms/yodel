@@ -6,3 +6,5 @@ class EmailField < StringField
   end
   
 end
+
+Field::TYPES['email'] = EmailField

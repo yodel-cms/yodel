@@ -24,3 +24,5 @@ class FunctionField < Field
     nil
   end
 end
+
+Field::TYPES['function'] = FunctionField

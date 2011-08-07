@@ -1,3 +1,9 @@
+require 'record/abstract_record'
+require 'record/embedded_record'
+require 'record/mongo_record'
+require 'record/site_record'
+require 'model/model'
+
 class Record < SiteRecord
   collection    :records
   attr_reader   :model_record, :model, :mixins

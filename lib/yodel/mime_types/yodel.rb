@@ -13,5 +13,3 @@ module Yodel
     mime_types << mime_type
   end
 end
-
-DefaultMimeSet.load!

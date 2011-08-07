@@ -1,35 +1,6 @@
 class Field
   attr_accessor :name, :options
-  
-  # TODO: this should automatically be generated
-  TYPES = {
-    'alias' => AliasField,
-    'array' => ArrayField,
-    'boolean' => BooleanField,
-    'date' => DateField,
-    'decimal' => DecimalField,
-    'email' => EmailField,
-    'enum' => EnumField,
-    'fields' => FieldsField,
-    'filtered_string' => FilteredStringField,
-    'filtered_text' => FilteredTextField,
-    'function' => FunctionField,
-    'hash' => HashField,
-    'html' => HTMLField,
-    'integer' => IntegerField,
-    'password' => PasswordField,
-    'self' => SelfField,
-    'string' => StringField,
-    'tags' => TagsField,
-    'text' => TextField,
-    'time' => TimeField,
-    'many_embedded' => ManyEmbeddedAssociation,
-    'one_embedded' => OneEmbeddedAssociation,
-    'many_store' => ManyStoreAssociation,
-    'one_store' => OneStoreAssociation,
-    'many_query' => ManyQueryAssociation,
-    'one_query' => OneQueryAssociation
-  }
+  TYPES = {}
   
   def self.from_options(name, options)
     field_from_type(options['type']).new(name, options)

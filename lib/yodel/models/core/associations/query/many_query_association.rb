@@ -6,3 +6,5 @@ class ManyQueryAssociation < Association
     nil
   end
 end
+
+Field::TYPES['many_query'] = ManyQueryAssociation

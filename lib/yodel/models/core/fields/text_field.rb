@@ -3,3 +3,5 @@ class TextField < StringField
     :textarea
   end
 end
+
+Field::TYPES['text'] = TextField

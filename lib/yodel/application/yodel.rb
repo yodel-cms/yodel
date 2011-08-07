@@ -1,6 +1,6 @@
 module Yodel
   def self.config
-    @config ||= Config.new
+    @config ||= YodelConfig.new
   end
   
   def self.env

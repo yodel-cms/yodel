@@ -17,3 +17,5 @@ class PasswordField < StringField
     end
   end
 end
+
+Field::TYPES['password'] = PasswordField

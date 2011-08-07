@@ -45,3 +45,5 @@ class OneEmbeddedAssociation < Association
       record.set(name, embedded_record)
     end
 end
+
+Field::TYPES['one_embedded'] = OneEmbeddedAssociation

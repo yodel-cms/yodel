@@ -1,4 +1,4 @@
-class Config
+class YodelConfig
   def initialize
     @options = {
       'migration_directories' => [],
@@ -38,6 +38,7 @@ class Config
     
     # directories
     self.yodel_root                 ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..') # FIXME: not true when a gem
+    self.root                       ||= Pathname.new(File.dirname(__FILE__)).join('..').join('..').join('..').join('..')
     self.public_directories         << self.root.join(self.public_directory_name)
     self.layout_directories         << self.root.join(self.layouts_directory_name)
     

@@ -24,3 +24,5 @@ class ManyStoreAssociation < Association
     @options['default'] || []
   end
 end
+
+Field::TYPES['many_store'] = ManyStoreAssociation

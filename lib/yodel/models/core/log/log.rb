@@ -1,3 +1,5 @@
+require 'log/log_entry'
+
 class Log
   def initialize(site)
     @site = site
