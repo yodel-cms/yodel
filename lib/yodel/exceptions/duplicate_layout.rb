@@ -1,4 +1,2 @@
-module Yodel
-  class DuplicateLayout < StandardError
-  end
+class DuplicateLayout < StandardError
 end

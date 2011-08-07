@@ -1,4 +1,2 @@
-module Yodel
-  class UnknownField < StandardError
-  end
+class UnknownField < StandardError
 end

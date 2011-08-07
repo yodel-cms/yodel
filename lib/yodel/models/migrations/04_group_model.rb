@@ -1,28 +1,28 @@
-class GroupModelMigration < Yodel::Migration
+class GroupModelMigration < Migration
   def self.up(site)
     site.records.create_model :groups do |groups|
       add_field :name, :string, validations: {required: {}}
       add_many  :users, store: false
       groups.icon = '/admin/images/group_icon.png'
-      groups.record_class_name = 'Yodel::Group'
+      groups.record_class_name = 'Group'
     end
     site.reload
     
     # a special singleton group representing an 'owner' of a record
     site.groups.create_model :owner_groups do |group|
-      group.record_class_name = 'Yodel::OwnerGroup'
+      group.record_class_name = 'OwnerGroup'
     end
     site.reload
     
     # a special singleton group representing no one
     site.groups.create_model :noone_groups do |group|
-      group.record_class_name = 'Yodel::NooneGroup'
+      group.record_class_name = 'NooneGroup'
     end
     site.reload
     
     # a special singleton group representing 'everyone'
     site.groups.create_model :guest_groups do |group|
-      group.record_class_name = 'Yodel::GuestsGroup'
+      group.record_class_name = 'GuestsGroup'
     end
     site.reload
     

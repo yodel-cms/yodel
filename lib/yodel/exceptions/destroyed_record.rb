@@ -1,4 +1,2 @@
-module Yodel
-  class DestroyedRecord < StandardError
-  end
+class DestroyedRecord < StandardError
 end

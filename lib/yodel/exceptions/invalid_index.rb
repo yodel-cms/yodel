@@ -1,4 +1,2 @@
-module Yodel
-  class InvalidIndex < StandardError
-  end
+class InvalidIndex < StandardError
 end

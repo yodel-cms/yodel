@@ -14,4 +14,4 @@ module Yodel
   end
 end
 
-Yodel::DefaultMimeSet.load!
+DefaultMimeSet.load!

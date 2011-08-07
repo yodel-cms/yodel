@@ -1,4 +1,2 @@
-module Yodel
-  class MassAssignment < StandardError
-  end
+class MassAssignment < StandardError
 end

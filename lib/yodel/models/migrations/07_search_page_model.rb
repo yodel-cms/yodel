@@ -1,4 +1,4 @@
-class SearchPageModelMigration < Yodel::Migration
+class SearchPageModelMigration < Migration
   def self.up(site)
     operators = [ 'Equals', 'Not Equal', 'Greater Than',
                   'Less Than', 'Greater Than or Equal To',
@@ -22,7 +22,7 @@ class SearchPageModelMigration < Yodel::Migration
         add_field :operator, :enum, options: operators
       end
       
-      search_pages.record_class_name = 'Yodel::SearchPage'
+      search_pages.record_class_name = 'SearchPage'
     end
   end
   

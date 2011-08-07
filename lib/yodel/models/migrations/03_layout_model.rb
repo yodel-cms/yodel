@@ -1,4 +1,4 @@
-class LayoutModelMigration < Yodel::Migration
+class LayoutModelMigration < Migration
   def self.up(site)
     site.records.create_model :layouts do |layouts|
       add_field :name, :string, validations: {required: {}}, index: true
@@ -7,7 +7,7 @@ class LayoutModelMigration < Yodel::Migration
       layouts.allowed_children = []
       layouts.allowed_parents = []
       layouts.searchable = false
-      layouts.record_class_name = 'Yodel::Layout'
+      layouts.record_class_name = 'Layout'
     end
     
     site.layouts.create_model :persistent_layouts do |persistent_layouts|
@@ -17,7 +17,7 @@ class LayoutModelMigration < Yodel::Migration
       persistent_layouts.allowed_children = [persistent_layouts]
       persistent_layouts.allowed_parents = [persistent_layouts]
       persistent_layouts.searchable = false
-      persistent_layouts.record_class_name = 'Yodel::PersistentLayout'
+      persistent_layouts.record_class_name = 'PersistentLayout'
     end
     
     site.layouts.create_model :file_layouts do |file_layouts|
@@ -26,7 +26,7 @@ class LayoutModelMigration < Yodel::Migration
       file_layouts.allowed_children = [file_layouts]
       file_layouts.allowed_parents = [file_layouts]
       file_layouts.searchable = false
-      file_layouts.record_class_name = 'Yodel::FileLayout'
+      file_layouts.record_class_name = 'FileLayout'
     end
   end
   

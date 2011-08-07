@@ -1,4 +1,4 @@
-class APICallModelMigration < Yodel::Migration
+class APICallModelMigration < Migration
   def self.up(site)
     site.records.create_model :api_calls do |api_calls|
       add_field :name, :string
@@ -13,7 +13,7 @@ class APICallModelMigration < Yodel::Migration
       add_field :body, :text
       add_field :body_layout, :string
       add_field :function, :string
-      api_calls.record_class_name = 'Yodel::APICall'
+      api_calls.record_class_name = 'APICall'
     end
   end
   

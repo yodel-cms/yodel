@@ -1,5 +1,3 @@
-module Yodel
-  class FilteredStringField < StringField
-    include Yodel::FilterMixin
-  end
+class FilteredStringField < StringField
+  include FilterMixin
 end

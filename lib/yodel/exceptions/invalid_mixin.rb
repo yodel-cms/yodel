@@ -1,4 +1,2 @@
-module Yodel
-  class InvalidMixin < StandardError
-  end
+class InvalidMixin < StandardError
 end

@@ -1,4 +1,4 @@
-class UserModelMigration < Yodel::Migration
+class UserModelMigration < Migration
   def self.up(site)
     site.records.create_model :users do |users|
       add_field :first_name, :string
@@ -13,7 +13,7 @@ class UserModelMigration < Yodel::Migration
       
       add_field :name, :function, fn: 'format("{{first_name}} {{last_name}}").strip()'
       users.icon = '/admin/images/user_icon.png'
-      users.record_class_name = 'Yodel::User'
+      users.record_class_name = 'User'
     end
   end
   

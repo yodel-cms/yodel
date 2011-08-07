@@ -1,4 +1,4 @@
-class DefaultSiteOptionsMigration < Yodel::Migration
+class DefaultSiteOptionsMigration < Migration
   def self.up(site)
     site.options = {
       pages: {

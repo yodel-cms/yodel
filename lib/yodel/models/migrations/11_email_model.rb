@@ -1,4 +1,4 @@
-class EmailModelMigration < Yodel::Migration
+class EmailModelMigration < Migration
   def self.up(site)
     site.records.create_model :emails do |emails|
       add_field :name, :string
@@ -10,7 +10,7 @@ class EmailModelMigration < Yodel::Migration
       add_field :text_body, :text
       add_field :html_body, :html
       add_field :html_layout, :string
-      emails.record_class_name = 'Yodel::Email'
+      emails.record_class_name = 'Email'
     end
     
     # template password reset email

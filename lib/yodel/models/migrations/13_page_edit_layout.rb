@@ -1,4 +1,4 @@
-class PageEditLayoutMigration < Yodel::Migration
+class PageEditLayoutMigration < Migration
   def self.up(site)
     site.pages.modify do |pages|
       add_field :edit_layout, :string, searchable: false, section: 'Options'

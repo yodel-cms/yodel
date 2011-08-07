@@ -1,4 +1,4 @@
-class PageModelMigration < Yodel::Migration
+class PageModelMigration < Migration
   def self.up(site)
     site.records.create_model :pages do |pages|
       # core page attributes
@@ -23,7 +23,7 @@ class PageModelMigration < Yodel::Migration
       pages.default_child_model = pages.id
       pages.allowed_children = [pages]
       pages.allowed_parents = [pages]
-      pages.record_class_name = 'Yodel::Page'
+      pages.record_class_name = 'Page'
     end
   end
   

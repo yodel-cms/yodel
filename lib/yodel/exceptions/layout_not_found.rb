@@ -1,4 +1,2 @@
-module Yodel
-  class LayoutNotFound < StandardError
-  end
+class LayoutNotFound < StandardError
 end

@@ -1,4 +1,4 @@
-class RecordProxyPageModelMigration < Yodel::Migration
+class RecordProxyPageModelMigration < Migration
   def self.up(site)
     site.pages.create_model :record_proxy_pages do |record_proxy_pages|
       add_one :record_model, model: :model
@@ -7,7 +7,7 @@ class RecordProxyPageModelMigration < Yodel::Migration
       add_one :after_update_page, model: :age
       add_one :new_record_page, model: :page
       add_one :edit_record_page, model: :age
-      record_proxy_pages.record_class_name = 'Yodel::RecordProxyPage'
+      record_proxy_pages.record_class_name = 'RecordProxyPage'
     end
   end
   

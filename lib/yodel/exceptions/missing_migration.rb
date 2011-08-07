@@ -1,4 +1,2 @@
-module Yodel
-  class MissingMigration < StandardError
-  end
+class MissingMigration < StandardError
 end

@@ -1,6 +1,6 @@
-class RecordModelMigration < Yodel::Migration
+class RecordModelMigration < Migration
   def self.up(site)
-    records = Yodel::Model.new(site, name: 'Record')
+    records = Model.new(site, name: 'Record')
     records.modify do |records|
       # identity, hierarchy and search
       add_many  :children, model: :record, foreign_key: 'parent', order: 'index asc'

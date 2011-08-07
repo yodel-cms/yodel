@@ -1,7 +1,5 @@
-module Yodel
-  class GuestsGroup < Group
-    def match_user_on_record?(user, record)
-      true
-    end
+class GuestsGroup < Group
+  def match_user_on_record?(user, record)
+    true
   end
 end

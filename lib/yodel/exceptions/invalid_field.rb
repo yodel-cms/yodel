@@ -1,4 +1,2 @@
-module Yodel
-  class InvalidField < StandardError
-  end
+class InvalidField < StandardError
 end
