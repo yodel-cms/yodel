@@ -1,6 +1,8 @@
 Dir.chdir(File.join(File.dirname(__FILE__), 'yodel')) do
   # rack extensions
   require 'middleware/request'
+  require 'middleware/error_pages'
+  require 'middleware/site_detector'
   
   # type extensions
   require 'types/date'

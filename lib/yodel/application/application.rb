@@ -12,20 +12,21 @@ class Application < Rack::Builder
     super
     
     # boot
+    unless Yodel.env.development?
+      Yodel.config.logger.info "Yodel starting up"
+    end
     Yodel.load_extensions
     Dir.chdir(Yodel.config.root)
     
     # setup middleware
+    use Rack::ShowExceptions if Yodel.env.development?
+    use ErrorPages
+    use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
     use Rack::NestedParams
     use Rack::MethodOverride
-    if Yodel.env.development?
-      use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
-      use Rack::ShowExceptions
-    else
-      # FIXME: need to do this once per site
-      use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret, domain: '.threadex.com.au'
-    end
+    use SiteDetector
     
+    # TODO: no need to check these every request in development
     # check for any remaining migrations
     Migration.remaining_migrations.each do |site, remaining|
       next if remaining.empty?
@@ -44,7 +45,9 @@ class Application < Rack::Builder
     @app = to_app
     
     # boot complete
-    Yodel.config.logger.info "Yodel startup complete"
+    unless Yodel.env.development?
+      Yodel.config.logger.info "Yodel startup complete"
+    end
   end
 
   def call(env)

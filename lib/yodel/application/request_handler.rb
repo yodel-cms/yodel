@@ -5,8 +5,7 @@ class RequestHandler
     # find the site this request is for
     request  = Rack::Request.new(env)
     response = Rack::Response.new
-    site = Site.find_by(domains: request.host)
-    return fail_with "Domain (#{request.host}) not found. Add a Site record for this domain." if site.nil?
+    site = env['yodel.site']
     
     # split the request path into a standard path and trailing file extension if present
     components = PATH_FORMAT_REGEX.match(request.path)
@@ -19,13 +18,13 @@ class RequestHandler
     
     # attempt to find a matching page for this request
     page = site.pages.where(path: path).first
-    return fail_with "Path (#{request.path}) not found for this site (#{site.name})." if page.nil?
+    return fail_with "File (#{request.path}) not found." if page.nil?
     Layout.reload_layouts(site) if Yodel.env.development? # FIXME: implement production caching
     page.respond_to_request(request, response, mime_type)
     response.finish
   end
   
   def fail_with(message)
-    [404, {"Content-Type" => "text/plain"}, [message]]
+    [404, {'Content-Type' => 'text/plain'}, [message]]
   end
 end
