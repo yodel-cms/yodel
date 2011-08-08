@@ -20,11 +20,11 @@ class Application < Rack::Builder
     use Rack::MethodOverride
     if Yodel.env.development?
       use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
+      use Rack::ShowExceptions
     else
       # FIXME: need to do this once per site
       use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret, domain: '.threadex.com.au'
     end
-    Yodel.initialise_middleware_with_app(self)
     
     # check for any remaining migrations
     Migration.remaining_migrations.each do |site, remaining|

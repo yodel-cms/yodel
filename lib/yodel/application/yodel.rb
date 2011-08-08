@@ -36,17 +36,5 @@ module Yodel
         require model.realpath(models_dir)
       end
     end
-  end
-  
-  def self.use_middleware(&block)
-    @extension_middleware ||= []
-    @extension_middleware << block
-  end
-  
-  def self.initialise_middleware_with_app(app)
-    @extension_middleware ||= []
-    @extension_middleware.each do |middleware_declaration|
-      middleware_declaration.call(app)
-    end
   end  
 end
