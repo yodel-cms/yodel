@@ -67,10 +67,12 @@ class DevelopmentServer
       # interim: for now, assume the server is started from an app
       # root, and all extensions exist in the extensions folder
       root = Pathname.new(File.dirname($settings_file))
+      extensions = root.join('extensions')
       @directories << root.join('public')
-      root.join('extensions').entries.each do |extension|
+      return unless extensions.exist?
+      extensions.entries.each do |extension|
         next if extension.to_s.start_with?('.')
-        public_dir = extension.join('public')
+        public_dir = extension.realpath(extensions).join('public')
         @directories << public_dir if public_dir.exist?
       end
     end

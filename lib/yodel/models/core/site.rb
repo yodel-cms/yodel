@@ -51,6 +51,12 @@ class Site
     @log ||= Log.new(self)
   end
   
+  def to_str
+    "#<Site: #{id} (#{name})>"
+  end
+  
+  alias :to_s :to_str
+  
   
   # ----------------------------------------
   # Database
