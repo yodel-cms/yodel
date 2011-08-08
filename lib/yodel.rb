@@ -1,9 +1,6 @@
-$:.unshift('.')
-
-Dir.chdir(File.dirname(__FILE__)) do
+Dir.chdir(File.join(File.dirname(__FILE__), 'yodel')) do
   # rack extensions
-  require 'middleware/rack/request'
-  require 'middleware/yodel/conditional_file'
+  require 'middleware/request'
   
   # type extensions
   require 'types/date'
@@ -11,10 +8,10 @@ Dir.chdir(File.dirname(__FILE__)) do
   require 'types/time'
   
   # core yodel
-  require 'yodel/application/application'
-  require 'yodel/exceptions/exceptions'
-  require 'yodel/mime_types/mime_types'
-  require 'yodel/request/request'
-  require 'yodel/models/models'
-  require 'yodel/task_queue/task_queue'
+  require 'application/application'
+  require 'exceptions/exceptions'
+  require 'mime_types/mime_types'
+  require 'request/request'
+  require 'models/models'
+  require 'task_queue/task_queue'
 end

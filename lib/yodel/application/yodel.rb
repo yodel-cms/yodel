@@ -8,24 +8,23 @@ module Yodel
   end
   
   def self.load_extensions
-    Impromptu.components.each do |component|
-      next unless component.name.start_with?('yodel.extensions.')
-      load_extension(component.folders.first)
-    end
+    extensions = Yodel.config.root.join('extensions')
+    return unless extensions.exist?
+    extensions.each_entry {|extension| load_extension(extension)}
   end
   
-  def self.load_extension(models_folder)
-    path          = models_folder.folder.join('..')
+  def self.load_extension(path)
     init_file     = path.join('init.rb')
     migration_dir = path.join('migrations')
     public_dir    = path.join('public')
     layouts_dir   = path.join('layouts')
+    models_dir    = path.join('models')
     
     require init_file if File.exist?(init_file)
     Yodel.config.public_directories << public_dir if File.directory?(public_dir)
     Yodel.config.layout_directories << layouts_dir if File.directory?(layouts_dir)
     Yodel.config.migration_directories.insert(-2, migration_dir) if File.directory?(migration_dir)
-    models_folder.preload!
+    models_dir.each_entry {|model| require model} if models_dir.exist?
   end
   
   def self.use_middleware(&block)

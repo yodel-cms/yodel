@@ -15,17 +15,6 @@ class Application < Rack::Builder
     Yodel.load_extensions
     Dir.chdir(Yodel.config.root)
     
-    # serve files from public in development. the directories are
-    # initialised in reverse order so the apps public directory
-    # takes first precedence over any extensions.
-    if Yodel.env.development?
-      Yodel.use_middleware do |app|
-        Yodel.config.public_directories.reverse.each do |directory|
-          app.use ConditionalFile, directory
-        end
-      end
-    end
-    
     # setup middleware
     use Rack::NestedParams
     use Rack::MethodOverride
