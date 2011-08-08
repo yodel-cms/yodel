@@ -27,17 +27,23 @@ class DevelopmentServer
     
     # pass the request to a new yodel application process
     read_fd, write_fd = IO.pipe
+
+    # child process loads yodel and responds to the request;
+    # the marshalled rack response is written over the pipe
     Process.fork do
       read_fd.close
       require 'yodel'
       status, headers, response = Application.new.call(env)
       body = []
       response.each {|chunk| body << chunk.to_s}
-      write_fd.write(Marshal.dump([status, headers, body]))
+      payload = Marshal.dump([status, headers, body])
+      write_fd.write(payload)
       write_fd.close
     end
+    
+    # the parent server waits until pipe EOF and unmarshals
+    # the response, sending it as the result of the request
     write_fd.close
-    Process.wait
     response = read_fd.read
     read_fd.close
     Marshal.load(response)

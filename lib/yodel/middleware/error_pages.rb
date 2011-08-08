@@ -5,10 +5,10 @@ class ErrorPages
   
   def call(env)
     status, headers, response = @app.call(env)
-    if status == 200
-      return [status, headers, response]
-    else
+    if status >= 400
       return render_error_page(status, response)
+    else
+      return [status, headers, response]
     end
   rescue
     if Yodel.env.production?
@@ -21,7 +21,9 @@ class ErrorPages
   def render_error_page(error_code, response)
     template = Ember::Template.new(TEMPLATE)
     unless response.empty?
-      error = response.join
+      components = []
+      response.each {|component| components << component}
+      error = components.join
     else
       error = "We're sorry, but something went wrong."
     end
