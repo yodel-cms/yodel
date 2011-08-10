@@ -209,7 +209,7 @@ class Model < SiteRecord
   # exist under a Blog page, even though Article is a
   # descendant of Page.
   def valid_children
-    allowed_children_and_descendants.select {|child| child.valid_parent?(self)}
+    allowed_children_and_descendants.select {|child| child.allowed_parent?(self)}
   end
   
   def valid_child?(other_model)
