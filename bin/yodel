@@ -14,4 +14,10 @@ if command == 'c'
 elsif command == 's'
   require 'yodel/middleware/development_server'
   Rack::Server.start(app: DevelopmentServer.new, Port: 2828)
+elsif command == 'm'
+  require 'yodel'
+  $application = Application.new
+  Site.all.each do |site|
+    Migration.run_migrations(site)
+  end
 end
