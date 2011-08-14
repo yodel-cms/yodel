@@ -76,6 +76,10 @@ class Record < SiteRecord
     @fields ||= @model.all_record_fields
   end
   
+  def field_sections
+    [nil, fields.values.collect(&:section)].flatten.uniq
+  end
+  
   def inspect_hash
     {model: model, parent: parent, index: index}.merge(super)
   end

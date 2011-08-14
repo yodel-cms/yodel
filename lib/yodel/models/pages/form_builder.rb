@@ -15,6 +15,16 @@ class FormBuilder
   end
   
   
+  def form_for_section(section)
+    buffer = Ember::Template.buffer_from_block(@block)
+    @record.fields.each do |name, field|
+      next unless field.display? && field.section == section && field.default_input_type.present?
+      buffer << "<div>" << label(name) << "<div>" << field(name) << status(name) << "</div></div>"
+    end
+    ''
+  end
+  
+  
   def field(name, options={}, &block)
     invalid = @record.errors.key?(name.to_s)
     field_name = name.to_s
@@ -42,12 +52,18 @@ class FormBuilder
     when :store_one
       element = build_select(value, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
     when :embedded
-      value.each do |document|
-        self.class.new(document, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
-      end
+      if block_given?
+        if value.respond_to?(:each)
+          value.each do |document|
+            self.class.new(document, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
+          end
+        else
+          self.class.new(value, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
+        end
       
-      if options.delete(:blank_record)
-        self.class.new(value.new, @action, {embedded_record: field, blank_record: true, prefix: name, id: @id}, &block).render
+        if options.delete(:blank_record)
+          self.class.new(value.new, @action, {embedded_record: field, blank_record: true, prefix: name, id: @id}, &block).render
+        end
       end
       
       buffer = Ember::Template.buffer_from_block(@block)
