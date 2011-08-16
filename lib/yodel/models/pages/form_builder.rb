@@ -18,7 +18,7 @@ class FormBuilder
   def form_for_section(section)
     buffer = Ember::Template.buffer_from_block(@block)
     @record.fields.each do |name, field|
-      next unless field.display? && field.section == section && field.default_input_type.present?
+      next unless field.display? && field.section == section && field.default_input_type.present? && field.default_input_type != :embedded
       buffer << "<div>" << label(name) << "<div>" << field(name) << status(name) << "</div></div>"
     end
     ''
@@ -40,6 +40,8 @@ class FormBuilder
       element = build_element(:input, {type: type.to_s, value: value.to_s})
     when :textarea
       element = build_element(:textarea, {}, value.to_s)
+    when :html
+      element = build_element(:textarea, {class: 'html'}, value.to_s)
     when :radio
       base = {type: 'radio', name: input_name}
       true_button   = build_element(:input, base.merge(condition('checked', value, ['true', true])))

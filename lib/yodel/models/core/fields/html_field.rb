@@ -6,6 +6,10 @@ class HTMLField < TextField
   def to_text(html)
     Hpricot(html.to_s).search('//text()').collect(&:to_s).collect(&:strip).join(' ').strip
   end
+  
+  def default_input_type
+    :html
+  end
 end
 
 Field::TYPES['html'] = HTMLField

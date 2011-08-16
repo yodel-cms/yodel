@@ -104,6 +104,14 @@ class Record < SiteRecord
     self.eigenmodel = nil
     save
   end
+  
+  def has_eigenmodel?
+    self.eigenmodel != nil
+  end
+  
+  def model_name
+    has_eigenmodel? ? self.eigenmodel.parent.name : self.model_record.name
+  end
 
   def create_mixin_instances(values)
     return [] if @model.nil?

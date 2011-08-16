@@ -246,6 +246,12 @@ class Page < Record
     raise LayoutNotFound
   end
   
+  def render_layout(name, mime_type)
+    layout_record = site.layouts.where(name: name, mime_type: mime_type).first
+    raise LayoutNotFound if layout_record.nil?
+    layout_record.render(self)
+  end
+  
 
   # ----------------------------------------
   # Default request handling

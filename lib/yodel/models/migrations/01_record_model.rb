@@ -3,18 +3,18 @@ class RecordModelMigration < Migration
     records = Model.new(site, name: 'Record')
     records.modify do |records|
       # identity, hierarchy and search
-      add_many  :children, model: :record, foreign_key: 'parent', order: 'index asc'
-      add_field :index, :integer, validations: {required: {}}
-      add_one   :owner, model: :user
+      add_many  :children, model: :record, foreign_key: 'parent', order: 'index asc', display: false
+      add_field :index, :integer, validations: {required: {}}, display: false
+      add_one   :owner, model: :user, display: false
       add_field :name, :string
-      add_field :show_in_search, :boolean, default: true
-      add_field :search_keywords, :array, of: :string
-      add_field :search_title, :string
+      add_field :show_in_search, :boolean, default: true, section: 'Options'
+      add_field :search_keywords, :array, of: :string, display: false
+      add_field :search_title, :string, display: false
 
       # modelling
-      add_one   :eigenmodel, model: :model, destroy: true
-      add_one   :parent, model: :record, index: true
-      add_one   :model, index: true
+      add_one   :eigenmodel, model: :model, destroy: true, display: false
+      add_one   :parent, model: :record, index: true, display: false
+      add_one   :model, index: true, display: false
       records.descendants = [records]
     end
 
