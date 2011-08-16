@@ -2,11 +2,14 @@ module RecordAssociation
   private
     def process_json_item(raw_id, store, record)
       associated_record = model(record).find(BSON::ObjectId.from_string(raw_id))
-      if !associated_record.nil? && associated_record.model.ancestors.include?(model(record))
-        associated_record
-      else
-        nil
+      if !associated_record.nil?
+        if model_name == 'Model'
+          return associated_record if associated_record.is_a?(Model)
+        elsif associated_record.model.ancestors.include?(model(record))
+          associated_record
+        end
       end
+      nil
     end
     
     def foreign_key(record)

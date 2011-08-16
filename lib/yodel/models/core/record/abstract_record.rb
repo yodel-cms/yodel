@@ -278,7 +278,7 @@ class AbstractRecord
       else
         set(name, value)
       end
-    end    
+    end
     save if do_save
   end
 

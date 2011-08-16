@@ -70,13 +70,15 @@ class Page < Record
   end
   
   def form_for(record, action, options={}, &block)
+    options[:method] = record.new? ? 'post' : 'put'
+    #action += '.json' if options[:remote] # FIXME: doesn't work if the path ends with a query string
     FormBuilder.new(record, action, options, &block).render
   end
   
   def form_for_page(options={}, &block)
     options[:method] = new? ? 'post' : 'put'
     form_path = path_was
-    form_path += '.json' if options[:remote]
+    form_path += '.json' if options[:remote] # FIXME: doesn't work if the path ends with a query string
     form_for(self, form_path, options, &block)
   end
   
