@@ -39,6 +39,13 @@ class Page < Record
     end
     
     self.path = new_prefix
+    count = 0
+    
+    while site.pages.where(path: self.path).exists?
+      count += 1
+      self.path = "#{new_prefix}#{count}"
+    end
+    
     save_without_validation if prefix
     children.each {|child| child.assign_path(new_prefix)}
   end
@@ -71,7 +78,7 @@ class Page < Record
   
   def form_for(record, action, options={}, &block)
     options[:method] = record.new? ? 'post' : 'put'
-    #action += '.json' if options[:remote] # FIXME: doesn't work if the path ends with a query string
+    action += '.json' if options[:remote] # FIXME: doesn't work if the path ends with a query string
     FormBuilder.new(record, action, options, &block).render
   end
   

@@ -2,7 +2,7 @@ class PageEditLayoutMigration < Migration
   def self.up(site)
     site.pages.modify do |pages|
       add_field :edit_layout, :string, searchable: false, section: 'Options'
-      add_one   :edit_layout_record, model: :layout, section: 'Options'
+      add_one   :edit_layout_record, model: :layout, display: false
     end
   end
   

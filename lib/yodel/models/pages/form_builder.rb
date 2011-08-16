@@ -37,6 +37,7 @@ class FormBuilder
     case type
     when :text, :password, :hidden
       value = nil if type == :password
+      value = value.id if value.is_a?(AbstractRecord)
       element = build_element(:input, {type: type.to_s, value: value.to_s})
     when :textarea
       element = build_element(:textarea, {}, value.to_s)

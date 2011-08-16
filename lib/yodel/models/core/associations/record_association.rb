@@ -1,6 +1,7 @@
 module RecordAssociation
   private
     def process_json_item(raw_id, store, record)
+      return nil if raw_id.blank?
       associated_record = model(record).find(BSON::ObjectId.from_string(raw_id))
       if !associated_record.nil?
         if model_name == 'Model'
