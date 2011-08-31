@@ -244,7 +244,9 @@ class Record < SiteRecord
 
   # FIXME: these need to be atomic ops over the whole set of children
   def insert_in_siblings(new_index)
+    original_parent = self.parent
     remove_from_siblings if index
+    self.parent = original_parent
     siblings.where(:index.gte => new_index).each do |sibling|
       sibling.increment!(:index)
     end
