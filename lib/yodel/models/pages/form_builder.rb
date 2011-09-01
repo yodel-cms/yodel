@@ -77,7 +77,7 @@ class FormBuilder
     end
     
     element.tap do |element|
-      element.set_attribute(:id, input_name)
+      element.set_attribute(:id, input_name.gsub(/\W/, '_'))
       element.set_attribute(:name, input_name)
       element.set_attribute(:class, invalid ? 'invalid' : (@record.new? ? 'new' : 'valid'))
       element.set_attribute(:placeholder, field.placeholder || '')
