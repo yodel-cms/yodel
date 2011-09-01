@@ -2,6 +2,10 @@ class ManyStoreAssociation < Association
   include StoreAssociation
   include ManyAssociation
   
+  def default_input_type
+    :store_many
+  end
+  
   def typecast(value, record)
     return ChangeSensitiveArray.new(record, name, []) if value.blank?
     raise "ManyStoreAssociation values must be enumerable (#{name})" unless value.respond_to?(:each)

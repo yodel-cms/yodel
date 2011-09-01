@@ -21,6 +21,12 @@ module StoreAssociation
     end
   end
   
+  def record_options(record)
+    query = model(record).where()
+    query = query.sort(@options['order'].to_s) if @options['order']
+    query.all
+  end
+  
   
   private
     def clear(store, record)

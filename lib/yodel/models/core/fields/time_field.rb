@@ -18,8 +18,13 @@ class TimeField < Field
   end
   
   def from_json(value, record)
-    nil unless ['year', 'month', 'day', 'hour', 'min', 'sec'].all? {|field| value.key?(field)}
-    Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], value['sec']).utc
+    return nil unless value.present? && (value.is_a?(String) || value.is_a?(Hash))
+    if value.is_a?(Hash)
+      return nil unless ['year', 'month', 'day', 'hour', 'min', 'sec'].all? {|field| value.key?(field)}
+      Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], value['sec']).utc
+    else
+      Time.parse(value).utc
+    end
   end
 end
 

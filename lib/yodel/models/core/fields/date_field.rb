@@ -18,8 +18,13 @@ class DateField < Field
   end
   
   def from_json(value, record)
-    nil unless ['year', 'month', 'day'].all? {|field| value.key?(field)}
-    Time.new(value['year'], value['month'], value['day'])
+    return nil unless value.present? && (value.is_a?(String) || value.is_a?(Hash))
+    if value.is_a?(Hash)
+      return nil unless ['year', 'month', 'day'].all? {|field| value.key?(field)}
+      Time.new(value['year'], value['month'], value['day'])
+    else
+      Time.parse(value)
+    end
   end
 end
 

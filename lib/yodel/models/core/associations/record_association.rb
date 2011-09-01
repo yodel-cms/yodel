@@ -7,7 +7,7 @@ module RecordAssociation
         if model_name == 'Model'
           return associated_record if associated_record.is_a?(Model)
         elsif associated_record.model.ancestors.include?(model(record))
-          associated_record
+          return associated_record
         end
       end
       nil

@@ -54,6 +54,9 @@ class FormBuilder
       element = build_select(value, field.options['options'], show_blank: field.show_blank, blank_text: field.blank_text)
     when :store_one
       element = build_select(value, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
+    when :store_many
+      element = build_select(value.collect(&:id), field.record_options(@record), show_blank: false, blank_text: '', group_by: nil, name_field: 'name', value_field: 'id', multiple: true)
+      input_name += '[]'
     when :embedded
       if block_given?
         if value.respond_to?(:each)
@@ -217,10 +220,14 @@ class FormBuilder
       Hpricot::Elem.new(tag.to_s, params, content)
     end
     
-    def condition(name, value, options)
+    def condition(name, value, options, multiple=false)
       options = [options] unless options.respond_to?(:to_a) && !options.is_a?(BSON::ObjectId)
       {value: options.first}.tap do |attributes|
-        attributes[name] = name if options.to_a.include?(value)
+        if multiple
+          attributes[name] = name if value.to_a.include?(options.first)
+        else
+          attributes[name] = name if options.to_a.include?(value)
+        end
       end
     end
     
@@ -232,7 +239,8 @@ class FormBuilder
       value_field = options[:value_field]
       
       group_by_field = group_by.is_a?(Hash) ? group_by.keys.first : group_by
-      
+      current_value = current_value.map(&:to_s) if options[:multiple]
+            
       if group_by_field
         select_options = Hash.new {|hash, key| hash[key] = []}
       else
@@ -246,7 +254,8 @@ class FormBuilder
         else
           option_name = option_value = value.to_s
         end
-        element = build_element(:option, condition('selected', current_value, option_value), option_name)
+        
+        element = build_element(:option, condition('selected', current_value, option_value, options[:multiple]), option_name)
         
         if group_by_field
           key = value.send(group_by_field).to_s
@@ -266,6 +275,9 @@ class FormBuilder
         blank_text = blank_text || 'Other'
         select_options.unshift(build_element(:option, condition('selected', current_value.to_s, ''), blank_text))
       end
-      build_element(:select, {}, select_options)
+      
+      attributes = {}
+      attributes[:multiple] = 'multiple' if options[:multiple]
+      build_element(:select, attributes, select_options)
     end
 end

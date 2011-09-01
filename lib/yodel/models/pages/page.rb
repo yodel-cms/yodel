@@ -41,7 +41,7 @@ class Page < Record
     self.path = new_prefix
     count = 0
     
-    while site.pages.where(path: self.path).exists?
+    while site.pages.where(:path => self.path, :_id.ne => self.id).exists?
       count += 1
       self.path = "#{new_prefix}#{count}"
     end
