@@ -19,7 +19,7 @@ class FormBuilder
     buffer = Ember::Template.buffer_from_block(@block)
     @record.fields.each do |name, field|
       next unless field.display? && field.section == section && field.default_input_type.present? && field.default_input_type != :embedded
-      buffer << "<div>" << label(name) << "<div>" << field(name) << status(name) << "</div></div>"
+      buffer << "<div class='contains-field-type-#{field.options['type']}'>" << label(name) << "<div>" << field(name) << status(name) << "</div></div>"
     end
     ''
   end
@@ -77,9 +77,11 @@ class FormBuilder
     end
     
     element.tap do |element|
+      class_name = invalid ? 'invalid' : (@record.new? ? 'new' : 'valid')
+      class_name += " field-type-#{field.options['type']}"
       element.set_attribute(:id, input_name.gsub(/\W/, '_'))
       element.set_attribute(:name, input_name)
-      element.set_attribute(:class, invalid ? 'invalid' : (@record.new? ? 'new' : 'valid'))
+      element.set_attribute(:class, class_name)
       element.set_attribute(:placeholder, field.placeholder || '')
       element.set_attribute('data-field', input_name)
       options.each do |name, value|
