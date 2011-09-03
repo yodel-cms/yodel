@@ -1,4 +1,8 @@
 class DateField < Field
+  def default_input_type
+    :date
+  end
+  
   def before_create(record)
     return unless name == 'created_at' || name == 'updated_at'
     record.set(name, Time.now.utc.to_date)

@@ -1,4 +1,8 @@
 class TimeField < Field
+  def default_input_type
+    :datetime
+  end
+  
   def before_create(record)
     return unless name == 'created_at' || name == 'updated_at'
     record.set(name, Time.now.utc)
@@ -20,8 +24,9 @@ class TimeField < Field
   def from_json(value, record)
     return nil unless value.present? && (value.is_a?(String) || value.is_a?(Hash))
     if value.is_a?(Hash)
-      return nil unless ['year', 'month', 'day', 'hour', 'min', 'sec'].all? {|field| value.key?(field)}
-      Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], value['sec']).utc
+      return nil unless ['year', 'month', 'day', 'hour', 'min'].all? {|field| value.key?(field)}
+      sec = value['sec'] || 0
+      Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], sec).utc
     else
       Time.parse(value).utc
     end

@@ -1,4 +1,20 @@
 class FormBuilder
+  MONTHS = [
+    [1, "January"],
+    [2, "February"],
+    [3, "March"],
+    [4, "April"],
+    [5, "May"],
+    [6, "June"],
+    [7, "July"],
+    [8, "August"],
+    [9, "September"],
+    [10, "October"],
+    [11, "November"],
+    [12, "December"]
+  ]
+  
+  
   def initialize(record, action, options={}, &block)
     @record = record
     @options = options
@@ -55,8 +71,40 @@ class FormBuilder
     when :store_one
       element = build_select(value, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
     when :store_many
-      element = build_select(value.collect(&:id), field.record_options(@record), show_blank: false, blank_text: '', group_by: nil, name_field: 'name', value_field: 'id', multiple: true)
+      element = build_select(value.collect(&:id), field.record_options(@record), show_blank: false, name_field: 'name', value_field: 'id', multiple: true)
       input_name += '[]'
+    when :date, :datetime
+      # day
+      day_select = build_select(value.try(:day).to_s, (1..31), show_blank: true, blank_text: '', name_field: 'to_s', value_field: 'to_s')
+      day_select.set_attribute(:name, input_name + '[day]')
+      day_select.set_attribute(:id, input_name + '_day_')
+      
+      # month
+      month_select = build_select(value.try(:month).to_s, MONTHS, show_blank: true, blank_text: '', name_field: 'last', value_field: 'first')
+      month_select.set_attribute(:name, input_name + '[month]')
+      month_select.set_attribute(:id, input_name + '_month_')
+      
+      # year
+      year_select = build_select(value.try(:year).to_s, ((Time.now.year - 100)..(Time.now.year + 10)), show_blank: true, blank_text: '', name_field: 'to_s', value_field: 'to_s')
+      year_select.set_attribute(:name, input_name + '[year]')
+      year_select.set_attribute(:id, input_name + '_year_')
+      
+      elements = [day_select, month_select, year_select]
+      if type == :datetime
+        # hour
+        hour_select = build_select(value.try(:hour).to_s, (0..23), show_blank: true, blank_text: '', name_field: 'to_s', value_field: 'to_s')
+        hour_select.set_attribute(:name, input_name + '[hour]')
+        hour_select.set_attribute(:id, input_name + '_hour_')
+        
+        # minute
+        min_select = build_select(value.try(:min).to_s, (0..59), show_blank: true, blank_text: '', name_field: 'to_s', value_field: 'to_s')
+        min_select.set_attribute(:name, input_name + '[min]')
+        min_select.set_attribute(:id, input_name + '_min_')
+        
+        elements += [hour_select, min_select]
+      end
+      
+      element = build_element(:span, {}, elements)
     when :embedded
       if block_given?
         if value.respond_to?(:each)
