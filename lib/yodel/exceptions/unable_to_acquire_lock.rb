@@ -1,0 +1,2 @@
+class UnableToAcquireLock < StandardError
+end

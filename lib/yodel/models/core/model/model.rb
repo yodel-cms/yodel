@@ -263,7 +263,6 @@ class Model < SiteRecord
     save
   end
   
-  # TODO: modify_field
   # TODO: ensure field name != a public method name
   
   def add_field(name, type, options={})

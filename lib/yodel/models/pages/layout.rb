@@ -1,7 +1,5 @@
 class Layout < Record
-  def self.reload_mutex
-    @reload_mutex ||= Mutex.new
-  end
+  MAX_LOCK_ATTEMPTS = 1000 # FIXME: is this appropriate? how long does each attempt take?
   
   # in development, all layout records are destroyed and recreated each
   # refresh, so the database view of the layout structure is consistent
@@ -9,16 +7,35 @@ class Layout < Record
   # disk as needed. In production, PersistentLayout records store the
   # layout markup in the database.
   def self.reload_layouts(site)
-    reload_mutex.synchronize do
-      site.layouts.all.each(&:destroy)
-      Yodel.mime_types.each do |mime_type|
-        mime_type_name = mime_type.name.to_s
-        mime_type_extensions = mime_type.extensions.join(',')
-        Yodel.config.layout_directories.each do |directory|
-          scan_folder(directory, site, mime_type_name, mime_type_extensions, nil)
-        end
+    # acquire a lock on the site to prevent multiple reloads colliding
+    attempts = 0
+    updated = 0
+    while updated == 0 && attempts < MAX_LOCK_ATTEMPTS
+      updated = Site::COLLECTION.update(
+        {'_id' => site.id, 'layout_lock' => {'$exists' => false}},
+        {'$set' => {'layout_lock' => true}},
+        safe: true)['n']
+      attempts += 1
+    end
+    
+    raise UnableToAcquireLock if attempts == MAX_LOCK_ATTEMPTS
+      
+    # lock has been acquired, this section is guarded
+    site.layouts.all.each(&:destroy)
+    Yodel.mime_types.each do |mime_type|
+      mime_type_name = mime_type.name.to_s
+      mime_type_extensions = mime_type.extensions.join(',')
+      Yodel.config.layout_directories.each do |directory|
+        scan_folder(directory, site, mime_type_name, mime_type_extensions, nil)
       end
     end
+    
+    # release the lock
+    updated = Site::COLLECTION.update(
+      {'_id' => site.id, 'layout_lock' => {'$exists' => true}},
+      {'$unset' => {'layout_lock' => 1}},
+      safe: true)['n']
+    raise InconsistentLockState if updated != 1
   end
 
   def render(page)

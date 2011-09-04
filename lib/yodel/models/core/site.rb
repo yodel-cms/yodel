@@ -73,6 +73,7 @@ class Site
   end
 
   # Destroy a site and all records associated with it
+  # FIXME: need to destroy all other record types here e.g models, log entries etc.
   def destroy
     return if @destroyed || @document['_id'].nil?
     Record::COLLECTION.remove(_site_id: @document['_id'])
