@@ -59,6 +59,26 @@ class FormBuilder
       element = build_element(:textarea, {}, value.to_s)
     when :html
       element = build_element(:textarea, {class: 'html'}, value.to_s)
+    when :file, :image
+      elements = []
+      elements << build_element(:input, {type: 'hidden', name: input_name + '[_action]', value: 'set'})
+      if type == :file
+        elements << build_element(:p, {}, "File: <span>#{value && value.name || 'none'}</span>")
+      else
+        if !value.nil? && value.exist?
+          src = value.url(:admin_thumb).to_s
+          display = 'block'
+        else
+          src = ''
+          display = 'none'
+        end
+        elements << build_element(:div, {class: 'image_preview'}, [build_element(:img, {src: src, style: "display: #{display}"})])
+        elements << build_element(:p, {}, "Image: <span>#{(value && value.name) || 'none'}</span>")
+      end
+      elements << build_element(:input, {type: 'checkbox', name: input_name + '[_action]', value: 'clear'})
+      elements << build_element(:span, {}, "Delete")
+      elements << build_element(:input, {type: 'file', value: value.name, name: input_name + '[_value]'})
+      element = build_element(:span, {}, elements)
     when :radio
       base = {type: 'radio', name: input_name}
       true_button   = build_element(:input, base.merge(condition('checked', value, ['true', true])))
@@ -220,6 +240,7 @@ class FormBuilder
         params = {
           'action' => @action,
           'method' => 'post',
+          'enctype' => 'multipart/form-data',
           'data-remote' => (!!@remote).to_s,
           'data-success-function' => @success_function.to_s,
           'data-errors-function' => @errors_function.to_s,

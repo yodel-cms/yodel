@@ -23,4 +23,6 @@ Dir.chdir(File.dirname(__FILE__)) do
   require 'self_field'
   require 'tags_field'
   require 'time_field'
+  require 'attachment_field'
+  require 'image_field'
 end

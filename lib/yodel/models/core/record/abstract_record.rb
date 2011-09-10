@@ -99,13 +99,12 @@ class AbstractRecord
       end
       
       # action hashes allow operations on fields such as append, increment
-      if value.is_a?(Hash) && value.key?('_action') && value.key?('_value')
+      if value.is_a?(Hash) && value.key?('_action')
         current_field.json_action(value.delete('_action'), value.delete('_value'), self)
       else
         catch :ignore_value do
           processed_value = current_field.from_json(value, self)
           set(name, processed_value)
-          #changed!(name)
         end
       end
     end

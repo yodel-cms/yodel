@@ -7,6 +7,7 @@ class DevelopmentServer
   
   def initialize
     @directories = []
+    @root = nil
     detect_public_directories
   end
   
@@ -66,9 +67,10 @@ class DevelopmentServer
     def detect_public_directories
       # interim: for now, assume the server is started from an app
       # root, and all extensions exist in the extensions folder
-      root = Pathname.new(File.dirname($settings_file))
-      extensions = root.join('extensions')
-      @directories << root.join('public')
+      @root = Pathname.new(File.dirname($settings_file))
+      extensions = @root.join('extensions')
+      @directories << @root.join('public')
+      @directories << @root.join('uploads')
       return unless extensions.exist?
       extensions.entries.each do |extension|
         next if extension.to_s.start_with?('.')

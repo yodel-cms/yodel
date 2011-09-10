@@ -1,4 +1,6 @@
 Dir.chdir(File.dirname(__FILE__)) do
+  require 'attachments/attachment'
+  require 'attachments/image'
   require 'fields/fields'
   require 'validations/validations'
   require 'associations/associations'
