@@ -29,8 +29,9 @@ class Layout < Record
         scan_folder(directory, site, mime_type_name, mime_type_extensions, nil)
       end
     end
-    
-    # release the lock
+
+  # release the lock
+  ensure
     updated = Site::COLLECTION.update(
       {'_id' => site.id, 'layout_lock' => {'$exists' => true}},
       {'$unset' => {'layout_lock' => 1}},

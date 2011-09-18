@@ -26,8 +26,6 @@ class Application < Rack::Builder
     use Rack::MethodOverride
     use SiteDetector
     
-    # TODO: no need to check these every request in development
-    # check for any remaining migrations
     Migration.remaining_migrations.each do |site, remaining|
       next if remaining.empty?
       Yodel.config.logger.warn "Remaining migrations for site #{site.name}:"
