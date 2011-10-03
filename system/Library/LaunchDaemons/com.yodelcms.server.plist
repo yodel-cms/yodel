@@ -17,6 +17,7 @@
 	<string>/var/log/yodel.log</string>
 	<key>StandardErrorPath</key>
 	<string>/var/log/yodel.log</string>
+	<key>EnvironmentVariables</key>
 	<dict>
 	  <key>INLINEDIR</key>
 	  <string><%= sites_root %></string>

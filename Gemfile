@@ -14,7 +14,11 @@ gem 'json',           '~> 1.6.1'
 gem 'rack-contrib',   '~> 1.1.0', require: 'rack/contrib'
 gem 'rubydns',        '~> 0.3.3'
 gem 'activemerchant'
-#gem 'activemerchant-payway', git: 'https://github.com/willcannings/activemerchant-payway.git'
+
+# extensions
+gem 'yodel_admin'
+gem 'yodel_queue'
+gem 'yodel_blog'
 
 group :development do
   gem 'shoulda', '>= 0'

@@ -14,13 +14,20 @@ class PublicAssets
     return [403, {"Content-Type" => "text/plain"}, "Forbidden"] if parts.include? ".."
     site = env['yodel.site']
     
-    # serve any static files
-    site.public_directories.each do |public_dir|
+    if site
+      public_directories = site.public_directories
+    else
+      public_directories = Yodel.config.public_directories
+    end
+    
+    public_directories.each do |public_dir|
       path = public_dir.join(*parts)
       if path.file? && path.readable?
         return dup.serve_file(path, env)
       end
     end
+    
+    @app.call(env)
   end
   
   def each

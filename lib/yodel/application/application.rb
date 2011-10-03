@@ -19,9 +19,9 @@ class Application < Rack::Builder
     use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
     use Rack::NestedParams
     use Rack::MethodOverride
-    use Runtime
     use SiteDetector
     use PublicAssets if Yodel.env.development?
+    use Runtime
     
     # FIXME: for production, load layouts once
     if Yodel.env.production?

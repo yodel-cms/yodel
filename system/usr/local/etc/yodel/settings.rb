@@ -4,7 +4,7 @@ Yodel.config.define do |config|
   # mongo
   config.database_hostname  = 'localhost'
   config.database_port      = 27017
-  config.database           = 'Yodel'
+  config.database           = 'yodel'
 
   # yodel
   config.session_key        = 'yodel.session'

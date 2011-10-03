@@ -40,6 +40,10 @@ class Installer
     `sudo launchctl load /Library/LaunchDaemons/com.yodelcms.dns.plist`
     
     puts 'starting yodel web server...'
+    if `sudo launchctl list` =~ /\d+.+com.yodelcms.server$/
+      `sudo launchctl unload /Library/LaunchDaemons/com.yodelcms.server.plist`
+    end
+    `sudo launchctl load /Library/LaunchDaemons/com.yodelcms.server.plist`
   end
   
   def self.install_linux_files

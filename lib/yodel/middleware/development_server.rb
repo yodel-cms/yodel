@@ -5,6 +5,8 @@ class StreamClosed < StandardError
 end
 
 class DevelopmentServer
+  SEPARATORS = Regexp.union(*[::File::SEPARATOR, ::File::ALT_SEPARATOR].compact)
+  
   class Message
     attr_accessor :status, :headers, :body, :env, :data, :message_type
     MESSAGE_TYPES = {request: 0, response: 1, restart: 2, exit: 3}

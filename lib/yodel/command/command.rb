@@ -6,15 +6,11 @@ class CommandRunner
     OptionParser.new do |opts|
       opts.banner = "Usage: yodel [options] server|dns|console|migrate|setup"
       opts.on('-p', '--port PORT', Integer, 'Port to run the DNS or web server (default 80)') do |port|
-        Yodel.config.port = port
+        $web_port = port
       end
   
       opts.on('-e', '--environment ENV', 'Web server environment (default development)', 'development', 'production') do |env|
-        if env == 'production'
-          Yodel.env.production!
-        else
-          Yodel.env.development!
-        end
+        $env = env
       end
   
       opts.on('-h', '--help', 'Display this screen') do
@@ -30,7 +26,15 @@ class CommandRunner
     when 'server'
       require '../requires'
       require '../middleware/development_server'
-      Rack::Server.start(app: DevelopmentServer.new, Port: 2828)
+      
+      Yodel.config.web_port = $web_port if $web_port
+      if $env == 'production'
+        Yodel.env.production!
+      else
+        Yodel.env.development!
+      end
+      
+      Rack::Server.start(app: DevelopmentServer.new, Port: Yodel.config.web_port)
   
     when 'dns'
       require '../requires'

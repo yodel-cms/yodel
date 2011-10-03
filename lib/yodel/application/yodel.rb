@@ -19,7 +19,7 @@ module Yodel
     
     Yodel.config.public_directories << public_dir if File.directory?(public_dir)
     Yodel.config.layout_directories << layouts_dir if File.directory?(layouts_dir)
-    Yodel.config.migration_directories.insert(-2, migration_dir) if File.directory?(migration_dir)
+    Yodel.config.migration_directories << migrations_dir if File.directory?(migrations_dir)
     
     # load any models. if the init.rb file exists it will have been loaded first,
     # allowing extensions to specify the order models are loaded.
