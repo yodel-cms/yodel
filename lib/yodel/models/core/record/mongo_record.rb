@@ -1,5 +1,5 @@
-require 'record/abstract_record'
-require 'model/mongo_model'
+require './record/abstract_record'
+require './model/mongo_model'
 
 class MongoRecord < AbstractRecord
   extend MongoModel

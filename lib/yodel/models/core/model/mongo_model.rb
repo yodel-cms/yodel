@@ -1,4 +1,4 @@
-require 'model/abstract_model'
+require './model/abstract_model'
 
 module MongoModel
   include AbstractModel
@@ -13,7 +13,7 @@ module MongoModel
   
   def collection(*name)
     if name.size == 1
-      @collection = Yodel.config.db_connection.collection(name.first, pk: PrimaryKeyFactory)
+      @collection = Yodel.db.collection(name.first, pk: PrimaryKeyFactory)
     else
       @collection
     end

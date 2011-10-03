@@ -1,2 +1,2 @@
-require 'functions/function'
-require 'functions/trigger'
+require './functions/function'
+require './functions/trigger'

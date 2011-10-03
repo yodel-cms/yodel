@@ -1,23 +1,4 @@
 #!/usr/bin/env ruby
-$settings_file = File.absolute_path(File.join(Dir.pwd, 'settings'))
-Dir.chdir(File.join(File.dirname(__FILE__), '..', 'lib'))
-$:.unshift('.')
-require 'yodel/requires'
-require 'irb'
-
-command = ARGV.shift
-
-if command == 'c'
-  require 'yodel'
-  $application = Application.new
-  IRB.start(__FILE__)
-elsif command == 's'
-  require 'yodel/middleware/development_server'
-  Rack::Server.start(app: DevelopmentServer.new, Port: 2828)
-elsif command == 'm'
-  require 'yodel'
-  $application = Application.new
-  Site.all.each do |site|
-    Migration.run_migrations(site)
-  end
-end
+Dir.chdir(File.dirname(__FILE__))
+require '../lib/yodel/command/command'
+CommandRunner.run

@@ -1,6 +1,6 @@
-require 'record/mongo_record'
-require 'record/record'
-require 'model/mongo_model'
+require './record/mongo_record'
+require './record/record'
+require './model/mongo_model'
 
 class RecordIndex < MongoRecord
   extend MongoModel

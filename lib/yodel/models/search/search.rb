@@ -1,1 +1,1 @@
-require 'search/search_page'
+require './search/search_page'

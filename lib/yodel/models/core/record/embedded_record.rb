@@ -1,4 +1,4 @@
-require 'record/abstract_record'
+require './record/abstract_record'
 
 class EmbeddedRecord < AbstractRecord
   attr_reader :embedded_field, :parent_record

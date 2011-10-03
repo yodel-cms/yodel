@@ -25,7 +25,7 @@ class Layout < Record
     Yodel.mime_types.each do |mime_type|
       mime_type_name = mime_type.name.to_s
       mime_type_extensions = mime_type.extensions.join(',')
-      Yodel.config.layout_directories.each do |directory|
+      site.layout_directories.each do |directory|
         scan_folder(directory, site, mime_type_name, mime_type_extensions, nil)
       end
     end

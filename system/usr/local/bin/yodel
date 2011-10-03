@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+<%= ruby_path %> -e 'require "yodel/command/command"; CommandRunner.run' $1

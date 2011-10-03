@@ -1,3 +1,5 @@
+# encoding: utf-8
+require 'psych'
 require 'rubygems'
 require 'bundler'
 begin
@@ -17,23 +19,10 @@ Jeweler::Tasks.new do |gem|
   gem.summary = 'Ruby CMS'
   gem.description = 'Rack based Ruby CMS'
   gem.email = 'me@willcannings.com'
-  gem.authors = ['Will']
-  
-  gem.files = ["lib/**/*.rb", "lib/**/*.components", "bin/*"]
-  
-  gem.add_runtime_dependency 'impromptu', 		'~> 1.2'
-  gem.add_runtime_dependency 'rack', 					'~> 1.0'
-  gem.add_runtime_dependency 'mongo_mapper', 	'~> 0.8.6'
-  gem.add_runtime_dependency 'activesupport',	'~> 3.0.0'
-  gem.add_runtime_dependency 'erubis',				'~> 2.6.6'
-  gem.add_runtime_dependency 'mail',					'~> 2.2.9'
-  gem.add_runtime_dependency 'RubyInline',		'~> 3.8.6'
-  gem.add_runtime_dependency 'image_science',	'~> 1.2.1'
-  gem.add_runtime_dependency 'hpricot',				'~> 0.8.3'
-  gem.add_runtime_dependency 'builder',				'~> 2.1.2'
-  gem.add_runtime_dependency 'ri_cal',				'~> 0.8.7'
-  gem.add_runtime_dependency 'json',					'~> 1.4.6'
-  gem.add_runtime_dependency 'rack-contrib',	'~> 1.1.0'
+  gem.authors = ['Will Cannings']
+  gem.files = ["lib/**/*", "bin/*", "system/**/*"]
+  gem.executables = ['yodel']
+  # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
 
@@ -49,6 +38,7 @@ Rcov::RcovTask.new do |test|
   test.libs << 'test'
   test.pattern = 'test/**/test_*.rb'
   test.verbose = true
+  test.rcov_opts << '--exclude "gems/*"'
 end
 
 task :default => :test

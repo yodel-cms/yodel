@@ -1,14 +1,6 @@
 class Migration
-  def self.remaining_migrations
-    Site.all.each_with_object(Hash.new([])) do |site, remaining|
-      each_migration do |migration, file|
-        if migration.nil?
-          remaining[site] <<= "Invalid migration file: #{file}"
-        elsif !site.migrations.include?(migration.name)
-          remaining[site] <<= "#{migration.name}: #{file}"
-        end
-      end
-    end
+  def self.copy_migrations(site)
+    
   end
   
   def self.run_migrations(site)
@@ -44,15 +36,12 @@ class Migration
     # to the supplied block. Incorrect migration files may result
     # in nil being yielded. The caller can respond appropriately.
     # The current file (a string path) is also provided.
-    def self.each_migration
-      Yodel.config.migration_directories.reverse.each do |dir|
-        next unless dir.directory?
-        Dir[dir.join('*.rb')].sort.each do |file|
-          @migration = nil
-          load file
-          yield @migration, file
-          Object.send(:remove_const, @migration.name.to_sym) if @migration
-        end
+    def self.each_migration(site)
+      Dir[site.migrations_directory.join('*.rb')].sort.each do |file|
+        @migration = nil
+        load file
+        yield @migration, file
+        Object.send(:remove_const, @migration.name.to_sym) if @migration
       end
     end
 end

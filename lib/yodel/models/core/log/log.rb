@@ -1,4 +1,4 @@
-require 'log/log_entry'
+require './log/log_entry'
 
 class Log
   def initialize(site)

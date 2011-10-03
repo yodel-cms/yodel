@@ -309,8 +309,29 @@ class Page < Record
     @content = content
   end
   
-  def content
-    @content ||= get('content')
+  def content(*section)
+    if section.empty?
+      @content ||= get('content')
+    else
+      instance_variable_get("@content_for_#{section.first}") || ''
+    end
+  end
+  
+  def content_for(section, options={}, &block)
+    if block_given?
+      content = Ember::Template.content_from_block(block).join
+    elsif options.key?(:partial)
+      content = partial(options[:partial])
+    end
+    instance_variable_set("@content_for_#{section}", content)
+  end
+  
+  def partial(name)
+    name = name.to_s
+    name = name + '.html' unless name.end_with?('.html')
+    path = site.partials_directory.join(name)
+    raise LayoutNotFound, path unless File.exist?(path)
+    Ember::Template.new(IO.read(path), {source_file: path}).render(get_binding)
   end
   
   def page

@@ -1,8 +1,8 @@
-require 'record/abstract_record'
-require 'record/embedded_record'
-require 'record/mongo_record'
-require 'record/site_record'
-require 'model/model'
+require './record/abstract_record'
+require './record/embedded_record'
+require './record/mongo_record'
+require './record/site_record'
+require './model/model'
 
 class Record < SiteRecord
   collection    :records
@@ -276,6 +276,11 @@ class Record < SiteRecord
     end
   end
   
+  # All direct descendents of this record, and the record itself
+  def children_and_self
+    [self, children].flatten
+  end
+  
   # All descendent children of this record, i.e children, grandchildren and so on.
   def all_children
     [self, children.collect(&:all_children)].flatten
@@ -290,6 +295,33 @@ class Record < SiteRecord
   # True if this record has no parent
   def root?
     parent.nil?
+  end
+  
+  # True if record is a parent (ancestor) of this record
+  def parent?(record)
+    parents.include?(record)
+  end
+  
+  # Returns the first parent which is an instance of type
+  def first_parent(type)
+    model = site.model_by_plural_name(type.to_s.downcase.pluralize)
+    match = parents.find {|record| record.model.parents_and_mixins.include?(model)}
+    
+    if block_given?
+      yield match
+    else
+      match
+    end
+  end
+  
+  # Finds the first parent which can respond to 'message' and returns the
+  # result. Will return nil if no parents response to the message, however,
+  # keep in mind that nil may be a valid response to this message.
+  def first_response_to(message)
+    message = message.to_s
+    parents.find do |record|
+      return record.send(message) if record.respond_to?(message) || record.fields.keys.include?(message)
+    end
   end
   
   

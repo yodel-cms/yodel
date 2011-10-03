@@ -1,5 +1,5 @@
-require 'record/mongo_record'
-require 'model/site_model'
+require './record/mongo_record'
+require './model/site_model'
 
 class SiteRecord < MongoRecord
   extend SiteModel

@@ -14,11 +14,15 @@ class ErrorPages
     if Yodel.env.production?
       return render_error_page(500, [])
     else
-      raise $!
+      if $!.respond_to?(:domain)
+        return render_error_page(404, $!.error, $!.description)
+      else
+        raise $!
+      end
     end
   end
   
-  def render_error_page(error_code, response)
+  def render_error_page(error_code, response, description=nil)
     template = Ember::Template.new(TEMPLATE)
     unless response.empty?
       components = []
@@ -27,10 +31,12 @@ class ErrorPages
     else
       error = "We're sorry, but something went wrong."
     end
-    if error_code == 404
-      description = "You may have mistyped the address or the page may have moved."
-    else
-      description = "We've been notified about this issue and we'll take a look at it shortly."
+    if description.nil?
+      if error_code == 404
+        description = "You may have mistyped the address or the page may have moved."
+      else
+        description = "We've been notified about this issue and we'll take a look at it shortly."
+      end
     end
     [error_code, {'Content-Type' => 'text/html'}, [template.render(binding)]]
   end
@@ -70,6 +76,10 @@ class ErrorPages
           font-size: 16px;
           margin: 0px;
           padding: 0px;
+        }
+        
+        a {
+          color: #777;
         }
         
         #lip {

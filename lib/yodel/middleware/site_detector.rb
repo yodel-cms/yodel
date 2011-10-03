@@ -7,7 +7,7 @@ class SiteDetector
     request = Rack::Request.new(env)
     site = Site.find_by(domains: request.host)
     if site.nil?
-      return [404, {'Content-Type' => 'text/plain'}, ["Domain (#{request.host}) not found."]]
+      raise DomainNotFound.new(request.host, request.port)
     else
       env['yodel.site'] = site
       unless Yodel.env.development?

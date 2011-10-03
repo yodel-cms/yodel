@@ -4,131 +4,266 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{yodel}
+  s.name = "yodel"
   s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Will"]
-  s.date = %q{2010-11-15}
-  s.description = %q{Rack based Ruby CMS}
-  s.email = %q{me@willcannings.com}
+  s.authors = ["Will Cannings"]
+  s.date = "2011-09-30"
+  s.description = "Rack based Ruby CMS"
+  s.email = "me@willcannings.com"
+  s.executables = ["yodel"]
   s.extra_rdoc_files = [
     "LICENSE",
     "README.rdoc"
   ]
   s.files = [
-    ".document",
-    "Gemfile",
-    "LICENSE",
-    "README.rdoc",
-    "Rakefile",
-    "VERSION",
+    "bin/yodel",
     "lib/yodel.rb",
-    "test/helper.rb",
-    "test/test_yodel.rb"
+    "lib/yodel/application/application.rb",
+    "lib/yodel/application/request_handler.rb",
+    "lib/yodel/application/yodel.rb",
+    "lib/yodel/command/command.rb",
+    "lib/yodel/config/config.rb",
+    "lib/yodel/config/environment.rb",
+    "lib/yodel/config/yodel.rb",
+    "lib/yodel/exceptions/destroyed_record.rb",
+    "lib/yodel/exceptions/domain_not_found.rb",
+    "lib/yodel/exceptions/duplicate_layout.rb",
+    "lib/yodel/exceptions/exceptions.rb",
+    "lib/yodel/exceptions/inconsistent_lock_state.rb",
+    "lib/yodel/exceptions/invalid_field.rb",
+    "lib/yodel/exceptions/invalid_index.rb",
+    "lib/yodel/exceptions/invalid_mixin.rb",
+    "lib/yodel/exceptions/invalid_model_field.rb",
+    "lib/yodel/exceptions/layout_not_found.rb",
+    "lib/yodel/exceptions/mass_assignment.rb",
+    "lib/yodel/exceptions/missing_migration.rb",
+    "lib/yodel/exceptions/unable_to_acquire_lock.rb",
+    "lib/yodel/exceptions/unknown_field.rb",
+    "lib/yodel/extras/dns_server.rb",
+    "lib/yodel/middleware/development_server.rb",
+    "lib/yodel/middleware/error_pages.rb",
+    "lib/yodel/middleware/git_http.rb",
+    "lib/yodel/middleware/request.rb",
+    "lib/yodel/middleware/runtime.rb",
+    "lib/yodel/middleware/site_detector.rb",
+    "lib/yodel/mime_types/default_mime_set.rb",
+    "lib/yodel/mime_types/mime_type.rb",
+    "lib/yodel/mime_types/mime_type_set.rb",
+    "lib/yodel/mime_types/mime_types.rb",
+    "lib/yodel/mime_types/yodel.rb",
+    "lib/yodel/models/api/api.rb",
+    "lib/yodel/models/api/api_call.rb",
+    "lib/yodel/models/core/associations/association.rb",
+    "lib/yodel/models/core/associations/associations.rb",
+    "lib/yodel/models/core/associations/counts/many_association.rb",
+    "lib/yodel/models/core/associations/counts/one_association.rb",
+    "lib/yodel/models/core/associations/embedded/embedded_association.rb",
+    "lib/yodel/models/core/associations/embedded/embedded_record_array.rb",
+    "lib/yodel/models/core/associations/embedded/many_embedded_association.rb",
+    "lib/yodel/models/core/associations/embedded/one_embedded_association.rb",
+    "lib/yodel/models/core/associations/query/many_query_association.rb",
+    "lib/yodel/models/core/associations/query/one_query_association.rb",
+    "lib/yodel/models/core/associations/query/query_association.rb",
+    "lib/yodel/models/core/associations/record_association.rb",
+    "lib/yodel/models/core/associations/store/many_store_association.rb",
+    "lib/yodel/models/core/associations/store/one_store_association.rb",
+    "lib/yodel/models/core/associations/store/store_association.rb",
+    "lib/yodel/models/core/attachments/attachment.rb",
+    "lib/yodel/models/core/attachments/image.rb",
+    "lib/yodel/models/core/core.rb",
+    "lib/yodel/models/core/fields/alias_field.rb",
+    "lib/yodel/models/core/fields/array_field.rb",
+    "lib/yodel/models/core/fields/attachment_field.rb",
+    "lib/yodel/models/core/fields/boolean_field.rb",
+    "lib/yodel/models/core/fields/change_sensitive_array.rb",
+    "lib/yodel/models/core/fields/change_sensitive_hash.rb",
+    "lib/yodel/models/core/fields/date_field.rb",
+    "lib/yodel/models/core/fields/decimal_field.rb",
+    "lib/yodel/models/core/fields/email_field.rb",
+    "lib/yodel/models/core/fields/enum_field.rb",
+    "lib/yodel/models/core/fields/field.rb",
+    "lib/yodel/models/core/fields/fields.rb",
+    "lib/yodel/models/core/fields/fields_field.rb",
+    "lib/yodel/models/core/fields/filter_mixin.rb",
+    "lib/yodel/models/core/fields/filtered_string_field.rb",
+    "lib/yodel/models/core/fields/filtered_text_field.rb",
+    "lib/yodel/models/core/fields/function_field.rb",
+    "lib/yodel/models/core/fields/hash_field.rb",
+    "lib/yodel/models/core/fields/html_field.rb",
+    "lib/yodel/models/core/fields/image_field.rb",
+    "lib/yodel/models/core/fields/integer_field.rb",
+    "lib/yodel/models/core/fields/password_field.rb",
+    "lib/yodel/models/core/fields/self_field.rb",
+    "lib/yodel/models/core/fields/string_field.rb",
+    "lib/yodel/models/core/fields/tags_field.rb",
+    "lib/yodel/models/core/fields/text_field.rb",
+    "lib/yodel/models/core/fields/time_field.rb",
+    "lib/yodel/models/core/functions/function.rb",
+    "lib/yodel/models/core/functions/functions.rb",
+    "lib/yodel/models/core/functions/trigger.rb",
+    "lib/yodel/models/core/log/log.rb",
+    "lib/yodel/models/core/log/log_entry.rb",
+    "lib/yodel/models/core/migration.rb",
+    "lib/yodel/models/core/model/abstract_model.rb",
+    "lib/yodel/models/core/model/model.rb",
+    "lib/yodel/models/core/model/mongo_model.rb",
+    "lib/yodel/models/core/model/site_model.rb",
+    "lib/yodel/models/core/mongo/mongo.rb",
+    "lib/yodel/models/core/mongo/primary_key_factory.rb",
+    "lib/yodel/models/core/mongo/query.rb",
+    "lib/yodel/models/core/mongo/record_index.rb",
+    "lib/yodel/models/core/record/abstract_record.rb",
+    "lib/yodel/models/core/record/embedded_record.rb",
+    "lib/yodel/models/core/record/mongo_record.rb",
+    "lib/yodel/models/core/record/record.rb",
+    "lib/yodel/models/core/record/site_record.rb",
+    "lib/yodel/models/core/site.rb",
+    "lib/yodel/models/core/validations/email_address_validation.rb",
+    "lib/yodel/models/core/validations/embedded_records_validation.rb",
+    "lib/yodel/models/core/validations/errors.rb",
+    "lib/yodel/models/core/validations/excluded_from_validation.rb",
+    "lib/yodel/models/core/validations/excludes_combinations_validation.rb",
+    "lib/yodel/models/core/validations/format_validation.rb",
+    "lib/yodel/models/core/validations/included_in_validation.rb",
+    "lib/yodel/models/core/validations/includes_combinations_validation.rb",
+    "lib/yodel/models/core/validations/length_validation.rb",
+    "lib/yodel/models/core/validations/password_confirmation_validation.rb",
+    "lib/yodel/models/core/validations/required_validation.rb",
+    "lib/yodel/models/core/validations/unique_validation.rb",
+    "lib/yodel/models/core/validations/validation.rb",
+    "lib/yodel/models/core/validations/validations.rb",
+    "lib/yodel/models/email/email.rb",
+    "lib/yodel/models/migrations/01_record_model.rb",
+    "lib/yodel/models/migrations/02_page_model.rb",
+    "lib/yodel/models/migrations/03_layout_model.rb",
+    "lib/yodel/models/migrations/04_group_model.rb",
+    "lib/yodel/models/migrations/05_user_model.rb",
+    "lib/yodel/models/migrations/06_snippet_model.rb",
+    "lib/yodel/models/migrations/07_search_page_model.rb",
+    "lib/yodel/models/migrations/08_default_site_options.rb",
+    "lib/yodel/models/migrations/09_security_page_models.rb",
+    "lib/yodel/models/migrations/10_record_proxy_page_model.rb",
+    "lib/yodel/models/migrations/11_email_model.rb",
+    "lib/yodel/models/migrations/12_api_call_model.rb",
+    "lib/yodel/models/migrations/13_page_edit_layout.rb",
+    "lib/yodel/models/models.rb",
+    "lib/yodel/models/pages/form_builder.rb",
+    "lib/yodel/models/pages/layout.rb",
+    "lib/yodel/models/pages/page.rb",
+    "lib/yodel/models/pages/pages.rb",
+    "lib/yodel/models/pages/record_proxy_page.rb",
+    "lib/yodel/models/search/search.rb",
+    "lib/yodel/models/search/search_page.rb",
+    "lib/yodel/models/security/facebook_login_page.rb",
+    "lib/yodel/models/security/group.rb",
+    "lib/yodel/models/security/guests_group.rb",
+    "lib/yodel/models/security/login_page.rb",
+    "lib/yodel/models/security/logout_page.rb",
+    "lib/yodel/models/security/noone_group.rb",
+    "lib/yodel/models/security/owner_group.rb",
+    "lib/yodel/models/security/password_reset_page.rb",
+    "lib/yodel/models/security/security.rb",
+    "lib/yodel/models/security/user.rb",
+    "lib/yodel/request/authentication.rb",
+    "lib/yodel/request/flash.rb",
+    "lib/yodel/request/request.rb",
+    "lib/yodel/requires.rb",
+    "lib/yodel/task_queue/queue_daemon.rb",
+    "lib/yodel/task_queue/queue_worker.rb",
+    "lib/yodel/task_queue/stats_thread.rb",
+    "lib/yodel/task_queue/task.rb",
+    "lib/yodel/task_queue/task_queue.rb",
+    "lib/yodel/types/date.rb",
+    "lib/yodel/types/object_id.rb",
+    "lib/yodel/types/time.rb",
+    "system/Library/LaunchDaemons/com.yodelcms.dns",
+    "system/etc/resolver/yodel",
+    "system/usr/local/bin/yodel",
+    "system/usr/local/etc/yodel/settings.rb",
+    "system/var/log/yodel.log"
   ]
-  s.homepage = %q{http://github.com/yodel-cms/yodel}
+  s.homepage = "http://github.com/yodel-cms/yodel"
   s.licenses = ["Public Domain"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.7}
-  s.summary = %q{Ruby CMS}
+  s.rubygems_version = "1.8.10"
+  s.summary = "Ruby CMS"
   s.test_files = [
     "test/helper.rb",
     "test/test_yodel.rb"
   ]
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<impromptu>, ["~> 1.0"])
-      s.add_runtime_dependency(%q<rack>, ["~> 1.0"])
-      s.add_runtime_dependency(%q<mongo_mapper>, ["~> 0.8.6"])
-      s.add_runtime_dependency(%q<activesupport>, ["~> 3.0.0"])
-      s.add_runtime_dependency(%q<erubis>, ["~> 2.6.6"])
-      s.add_runtime_dependency(%q<mail>, ["~> 2.2.9"])
+      s.add_runtime_dependency(%q<rack>, ["~> 1.3.3"])
+      s.add_runtime_dependency(%q<mongo>, ["~> 1.3.1"])
+      s.add_runtime_dependency(%q<bson>, ["~> 1.3.1"])
+      s.add_runtime_dependency(%q<bson_ext>, ["~> 1.3.1"])
+      s.add_runtime_dependency(%q<plucky>, ["~> 0.4.1"])
+      s.add_runtime_dependency(%q<activesupport>, ["~> 3.0.3"])
+      s.add_runtime_dependency(%q<ember>, ["~> 0.3.1"])
+      s.add_runtime_dependency(%q<mail>, ["~> 2.3.0"])
+      s.add_runtime_dependency(%q<RubyInline>, ["~> 3.11.0"])
       s.add_runtime_dependency(%q<image_science>, ["~> 1.2.1"])
-      s.add_runtime_dependency(%q<hpricot>, ["~> 0.8.3"])
-      s.add_runtime_dependency(%q<builder>, ["~> 2.1.2"])
-      s.add_runtime_dependency(%q<ri_cal>, ["~> 0.8.7"])
-      s.add_runtime_dependency(%q<json>, ["~> 1.4.6"])
+      s.add_runtime_dependency(%q<hpricot>, ["~> 0.8.4"])
+      s.add_runtime_dependency(%q<json>, ["~> 1.6.1"])
       s.add_runtime_dependency(%q<rack-contrib>, ["~> 1.1.0"])
+      s.add_runtime_dependency(%q<linguistics>, ["~> 1.0.9"])
+      s.add_runtime_dependency(%q<rubydns>, ["~> 0.3.3"])
+      s.add_runtime_dependency(%q<activemerchant>, [">= 0"])
+      s.add_runtime_dependency(%q<activemerchant-payway>, [">= 0"])
       s.add_development_dependency(%q<shoulda>, [">= 0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.5.1"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
-      s.add_runtime_dependency(%q<impromptu>, ["~> 1.0"])
-      s.add_runtime_dependency(%q<rack>, ["~> 1.0"])
-      s.add_runtime_dependency(%q<mongo_mapper>, ["~> 0.8.6"])
-      s.add_runtime_dependency(%q<activesupport>, ["~> 3.0.0"])
-      s.add_runtime_dependency(%q<erubis>, ["~> 2.6.6"])
-      s.add_runtime_dependency(%q<mail>, ["~> 2.2.9"])
-      s.add_runtime_dependency(%q<image_science>, ["~> 1.2.1"])
-      s.add_runtime_dependency(%q<hpricot>, ["~> 0.8.3"])
-      s.add_runtime_dependency(%q<builder>, ["~> 2.1.2"])
-      s.add_runtime_dependency(%q<ri_cal>, ["~> 0.8.7"])
-      s.add_runtime_dependency(%q<json>, ["~> 1.4.6"])
-      s.add_runtime_dependency(%q<rack-contrib>, ["~> 1.1.0"])
     else
-      s.add_dependency(%q<impromptu>, ["~> 1.0"])
-      s.add_dependency(%q<rack>, ["~> 1.0"])
-      s.add_dependency(%q<mongo_mapper>, ["~> 0.8.6"])
-      s.add_dependency(%q<activesupport>, ["~> 3.0.0"])
-      s.add_dependency(%q<erubis>, ["~> 2.6.6"])
-      s.add_dependency(%q<mail>, ["~> 2.2.9"])
+      s.add_dependency(%q<rack>, ["~> 1.3.3"])
+      s.add_dependency(%q<mongo>, ["~> 1.3.1"])
+      s.add_dependency(%q<bson>, ["~> 1.3.1"])
+      s.add_dependency(%q<bson_ext>, ["~> 1.3.1"])
+      s.add_dependency(%q<plucky>, ["~> 0.4.1"])
+      s.add_dependency(%q<activesupport>, ["~> 3.0.3"])
+      s.add_dependency(%q<ember>, ["~> 0.3.1"])
+      s.add_dependency(%q<mail>, ["~> 2.3.0"])
+      s.add_dependency(%q<RubyInline>, ["~> 3.11.0"])
       s.add_dependency(%q<image_science>, ["~> 1.2.1"])
-      s.add_dependency(%q<hpricot>, ["~> 0.8.3"])
-      s.add_dependency(%q<builder>, ["~> 2.1.2"])
-      s.add_dependency(%q<ri_cal>, ["~> 0.8.7"])
-      s.add_dependency(%q<json>, ["~> 1.4.6"])
+      s.add_dependency(%q<hpricot>, ["~> 0.8.4"])
+      s.add_dependency(%q<json>, ["~> 1.6.1"])
       s.add_dependency(%q<rack-contrib>, ["~> 1.1.0"])
+      s.add_dependency(%q<linguistics>, ["~> 1.0.9"])
+      s.add_dependency(%q<rubydns>, ["~> 0.3.3"])
+      s.add_dependency(%q<activemerchant>, [">= 0"])
+      s.add_dependency(%q<activemerchant-payway>, [">= 0"])
       s.add_dependency(%q<shoulda>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
       s.add_dependency(%q<jeweler>, ["~> 1.5.1"])
       s.add_dependency(%q<rcov>, [">= 0"])
-      s.add_dependency(%q<impromptu>, ["~> 1.0"])
-      s.add_dependency(%q<rack>, ["~> 1.0"])
-      s.add_dependency(%q<mongo_mapper>, ["~> 0.8.6"])
-      s.add_dependency(%q<activesupport>, ["~> 3.0.0"])
-      s.add_dependency(%q<erubis>, ["~> 2.6.6"])
-      s.add_dependency(%q<mail>, ["~> 2.2.9"])
-      s.add_dependency(%q<image_science>, ["~> 1.2.1"])
-      s.add_dependency(%q<hpricot>, ["~> 0.8.3"])
-      s.add_dependency(%q<builder>, ["~> 2.1.2"])
-      s.add_dependency(%q<ri_cal>, ["~> 0.8.7"])
-      s.add_dependency(%q<json>, ["~> 1.4.6"])
-      s.add_dependency(%q<rack-contrib>, ["~> 1.1.0"])
     end
   else
-    s.add_dependency(%q<impromptu>, ["~> 1.0"])
-    s.add_dependency(%q<rack>, ["~> 1.0"])
-    s.add_dependency(%q<mongo_mapper>, ["~> 0.8.6"])
-    s.add_dependency(%q<activesupport>, ["~> 3.0.0"])
-    s.add_dependency(%q<erubis>, ["~> 2.6.6"])
-    s.add_dependency(%q<mail>, ["~> 2.2.9"])
+    s.add_dependency(%q<rack>, ["~> 1.3.3"])
+    s.add_dependency(%q<mongo>, ["~> 1.3.1"])
+    s.add_dependency(%q<bson>, ["~> 1.3.1"])
+    s.add_dependency(%q<bson_ext>, ["~> 1.3.1"])
+    s.add_dependency(%q<plucky>, ["~> 0.4.1"])
+    s.add_dependency(%q<activesupport>, ["~> 3.0.3"])
+    s.add_dependency(%q<ember>, ["~> 0.3.1"])
+    s.add_dependency(%q<mail>, ["~> 2.3.0"])
+    s.add_dependency(%q<RubyInline>, ["~> 3.11.0"])
     s.add_dependency(%q<image_science>, ["~> 1.2.1"])
-    s.add_dependency(%q<hpricot>, ["~> 0.8.3"])
-    s.add_dependency(%q<builder>, ["~> 2.1.2"])
-    s.add_dependency(%q<ri_cal>, ["~> 0.8.7"])
-    s.add_dependency(%q<json>, ["~> 1.4.6"])
+    s.add_dependency(%q<hpricot>, ["~> 0.8.4"])
+    s.add_dependency(%q<json>, ["~> 1.6.1"])
     s.add_dependency(%q<rack-contrib>, ["~> 1.1.0"])
+    s.add_dependency(%q<linguistics>, ["~> 1.0.9"])
+    s.add_dependency(%q<rubydns>, ["~> 0.3.3"])
+    s.add_dependency(%q<activemerchant>, [">= 0"])
+    s.add_dependency(%q<activemerchant-payway>, [">= 0"])
     s.add_dependency(%q<shoulda>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
     s.add_dependency(%q<jeweler>, ["~> 1.5.1"])
     s.add_dependency(%q<rcov>, [">= 0"])
-    s.add_dependency(%q<impromptu>, ["~> 1.0"])
-    s.add_dependency(%q<rack>, ["~> 1.0"])
-    s.add_dependency(%q<mongo_mapper>, ["~> 0.8.6"])
-    s.add_dependency(%q<activesupport>, ["~> 3.0.0"])
-    s.add_dependency(%q<erubis>, ["~> 2.6.6"])
-    s.add_dependency(%q<mail>, ["~> 2.2.9"])
-    s.add_dependency(%q<image_science>, ["~> 1.2.1"])
-    s.add_dependency(%q<hpricot>, ["~> 0.8.3"])
-    s.add_dependency(%q<builder>, ["~> 2.1.2"])
-    s.add_dependency(%q<ri_cal>, ["~> 0.8.7"])
-    s.add_dependency(%q<json>, ["~> 1.4.6"])
-    s.add_dependency(%q<rack-contrib>, ["~> 1.1.0"])
   end
 end
 

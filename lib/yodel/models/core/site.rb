@@ -1,5 +1,5 @@
 class Site
-  COLLECTION = Yodel.config.db_connection.collection('sites', pk: PrimaryKeyFactory)
+  COLLECTION = Yodel.db.collection('sites', pk: PrimaryKeyFactory)
   DEFAULT_DOCUMENT = {
     '_id' => PrimaryKeyFactory.pk,
     'model_plural_names' => {},
@@ -8,7 +8,9 @@ class Site
     'migrations' => [],
     'options' => {},
     'domains' => [],
-    'name' => ''
+    'name' => '',
+    'identifier' => '',
+    'site_root' => ''
   }
   
   def initialize(document=nil)
@@ -56,6 +58,39 @@ class Site
   end
   
   alias :to_s :to_str
+  
+  # directories
+  def root_directory
+    @root_dir ||= Pathname.new(site_root)
+  end
+  
+  def public_directory
+    @public_dir ||= root_directory.join(Yodel::PUBLIC_DIRECTORY_NAME)
+  end
+  
+  def public_directories
+    @public_dirs ||= Yodel.config.public_directories + [public_directory]
+  end
+  
+  def layouts_directory
+    @layouts_dir ||= root_directory.join(Yodel::LAYOUTS_DIRECTORY_NAME)
+  end
+  
+  def layout_directories
+    @layout_dirs ||= Yodel.config.layout_directories + [layouts_directory]
+  end
+  
+  def partials_directory
+    @partials_dir ||= root_directory.join(Yodel::PARTIALS_DIRECTORY_NAME)
+  end
+  
+  def migrations_directory
+    @migrations_dir ||= root_directory.join(Yodel::MIGRATIONS_DIRECTORY_NAME)
+  end
+  
+  def attachments_directory
+    @attachments_dir ||= root_directory.join(Yodel::ATTACHMENTS_DIRECTORY_NAME)
+  end
   
   
   # ----------------------------------------

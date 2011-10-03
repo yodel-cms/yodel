@@ -1,4 +1,4 @@
-require 'model/mongo_model'
+require './model/mongo_model'
 
 module SiteModel
   include MongoModel

@@ -7,9 +7,10 @@ require 'net/http'
 require 'open-uri'
 
 # load bundled gems
+ENV['BUNDLE_GEMFILE'] = File.join(File.dirname(__FILE__), '..', '..', 'Gemfile')
 require 'rubygems'
-require 'bundler/setup'
-Bundler.require(:default)
+require 'bundler'
+Bundler.require
 
 # manually load active support extensions
 require 'active_support/core_ext/object/blank'
@@ -17,3 +18,9 @@ require 'active_support/core_ext/object/try'
 require 'active_support/inflector'
 require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/array/conversions'
+
+# config and environment are loaded separately
+# from yodel, so a configuration can be created
+# before loading the server or console
+require File.join(File.dirname(__FILE__), 'config', 'config')
+require '/usr/local/etc/yodel/settings.rb'

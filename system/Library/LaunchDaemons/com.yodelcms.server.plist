@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.yodelcms.dns</string>
+	<string>com.yodelcms.server</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>ruby</string>
-		<string></string>
+		<string>/usr/local/bin/yodel</string>
+		<string>server</string>
 	</array>
 	<key>KeepAlive</key>
 	<true/>

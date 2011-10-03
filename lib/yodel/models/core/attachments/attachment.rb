@@ -14,7 +14,7 @@ class Attachment
   end
     
   def url
-    @url ||= Pathname.new('/').join(relative_path)
+    @url ||= Pathname.new('/').join(Yodel::ATTACHMENTS_DIRECTORY_NAME, relative_path)
   end
   
   def relative_path
@@ -22,15 +22,15 @@ class Attachment
   end
   
   def relative_directory_path
-    @relative_directory_path ||= File.join(Yodel.config.attachments_directory_name, @field.name, @record.id.to_s)
+    @relative_directory_path ||= File.join(@field.name, @record.id.to_s)
   end
   
   def path
-    @path ||= Yodel.config.attachments_directory.join(relative_path)
+    @path ||= @record.site.attachments_directory.join(relative_path)
   end
   
   def directory_path
-    @directory_path ||= Yodel.config.attachments_directory.join(relative_directory_path)
+    @directory_path ||= @record.site.attachments_directory.join(relative_directory_path)
   end
   
   def exist?
@@ -56,7 +56,7 @@ class Attachment
     # reset the name and mime type of the attachment
     @name = file[:filename]
     @mime = file[:type]
-    temp = file[:tempfile]
+    temp  = file[:tempfile]
     temp_path = temp.path
     temp.close
     

@@ -25,6 +25,11 @@ class PageModelMigration < Migration
       pages.allowed_parents = [pages]
       pages.record_class_name = 'Page'
     end
+    
+    # default root page
+    page = site.pages.new
+    page.title = "Home"
+    page.save
   end
   
   def self.down(site)

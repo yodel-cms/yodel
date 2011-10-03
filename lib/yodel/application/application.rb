@@ -1,10 +1,7 @@
 Dir.chdir(File.dirname(__FILE__)) do
-  require 'yodel_config'
-  require 'environment'
-  require 'request_handler'
-  require 'yodel'  
-  require $settings_file unless $settings_file.nil?
-  Yodel.config.merge_defaults!
+  require '../middleware/public_assets'
+  require './request_handler'
+  require './yodel'
 end
 
 class Application < Rack::Builder
@@ -12,11 +9,9 @@ class Application < Rack::Builder
     super
     
     # boot
-    unless Yodel.env.development?
-      Yodel.config.logger.info "Yodel starting up"
-    end
+    Yodel.config.logger.info "Yodel starting up" if Yodel.env.production?
+    Dir.chdir(Yodel.config.sites_root)
     Yodel.load_extensions
-    Dir.chdir(Yodel.config.root)
     
     # setup middleware
     use Rack::ShowExceptions if Yodel.env.development?
@@ -24,14 +19,9 @@ class Application < Rack::Builder
     use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
     use Rack::NestedParams
     use Rack::MethodOverride
+    use Runtime
     use SiteDetector
-    
-    Migration.remaining_migrations.each do |site, remaining|
-      next if remaining.empty?
-      Yodel.config.logger.warn "Remaining migrations for site #{site.name}:"
-      remaining.each {|name| Yodel.config.logger.warn name}
-      Yodel.config.logger.warn ""
-    end
+    use PublicAssets if Yodel.env.development?
     
     # FIXME: for production, load layouts once
     if Yodel.env.production?

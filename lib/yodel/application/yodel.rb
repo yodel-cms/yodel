@@ -1,29 +1,22 @@
 module Yodel
-  def self.config
-    @config ||= YodelConfig.new
-  end
-  
-  def self.env
-    @env ||= Environment.new
+  def self.db
+    @db ||= Mongo::Connection.new(Yodel.config.database_hostname, Yodel.config.database_port).db(Yodel.config.database)
   end
   
   def self.load_extensions
-    extensions = Yodel.config.root.join('extensions')
-    return unless extensions.exist?
-    extensions.each_entry do |extension|
-      next if extension.to_s.start_with?('.')
-      load_extension(extension.realpath(extensions))
+    Gem::Specification.find_all do |gem|
+      load_extension(gem) if gem.name =~ /yodel_/
     end
   end
   
-  def self.load_extension(path)
-    init_file     = path.join('init.rb')
-    migration_dir = path.join('migrations')
-    public_dir    = path.join('public')
-    layouts_dir   = path.join('layouts')
-    models_dir    = path.join('models')
+  def self.load_extension(extension)
+    require extension.name
+    lib_dir         = Pathname.new(extension.full_gem_path).join(EXTENSION_LIB_DIRECTORY_NAME)
+    migrations_dir  = lib_dir.join(MIGRATIONS_DIRECTORY_NAME)
+    public_dir      = lib_dir.join(PUBLIC_DIRECTORY_NAME)
+    layouts_dir     = lib_dir.join(LAYOUTS_DIRECTORY_NAME)
+    models_dir      = lib_dir.join(MODELS_DIRECTORY_NAME)
     
-    require init_file if File.exist?(init_file)
     Yodel.config.public_directories << public_dir if File.directory?(public_dir)
     Yodel.config.layout_directories << layouts_dir if File.directory?(layouts_dir)
     Yodel.config.migration_directories.insert(-2, migration_dir) if File.directory?(migration_dir)
