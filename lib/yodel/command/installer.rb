@@ -8,7 +8,15 @@ class Installer
   end
   
   def self.install_system_files
-    puts "Installing yodel system files\n"
+    puts "Installing yodel system files...\n"
+    puts 'By default, the yodel server will run on port 80, meaning you can access yodel'
+    puts 'sites by visiting <http://sitename.yodel/>. If you already have Apache or'
+    puts 'another web server running on this port, enter a different port (such as 8080)'
+    puts 'Press enter to use port 80 by default.'
+    print 'Use port [80]:'
+    @web_port = gets.strip.to_i
+    @web_port = 80 unless @web_port > 0
+    
     if `uname -a` =~ /Darwin/
       install_mac_files
     else
@@ -21,18 +29,21 @@ class Installer
     install 'etc/resolver/yodel'
     install 'Library/LaunchDaemons/com.yodelcms.dns.plist'
     install 'Library/LaunchDaemons/com.yodelcms.server.plist'
-    install 'usr/local/bin/yodel', '0744'
+    install 'usr/local/bin/yodel_command_runner', '0777'
     install 'usr/local/etc/yodel/settings.rb'
     install 'var/log/yodel.log', '0666'
     
     puts 'starting yodel dns server...'
-    `sudo launchctl unload /Library/LaunchDaemons/com.yodelcms.dns.plist`
+    if `sudo launchctl list` =~ /\d+.+com.yodelcms.dns$/
+      `sudo launchctl unload /Library/LaunchDaemons/com.yodelcms.dns.plist`
+    end
     `sudo launchctl load /Library/LaunchDaemons/com.yodelcms.dns.plist`
+    
     puts 'starting yodel web server...'
   end
   
   def self.install_linux_files
-    install 'usr/local/bin/yodel', '0744'
+    install 'usr/local/bin/yodel_command_runner', '0777'
     install 'usr/local/etc/yodel/settings.rb'
     install 'var/log/yodel.log', '0666'
   end
@@ -59,9 +70,9 @@ class Installer
   # template variables
   def self.sites_root
     if `uname -a` =~ /Darwin/
-      File.expand_path("~/Sites")
+      File.expand_path('~/Sites')
     else
-      "/var/www"
+      '/var/www'
     end
   end
   
@@ -75,5 +86,13 @@ class Installer
       end
     end
     @ruby_path
+  end
+  
+  def self.web_port
+    @web_port
+  end
+  
+  def self.dns_port
+    2827
   end
 end

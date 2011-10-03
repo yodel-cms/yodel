@@ -12,10 +12,9 @@ gem 'image_science',  '~> 1.2.1'
 gem 'hpricot',        '~> 0.8.4'
 gem 'json',           '~> 1.6.1'
 gem 'rack-contrib',   '~> 1.1.0', require: 'rack/contrib'
-gem 'linguistics',    '~> 1.0.9'
 gem 'rubydns',        '~> 0.3.3'
 gem 'activemerchant'
-gem 'activemerchant-payway', git: 'https://github.com/willcannings/activemerchant-payway.git'
+#gem 'activemerchant-payway', git: 'https://github.com/willcannings/activemerchant-payway.git'
 
 group :development do
   gem 'shoulda', '>= 0'

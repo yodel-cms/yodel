@@ -20,7 +20,7 @@ Jeweler::Tasks.new do |gem|
   gem.description = 'Rack based Ruby CMS'
   gem.email = 'me@willcannings.com'
   gem.authors = ['Will Cannings']
-  gem.files = ["lib/**/*", "bin/*", "system/**/*"]
+  gem.files = ["lib/**/*", "bin/*", "system/**/*", "Gemfile"]
   gem.executables = ['yodel']
   # dependencies defined in Gemfile
 end

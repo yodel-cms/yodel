@@ -33,7 +33,8 @@ class CommandRunner
       Rack::Server.start(app: DevelopmentServer.new, Port: 2828)
   
     when 'dns'
-      require '../extras/dns_server'
+      require '../requires'
+      require './dns_server'
       DNSServer.start
   
     when 'console'

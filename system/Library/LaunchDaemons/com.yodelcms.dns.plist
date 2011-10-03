@@ -6,12 +6,21 @@
 	<string>com.yodelcms.dns</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/usr/local/bin/yodel</string>
+		<string>/usr/local/bin/yodel_command_runner</string>
 		<string>dns</string>
 	</array>
 	<key>KeepAlive</key>
 	<true/>
 	<key>RunAtLoad</key>
 	<true/>
+	<key>StandardOutPath</key>
+	<string>/var/log/yodel_dns.log</string>
+	<key>StandardErrorPath</key>
+	<string>/var/log/yodel_dns.log</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+	  <key>INLINEDIR</key>
+	  <string><%= sites_root %></string>
+	</dict>
 </dict>
 </plist>

@@ -3,7 +3,7 @@ require 'rubydns'
 class DNSServer
   def self.start
     @resolv = Resolv::DNS.new
-    RubyDNS::run_server(:listen => [[:udp, "0.0.0.0", 2827], [:tcp, "0.0.0.0", 2827]]) do
+    RubyDNS::run_server(:listen => [[:udp, "0.0.0.0", Yodel.config.dns_port], [:tcp, "0.0.0.0", Yodel.config.dns_port]]) do
       match(/yodel/) do |match_data, transaction|
         transaction.respond!("127.0.0.1")
       end
