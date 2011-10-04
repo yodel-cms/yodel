@@ -1,5 +1,3 @@
-require 'logger'
-
 Yodel.config.define do |config|
   # mongo
   config.database_hostname  = 'localhost'
@@ -9,7 +7,15 @@ Yodel.config.define do |config|
   # yodel
   config.session_key        = 'yodel.session'
   config.session_secret     = 'yodel.session'
-  config.sites_root         = "<%= sites_root %>"
+  config.sites_root         = Pathname.new('<%= sites_root.gsub("'", "\\\\'") %>')
+  config.owner_user         = <%= user %>
+  config.owner_group        = <%= group %>
+  
+  # remote
+  config.remote_host        = '<%= remote_host %>'
+  config.remote_name        = '<%= remote_name %>'
+  config.remote_email       = '<%= remote_email %>'
+  config.remote_pass        = '<%= remote_pass %>'
   
   # servers
   config.web_port           = <%= web_port %>

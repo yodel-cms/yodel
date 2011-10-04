@@ -13,7 +13,8 @@ gem 'hpricot',        '~> 0.8.4'
 gem 'json',           '~> 1.6.1'
 gem 'rack-contrib',   '~> 1.1.0', require: 'rack/contrib'
 gem 'rubydns',        '~> 0.3.3'
-gem 'activemerchant'
+gem 'git',            '~> 1.2.5'
+gem 'highline',       '~> 1.6.2'
 
 # extensions
 gem 'yodel_admin'

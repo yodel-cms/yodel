@@ -1,6 +1,7 @@
 Dir.chdir(File.dirname(__FILE__)) do
   require '../middleware/public_assets'
   require './request_handler'
+  require './extension'
   require './yodel'
 end
 

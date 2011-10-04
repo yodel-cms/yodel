@@ -7,7 +7,7 @@ class DomainNotFound < StandardError
   end
   
   def error
-    ["#{@domain} isn't set up yet"]
+    ["#{@domain} isn't set up"]
   end
   
   def description

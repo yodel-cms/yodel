@@ -1,5 +1,6 @@
 require 'rack/utils'
 require 'rack/mime'
+require 'thread'
 
 class StreamClosed < StandardError
 end
@@ -75,9 +76,25 @@ class DevelopmentServer
   
   def initialize
     spawn_server
+    @mutex = Mutex.new
+    @pid = nil
+    Signal.trap("SIGTERM") do
+      self.kill_child
+      Process.kill("SIGINT", Process.pid)
+    end
+  end
+  
+  def kill_child
+    begin
+      Process.kill("SIGTERM", @pid) if @pid
+      @pid = nil
+      @client_socket.close
+    rescue
+    end
   end
   
   def call(env)
+    @mutex.lock
     parts = Rack::Utils.unescape(env["PATH_INFO"]).split(SEPARATORS)
     return [403, {"Content-Type" => "text/plain"}, "Forbidden"] if parts.include? ".."
     
@@ -99,6 +116,8 @@ class DevelopmentServer
     
     # response data is a valid rack response
     response.data
+  ensure
+    @mutex.unlock
   end
   
   protected
@@ -113,8 +132,8 @@ class DevelopmentServer
       # child process loads yodel and responds to the request; if any
       # source files have been modified since the server was started, send
       # a restart message to the client and exit
-      pid = Process.fork
-      if pid.nil?
+      @pid = Process.fork
+      if @pid.nil?
         @client_socket.close
         require File.join(File.dirname(__FILE__), '..', '..', 'yodel')
         closed = false
@@ -125,33 +144,37 @@ class DevelopmentServer
         end
         
         loop do
-          # block until a new request is received
-          request = Message.read(@server_socket)
+          begin
+            # block until a new request is received
+            request = Message.read(@server_socket)
           
-          # check for modified files
-          @modification_times.each do |path, modified_time|
-            if File.exist?(path) && File.mtime(path) > modified_time
-              message = Message.new(:restart)
-              message.write(@server_socket)
-              @server_socket.close
-              closed = true
-              break
+            # check for modified files
+            @modification_times.each do |path, modified_time|
+              if File.exist?(path) && File.mtime(path) > modified_time
+                message = Message.new(:restart)
+                message.write(@server_socket)
+                @server_socket.close
+                closed = true
+                break
+              end
             end
-          end
           
-          # kill the server if a file was changed
-          break if closed
+            # kill the server if a file was changed
+            break if closed
           
-          # otherwise respond to the request
-          if request.request?
-            response = Message.new(:response)
-            response.status, response.headers, response.body = @application.call(request.data)
-            response.write(@server_socket)
+            # otherwise respond to the request
+            if request.request?
+              response = Message.new(:response)
+              response.status, response.headers, response.body = @application.call(request.data)
+              response.write(@server_socket)
+            end
+          rescue Interrupt, StreamClosed
+            exit
           end
         end
       
       else
-        Process.detach(pid)
+        Process.detach(@pid)
         @server_socket.close
       end
     end

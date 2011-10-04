@@ -16,6 +16,7 @@ class Model < SiteRecord
   field :functions, :hash
   field :icon, :string, inherited: true
   field :menu_root, :boolean, default: false
+  field :hide_in_admin, :boolean, default: false
   field :record_class_name, :string, default: 'Record', inherited: true
   field :searchable, :boolean, default: true, inherited: true
   field :indexes, :array, of: :strings

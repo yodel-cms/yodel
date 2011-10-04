@@ -56,7 +56,7 @@ class CommandRunner
   
     when 'setup'
       require './installer'
-      Installer.install_system_files
+      Installer.new.install_system_files
       
     else
       puts "Unknown command: #{command}"  

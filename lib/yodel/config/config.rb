@@ -8,7 +8,8 @@ class YodelConfig
     @options = {
       'migration_directories' => [],
       'public_directories' => [],
-      'layout_directories' => []
+      'layout_directories' => [],
+      'extensions' => []
     }
   end
   

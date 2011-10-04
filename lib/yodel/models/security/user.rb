@@ -16,12 +16,12 @@ class User < Record
   before_save :hash_password
   def hash_password
     return unless password_changed? && password? && password_salt?
-    self.password = hashed_password(password)
+    self.password = Password.hashed_password(password_salt, password)
   end
   
   # check if a plain text password matches the hashed, salted password
   def passwords_match?(password)
-    self.password_was == hashed_password(password) ? self : nil
+    self.password_was == Password.hashed_password(password_salt, password) ? self : nil
   end
   
   # create and set a new password for this user, returning the new plain text password
@@ -30,9 +30,4 @@ class User < Record
     PASS_LENGTH.times {self.password += SALT_ALPHABET.sample.chr}
     self.password.tap {self.save}
   end
-
-  protected
-    def hashed_password(password)
-      Digest::SHA1.hexdigest("#{password_salt}:#{password}")
-    end
 end

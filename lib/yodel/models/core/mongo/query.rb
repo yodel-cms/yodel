@@ -17,7 +17,7 @@ class Query < Plucky::Query
   # the query may not match (extra restrictions), but for quries that do match, we
   # should save id-> recrd in cached_records
   # TODO: cache any new records, so they can be matched by single lookups in the future
-  def all(opts={})
+  def find_each(opts={})
     if @site
       super.collect do |values|
         record = @site.cached_records[values['_id']]
@@ -38,7 +38,7 @@ class Query < Plucky::Query
       return nil if document.nil?
       @constructor.load(document)
     else
-      query = clone.update(opts)
+      query = clone.amend(opts)
     
       # construct the criteria hash, and remove the keys allowed by a cacheable lookup
       criteria_hash = query.criteria.to_hash
