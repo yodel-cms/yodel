@@ -16,7 +16,7 @@ class TaskQueue
     options = {query: conditions, update: {'$set' => {locked: Time.now}}, sort: ['created_at', 1]}
     document = Task.collection.find_and_modify(options)
     return nil if document.nil?
-    site = Site.find_by(_id: document['_site_id'])
+    site = Site.find(document['_site_id'])
     
     # FIXME: write error to log here
     if site.nil?

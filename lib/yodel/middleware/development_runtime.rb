@@ -35,8 +35,7 @@ class DevelopmentRuntime
     # create the new site
     site = Site.new
     site.name = name
-    site.identifier = name
-    site.site_root = site_dir.realpath.to_s
+    site.root_directory = site_dir.realpath.to_s
     site.domains << "#{name}.yodel"
     
     # install the standard set of folders

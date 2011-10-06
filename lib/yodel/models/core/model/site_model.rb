@@ -11,10 +11,6 @@ module SiteModel
     Query.new(constructor, site, collection, scope)
   end
   
-  def scoped_with_constructor(site, constructor, scope={})
-    scoped(site, constructor, scope.merge({_site_id: site.id}))
-  end
-  
   def load(site, values)
     new(site, values)
   end

@@ -17,7 +17,7 @@ class Customer < MongoRecord
   
   def sites_json
     sites.collect do |id|
-      Site.find_by(_id: id).as_json
+      Site.find(id).as_json
     end
   end
 end

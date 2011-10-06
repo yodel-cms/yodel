@@ -9,7 +9,7 @@ Dir.chdir(File.dirname(__FILE__)) do
   require './model/model'
   require './functions/functions'
   require './log/log'
-  require './migration'
+  require './site/migration'
+  require './site/site'
   require './customer'
-  require './site'
 end

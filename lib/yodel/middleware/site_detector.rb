@@ -5,7 +5,7 @@ class SiteDetector
   
   def call(env)
     request = Rack::Request.new(env)
-    site = Site.find_by(domains: request.host)
+    site = Site.where(domains: request.host).first
     env['yodel.site'] = site
     unless site.nil? || Yodel.env.development?
       env['rack.session.options'][:domain] = ".#{site.domains.first}"
