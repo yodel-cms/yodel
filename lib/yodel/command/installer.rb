@@ -159,6 +159,7 @@ class Installer
     # start yodel for environment installation
     report('starting', 'yodel')
     require '../../yodel'
+    Yodel.load_extensions
     
     # install an environment support site
     report('installing', "#{@environment} environment support site")

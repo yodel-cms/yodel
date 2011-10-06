@@ -5,8 +5,8 @@ module Yodel
   
   def self.load_extensions
     Gem::Specification.find_all do |gem|
-      next unless gem.name.start_with?('yodel_') && !gem.name.end_with?('environment')
-      extension = Extension.new(gem)
+      next unless gem.name.start_with?('yodel_')
+      extension = Extension.new(gem, gem.name.end_with?('environment'))
       extension.load!
     end
   end
