@@ -18,6 +18,8 @@ class PageModelMigration < Migration
       # layout
       add_field :page_layout, :string, section: 'Options', default: nil, searchable: false
       add_one   :page_layout_record, model: :layout, display: false
+      add_field :edit_layout, :string, searchable: false, section: 'Options'
+      add_one   :edit_layout_record, model: :layout, display: false
       
       add_field :name, :alias, of: :title
       pages.default_child_model = pages.id

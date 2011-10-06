@@ -11,7 +11,7 @@ class Layout < Record
     attempts = 0
     updated = 0
     while updated == 0 && attempts < MAX_LOCK_ATTEMPTS
-      updated = Site::COLLECTION.update(
+      updated = Site.collection.update(
         {'_id' => site.id, 'layout_lock' => {'$exists' => false}},
         {'$set' => {'layout_lock' => true}},
         safe: true)['n']
@@ -32,7 +32,7 @@ class Layout < Record
 
   # release the lock
   ensure
-    updated = Site::COLLECTION.update(
+    updated = Site.collection.update(
       {'_id' => site.id, 'layout_lock' => {'$exists' => true}},
       {'$unset' => {'layout_lock' => 1}},
       safe: true)['n']
