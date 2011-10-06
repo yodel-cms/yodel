@@ -7,7 +7,7 @@ class YodelConfig
   def initialize
     @options = {
       'migration_directories' => [],
-      'public_directories' => [],
+      'public_directories' => [File.join(File.dirname(__FILE__), '..', 'public')],
       'layout_directories' => [],
       'extensions' => []
     }

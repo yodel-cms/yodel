@@ -21,8 +21,8 @@ class PublicAssets
     end
     
     public_directories.each do |public_dir|
-      path = public_dir.join(*parts)
-      if path.file? && path.readable?
+      path = File.join(public_dir, *parts)
+      if File.file?(path) && File.readable?(path)
         return dup.serve_file(path, env)
       end
     end
@@ -31,7 +31,7 @@ class PublicAssets
   end
   
   def each
-    @path.open('rb') do |file|
+    File.open(@path, 'rb') do |file|
       file.seek(@range.begin)
       remaining_len = @range.end - @range.begin + 1
       while remaining_len > 0
@@ -46,11 +46,11 @@ class PublicAssets
   protected
     def serve_file(path, env)
       response = [200, {
-        "Last-Modified" => path.mtime.httpdate,
-        "Content-Type"  => Rack::Mime.mime_type(path.extname, 'text/plain')
+        "Last-Modified" => File.mtime(path).httpdate,
+        "Content-Type"  => Rack::Mime.mime_type(File.extname(path), 'text/plain')
       }, self]
       
-      size = path.size? || Rack::Utils.bytesize(path.read)
+      size = FileTest.size?(path) || Rack::Utils.bytesize(IO.read(path))
       ranges = Rack::Utils.byte_ranges(env, size)
       
       if ranges.nil? || ranges.length > 1

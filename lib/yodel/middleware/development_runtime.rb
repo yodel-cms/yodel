@@ -29,7 +29,7 @@ class DevelopmentRuntime
   
   def create_site(name, request)
     # create a new folder for the site
-    site_dir = Yodel.config.sites_root.join(name)
+    site_dir = File.join(Yodel.config.sites_root, name)
     site_dir.mkpath
     
     # create the new site

@@ -3,11 +3,11 @@ class Extension
   
   def initialize(gem)
     @name           = gem.name
-    @lib_dir        = Pathname.new(gem.full_gem_path).join(Yodel::EXTENSION_LIB_DIRECTORY_NAME)
-    @migrations_dir = lib_dir.join(Yodel::MIGRATIONS_DIRECTORY_NAME)
-    @public_dir     = lib_dir.join(Yodel::PUBLIC_DIRECTORY_NAME)
-    @layouts_dir    = lib_dir.join(Yodel::LAYOUTS_DIRECTORY_NAME)
-    @models_dir     = lib_dir.join(Yodel::MODELS_DIRECTORY_NAME)
+    @lib_dir        = File.join(gem.full_gem_path, Yodel::EXTENSION_LIB_DIRECTORY_NAME)
+    @migrations_dir = File.join(@lib_dir, Yodel::MIGRATIONS_DIRECTORY_NAME)
+    @public_dir     = File.join(@lib_dir, Yodel::PUBLIC_DIRECTORY_NAME)
+    @layouts_dir    = File.join(@lib_dir, Yodel::LAYOUTS_DIRECTORY_NAME)
+    @models_dir     = File.join(@lib_dir, Yodel::MODELS_DIRECTORY_NAME)
   end
   
   def load!
@@ -19,10 +19,10 @@ class Extension
     
     # load any models. if the init.rb file exists it will have been loaded first,
     # allowing extensions to specify the order models are loaded.
-    if @models_dir.exist?
-      @models_dir.each_entry do |model|
-        next if model.to_s.start_with?('.')
-        require model.realpath(@models_dir)
+    if File.exist?(@models_dir)
+      Dir.foreach(@models_dir) do |model|
+        next if model.start_with?('.')
+        require File.realpath(model, @models_dir)
       end
     end
   end

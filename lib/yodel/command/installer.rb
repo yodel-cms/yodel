@@ -6,7 +6,9 @@ require 'ember'
 require '../models/security/password'
 
 class Installer
-  # template variables
+  # ----------------------------------------
+  # Template variables
+  # ----------------------------------------
   attr_reader :sites_root, :web_port, :dns_port, :remote_name, :remote_host, :remote_email, :remote_pass, :user, :group
   
   def default_sites_root
@@ -29,7 +31,10 @@ class Installer
     @ruby_path
   end
   
-  # helpers
+  
+  # ----------------------------------------
+  # Helpers
+  # ----------------------------------------
   def system_path
     @system_path ||= File.join(File.dirname(__FILE__), '..', '..', '..', 'system')
   end
@@ -38,6 +43,33 @@ class Installer
     @h.say "<%= color('#{verb}', GREEN) %>\t#{noun}"
   end
   
+  def escape_quotes(str)
+    str.gsub("'", "\\\\'")
+  end
+  
+  def install(file, permissions='0644')
+    dest_path   = File.join('/', file)
+    source_path = File.join(system_path, file)
+    temp_file   = Tempfile.new('yodel')
+    report('installing', dest_path)
+    
+    # render the file template
+    temp_file.write Ember::Template.new(IO.read(source_path), {source_file: source_path}).render(binding)
+    temp_file.close
+    
+    # create parent directories, copy the rendered file and set permissions
+    `sudo mkdir -p #{File.dirname(dest_path)}`
+    `sudo cp #{temp_file.path} #{dest_path}`
+    `sudo chmod #{permissions} #{dest_path}`
+    
+    # delete the temp file used for rendering
+    temp_file.unlink
+  end
+  
+  
+  # ----------------------------------------
+  # Q & A
+  # ----------------------------------------
   def install_system_files
     @h = h = HighLine.new
     h.say "\n<%= color('Welcome to Yodel', BOLD) %>\n\n"
@@ -119,6 +151,10 @@ class Installer
     h.say "the instructions\n\n"
   end
   
+  
+  # ----------------------------------------
+  # OS X
+  # ----------------------------------------
   def install_mac_files
     install 'etc/resolver/yodel'
     install 'Library/LaunchDaemons/com.yodelcms.dns.plist'
@@ -140,28 +176,13 @@ class Installer
     `sudo launchctl load /Library/LaunchDaemons/com.yodelcms.server.plist`
   end
   
+  
+  # ----------------------------------------
+  # Linux
+  # ----------------------------------------
   def install_linux_files
     install 'usr/local/bin/yodel_command_runner', '0777'
     install 'usr/local/etc/yodel/settings.rb'
     install 'var/log/yodel.log', '0666'
-  end
-  
-  def install(file, permissions='0644')
-    dest_path   = File.join('/', file)
-    source_path = File.join(system_path, file)
-    temp_file   = Tempfile.new('yodel')
-    report('installing', dest_path)
-    
-    # render the file template
-    temp_file.write Ember::Template.new(IO.read(source_path), {source_file: source_path}).render(binding)
-    temp_file.close
-    
-    # create parent directories, copy the rendered file and set permissions
-    `sudo mkdir -p #{File.dirname(dest_path)}`
-    `sudo cp #{temp_file.path} #{dest_path}`
-    `sudo chmod #{permissions} #{dest_path}`
-    
-    # delete the temp file used for rendering
-    temp_file.unlink
   end
 end

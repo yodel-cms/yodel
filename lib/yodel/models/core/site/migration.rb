@@ -31,9 +31,9 @@ class Migration
   
   private
     def self.each_migration_for(site, &block)
-      each_migration(site.migrations_directory.join(Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME), &block)
-      each_migration(site.migrations_directory.join(Yodel::EXTENSION_MIGRATIONS_DIRECTORY_NAME), &block)
-      each_migration(site.migrations_directory.join(Yodel::SITE_MIGRATIONS_DIRECTORY_NAME), &block)
+      each_migration(File.join(site.migrations_directory, Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME), &block)
+      each_migration(File.join(site.migrations_directory, Yodel::EXTENSION_MIGRATIONS_DIRECTORY_NAME), &block)
+      each_migration(File.join(site.migrations_directory, Yodel::SITE_MIGRATIONS_DIRECTORY_NAME), &block)
     end
     
     # Iterate over every migration and yield the migration class
@@ -41,6 +41,7 @@ class Migration
     # in nil being yielded. The caller can respond appropriately.
     # The current file (a string path) is also provided.
     def self.each_migration(directory)
+      return unless File.directory?(directory)
       Dir[directory.join('**/*.rb')].sort.each do |file|
         @migration = nil
         load file
