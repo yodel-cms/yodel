@@ -44,6 +44,8 @@ GEM
       polyglot (>= 0.3.1)
     yodel_admin (0.0.1)
     yodel_blog (0.0.1)
+    yodel_development_environment (0.0.1)
+    yodel_production_environment (0.0.1)
     yodel_queue (0.0.1)
 
 PLATFORMS
@@ -72,4 +74,6 @@ DEPENDENCIES
   shoulda
   yodel_admin
   yodel_blog
+  yodel_development_environment
+  yodel_production_environment
   yodel_queue

@@ -22,6 +22,10 @@ gem 'yodel_admin'
 gem 'yodel_queue'
 gem 'yodel_blog'
 
+# environment support sites
+gem 'yodel_development_environment'
+gem 'yodel_production_environment'
+
 group :development do
   gem 'shoulda', '>= 0'
   gem 'jeweler', '~> 1.5.1'

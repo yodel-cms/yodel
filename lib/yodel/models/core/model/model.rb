@@ -52,8 +52,8 @@ class Model < SiteRecord
   def initialize(site, values={})
     @cached_records_by_name = {}
     super
-    @unscoped     = scoped_for(site)
-    @scope        = scoped_for(site, 'model' => get_raw('descendants'))
+    @unscoped     = Record.scoped(site, self)
+    @scope        = Record.scoped(site, self, 'model' => get_raw('descendants'))
     @record_class = Object.module_eval(get_raw('record_class_name'))
   end
   

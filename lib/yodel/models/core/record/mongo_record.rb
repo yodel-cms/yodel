@@ -31,6 +31,7 @@ class MongoRecord < AbstractRecord
   def perform_save
     id = collection.save(@values, safe: true)
   rescue
+    # TODO: write Yodel.db.get_last_error to the log or as a warning to the site
     false
   end
 

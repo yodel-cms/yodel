@@ -42,7 +42,7 @@ class Migration
     # The current file (a string path) is also provided.
     def self.each_migration(directory)
       return unless File.directory?(directory)
-      Dir[directory.join('**/*.rb')].sort.each do |file|
+      Dir[File.join(directory, '**/*.rb')].sort.each do |file|
         @migration = nil
         load file
         yield @migration, file

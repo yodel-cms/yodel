@@ -1,6 +1,6 @@
 class Site < MongoRecord
   attr_reader :cached_records, :cached_models
-  extend MongoModel::Lookup
+  #extend MongoModel::Lookup
   
   collection :sites
   field :name, :string
@@ -13,9 +13,9 @@ class Site < MongoRecord
   field :migrations, :array
   field :options, :hash
   field :domains, :array
-  many  :records, foreign_key: '_site_id'
   
-  def initialize(document=nil)
+  def initialize(values={})
+    super
     @cached_records = {}
     @cached_models  = {}
     
@@ -68,13 +68,14 @@ class Site < MongoRecord
     @attachments_dir ||= File.join(root_directory, Yodel::ATTACHMENTS_DIRECTORY_NAME)
   end
   
-  
   # ----------------------------------------
   # Life cycle
   # ----------------------------------------
   before_destroy :destroy_records
   def destroy_records
-    Record::COLLECTION.remove(_site_id: id)
+    # FIXME: add all core model types
+    Record.collection.remove(_site_id: id)
+    Model.collection.remove(_site_id: id)
   end
   
   
@@ -99,8 +100,10 @@ class Site < MongoRecord
   # use the method missing functionality of site since it checks the cached_models
   # hash before performing a lookup, whereas this method will always do a lookup.
   def model_by_plural_name(name)
-    # ensure the site has a reference to a model by this name
-    model_id = model_types[name]
+    # ensure the site has a reference to a model by this name. get is required here
+    # instead calling 'model_types' explicitly as that relies on method_missing
+    # which in turn sometimes calls this method (creating infinite recursion)
+    model_id = get('model_types')[name]
     return nil if model_id.nil?
     
     # perform a lookup; nil will be returned if the model doesn't exist
@@ -112,9 +115,12 @@ class Site < MongoRecord
   
   # Retrieve a model by its full name ('Model' as opposed to 'models')
   def model(name)
+    # get is required here instead calling 'model_types' explicitly as that relies
+    # on method_missing which in turn sometimes calls this method (creating
+    # infinite recursion)
     return nil if name.nil?
     model = @cached_models[name]
     return model unless model.nil?
-    model_by_plural_name(model_plural_names[name])
+    model_by_plural_name(get('model_plural_names')[name])
   end
 end

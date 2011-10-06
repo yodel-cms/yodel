@@ -44,7 +44,7 @@ class HashField < Field
   
   private
     def process(hash, record, method)
-      return hash if @element_type.nil?
+      return hash.to_hash if @element_type.nil?
       hash.to_hash.each do |key, value|
         hash[key.to_s] = @element_type.send(method, value, record)
       end

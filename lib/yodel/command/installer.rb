@@ -144,22 +144,37 @@ class Installer
       @public_directory = escape_quotes(@public_directory)
     end
     
-    h.say "\n<%= color('3/3', RED) %> <%= color('Installation', BOLD) %>"
+    h.say "\n<%= color('3/3', RED) %> <%= color('Installing files', BOLD) %>"
     h.say "Yodel will now install the necessary system files. You may be asked to enter"
     h.say "your local user password.\n\n"
     h.say "-----------------------------------------------------------------------------\n\n"
     
+    # install system files
     if `uname -a` =~ /Darwin/
       install_mac_files
     else
       install_linux_files
     end
     
+    # start yodel for environment installation
+    report('starting', 'yodel')
+    require '../../yodel'
+    
+    # install an environment support site
+    report('installing', "#{@environment} environment support site")
+    site = Site.new
+    site.name = "yodel"
+    site.domains = ['yodel', 'localhost', '127.0.0.1']
+    gem = Gem::Specification.find_by_name("yodel_#{@environment}_environment")
+    site.root_directory = File.join(gem.full_gem_path, Yodel::EXTENSION_LIB_DIRECTORY_NAME)
+    site.save
+    Migration.run_migrations(site)
+    
     h.say "\n-----------------------------------------------------------------------------"
     h.say "\n<%= color('Installation complete', BOLD) %>"
-    h.say "Visit http://yodel#{":#{@web_port}" if @web_port != 80}/ to clone any existing sites from http://#{@remote_host}/"
-    h.say "You can create a new site by visiting <http://sitename.yodel#{":#{@web_port}" if @web_port != 80}/> and following"
-    h.say "the instructions\n\n"
+    h.say "Visit http://yodel#{":#{@web_port}" if @web_port != 80}/ to setup accounts you have on a remote Yodel server."
+    h.say "You can create a new site by visiting <http://sitename.yodel#{":#{@web_port}" if @web_port != 80}/> and"
+    h.say "following the instructions\n\n"
   end
   
   
