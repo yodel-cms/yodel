@@ -1,8 +1,4 @@
 class Migration
-  def self.copy_migrations(site)
-    
-  end
-  
   def self.run_migrations(site)
     Yodel.config.logger.info "Migrating #{site.name}"
     

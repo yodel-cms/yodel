@@ -352,9 +352,7 @@ class Page < Record
   respond_to :get do
     with :html do
       return unless user_allowed_to?(:view)
-      render_or_default(:html) do
-        "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
-      end
+      render_or_default(:html) { raise LayoutNotFound }
     end
     
     with :json do
@@ -397,9 +395,7 @@ class Page < Record
       else
         flash.now(:performed_update, true)
         flash.now(:update_successful, success)
-        render_or_default(:html) do
-          "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
-        end
+        render_or_default(:html) { raise LayoutNotFound }
       end
     end
     

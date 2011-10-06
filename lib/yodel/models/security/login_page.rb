@@ -8,9 +8,7 @@ class LoginPage < Page
         response.redirect path
       else
         flash.now(:login_failed, true)
-        render_or_default(:html) do
-          "<p>Sorry, your account could not be found</p>"
-        end
+        render_or_default(:html) { raise LayoutNotFound }
       end
     end
     

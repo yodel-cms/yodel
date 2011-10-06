@@ -4,8 +4,8 @@ class APICall < Record
   end
   
   def perform_call(data)
-    data = decode_data_hash(data)
-    mime = Yodel.mime_types[mime_type.to_sym]
+    data    = decode_data_hash(data)
+    mime    = Yodel.mime_types[mime_type.to_sym]
     headers = {'Content-Type' => mime.default_mime_type}
     
     # FIXME: reloading should be done elsewhere, not a concern of APICall

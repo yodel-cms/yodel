@@ -8,7 +8,8 @@ Dir.chdir(File.dirname(__FILE__)) do
   require './record/record'
   require './model/model'
   require './functions/functions'
-  require './log/log'  
+  require './log/log'
   require './migration'
+  require './customer'
   require './site'
 end

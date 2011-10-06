@@ -5,7 +5,7 @@ class ErrorPages
   
   def call(env)
     status, headers, response = @app.call(env)
-    if status >= 400
+    if status.to_i >= 400 && status.to_i != 401
       return render_error_page(status, response)
     else
       return [status, headers, response]

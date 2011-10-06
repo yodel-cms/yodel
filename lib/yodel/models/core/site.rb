@@ -10,7 +10,8 @@ class Site
     'domains' => [],
     'name' => '',
     'identifier' => '',
-    'site_root' => ''
+    'site_root' => '',
+    'remote_id' => nil
   }
   
   def initialize(document=nil)
@@ -58,6 +59,17 @@ class Site
   end
   
   alias :to_s :to_str
+  
+  def as_json
+    {
+      id: id,
+      name: name,
+      identifier: identifier,
+      domains: domains,
+      extensions: extensions,
+      gitrev: Git.open(site_root).log(1).first.sha
+    }
+  end
   
   # directories
   def root_directory

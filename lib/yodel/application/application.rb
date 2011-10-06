@@ -1,8 +1,14 @@
 Dir.chdir(File.dirname(__FILE__)) do
-  require '../middleware/public_assets'
   require './request_handler'
   require './extension'
   require './yodel'
+  
+  if Yodel.env.development?
+    require '../middleware/public_assets'
+    require '../middleware/development_runtime'
+  else
+    require '../middleware/production_runtime'
+  end
 end
 
 class Application < Rack::Builder
@@ -21,8 +27,12 @@ class Application < Rack::Builder
     use Rack::NestedParams
     use Rack::MethodOverride
     use SiteDetector
-    use PublicAssets if Yodel.env.development?
-    use Runtime
+    if Yodel.env.development?
+      use PublicAssets
+      use DevelopmentRuntime
+    else
+      use ProductionRuntime
+    end
     
     # FIXME: for production, load layouts once
     if Yodel.env.production?

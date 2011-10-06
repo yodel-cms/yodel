@@ -13,6 +13,7 @@ Yodel.config.define do |config|
   
   # remote
   config.remote_host        = '<%= remote_host %>'
+  config.remote_port        = 80
   config.remote_name        = '<%= remote_name %>'
   config.remote_email       = '<%= remote_email %>'
   config.remote_pass        = '<%= remote_pass %>'
@@ -20,9 +21,10 @@ Yodel.config.define do |config|
   # servers
   config.web_port           = <%= web_port %>
   config.dns_port           = <%= dns_port %>
+  
+  # production server
+  config.git_path           = `which git`
 
-  # TODO: switch to log4r and log to a file and stdout
-  # TODO: also switch rack to use this logger for requests
   # logging
   config.logger             = Logger.new('/var/log/yodel.log')
   config.sev_threshold      = Logger::INFO

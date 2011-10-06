@@ -18,9 +18,7 @@ class PasswordResetPage < Page
   respond_to :get do
     with :html do
       @email = params['email']
-      render_or_default(:html) do
-        "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
-      end
+      render_or_default(:html) { raise LayoutNotFound }
     end
   end
   
@@ -39,9 +37,7 @@ class PasswordResetPage < Page
       end
       
       @email = email
-      render_or_default(:html) do
-        "<p>Sorry, a layout couldn't be found for this page</p>" # FIXME: better error message
-      end
+      render_or_default(:html) { raise LayoutNotFound }
     end
     
     with :json do

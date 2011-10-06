@@ -8,5 +8,5 @@ class LogEntry < SiteRecord
   collection :log
   field :severity, :integer, default: INFO
   field :created_at, :time
-  field :message, :string    
+  field :message, :string
 end

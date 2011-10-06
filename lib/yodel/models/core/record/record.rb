@@ -303,10 +303,15 @@ class Record < SiteRecord
   end
   
   # Returns the first parent which is an instance of type
-  def first_parent(type)
+  def first_parent(type, exact=false)
     model = site.model_by_plural_name(type.to_s.downcase.pluralize)
-    match = parents.find {|record| record.model.parents_and_mixins.include?(model)}
     
+    if exact
+      match = parents.find {|record| record.model == model}
+    else
+      match = parents.find {|record| record.model.parents_and_mixins.include?(model)}
+    end
+
     if block_given?
       yield match
     else

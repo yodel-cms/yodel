@@ -60,12 +60,11 @@ class GitHttp
     def call(env)
       @env = env
       @req = Rack::Request.new(env)
-      
       cmd, path, @reqfile, @rpc = match_routing
-
+      
       return render_method_not_allowed if cmd == 'not_allowed'
       return render_not_found if !cmd
-
+      
       @dir = get_git_dir(path)
       return render_not_found if !@dir
 
