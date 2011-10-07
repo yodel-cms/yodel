@@ -5,6 +5,7 @@ require 'date'
 require 'ostruct'
 require 'net/http'
 require 'open-uri'
+require 'fileutils'
 
 # load bundled gems
 ENV['BUNDLE_GEMFILE'] = File.join(File.dirname(__FILE__), '..', '..', 'Gemfile')

@@ -12,7 +12,7 @@ class SiteDetector
       raise DomainNotFound.new(request.host, request.port)
     else
       if !File.directory?(site.root_directory)
-        raise MissingRootDirectory
+        raise MissingRootDirectory.new(site, request.port)
       elsif Yodel.env.production?
         env['rack.session.options'][:domain] = ".#{site.domains.first}"
       end

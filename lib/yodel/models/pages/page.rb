@@ -294,7 +294,7 @@ class Page < Record
     attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
     delete_link = "#{wrap_start}<a #{attributes} onclick='#{confirm}submit()'>#{text}</a>#{wrap_end}"
     method_input = "<input type='hidden' name='_method' value='delete'>"
-    "<form action='#{path}' method='post'>#{method_input}#{delete_link}</form>"
+    "<form action='#{path}' method='post' class='delete'>#{method_input}#{delete_link}</form>"
   end
   
   def render_or_default(mime_type, &block)

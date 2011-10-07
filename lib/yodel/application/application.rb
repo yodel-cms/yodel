@@ -5,7 +5,6 @@ Dir.chdir(File.dirname(__FILE__)) do
   
   if Yodel.env.development?
     require '../middleware/public_assets'
-    require '../middleware/development_runtime'
   else
     require '../middleware/production_runtime'
   end
@@ -27,12 +26,7 @@ class Application < Rack::Builder
     use Rack::NestedParams
     use Rack::MethodOverride
     use SiteDetector
-    if Yodel.env.development?
-      use PublicAssets
-      use DevelopmentRuntime
-    else
-      use ProductionRuntime
-    end
+    use PublicAssets if Yodel.env.development?
     
     # FIXME: for production, load layouts once
     if Yodel.env.production?

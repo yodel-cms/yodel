@@ -16,7 +16,6 @@ class Extension
       require @name
       Yodel.config.public_directories << @public_dir if File.directory?(@public_dir)
       Yodel.config.layout_directories << @layouts_dir if File.directory?(@layouts_dir)
-      Yodel.config.migration_directories << @migrations_dir if File.directory?(@migrations_dir)
       Yodel.config.extensions << self
     end
     

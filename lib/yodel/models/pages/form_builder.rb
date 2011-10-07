@@ -28,6 +28,11 @@ class FormBuilder
     @blank_record = options.delete(:blank_record)
     @prefix = options.delete(:prefix)
     @id = options.delete(:id) || "form_for_#{record.id}"
+    
+    # js functions
+    @success_function = options.delete(:success)
+    @errors_function  = options.delete(:errors)
+    @failure_function = options.delete(:failure)
   end
   
   
@@ -35,9 +40,14 @@ class FormBuilder
     buffer = Ember::Template.buffer_from_block(@block)
     @record.fields.each do |name, field|
       next unless field.display? && field.section == section && field.default_input_type.present? && field.default_input_type != :embedded
-      buffer << "<div class='contains-field-type-#{field.options['type']}'>" << label(name) << "<div>" << field(name) << status(name) << "</div></div>"
+      buffer << field_row(name, field)
     end
     ''
+  end
+  
+  def field_row(name, field=nil)
+    field = @record.fields[name.to_s] if field.nil?
+    "<div class='contains-field-type-#{field.options['type']}'>" << label(name).to_s << "<div>" << field(name).to_s << status(name).to_s << "</div></div>"
   end
   
   
@@ -212,15 +222,15 @@ class FormBuilder
   end
   
   def success(&block)
-    define_callback_function('success', 'record', block)
+    @success_function = Ember::Template.wrap_content_block(block) {|content| content.join}
   end
   
   def errors(&block)
-    define_callback_function('errors', 'errors', block)
+    @errors_function = Ember::Template.wrap_content_block(block) {|content| content.join}
   end
   
   def failure(&block)
-    define_callback_function('failure', 'xhr', block)
+    @failure_function = Ember::Template.wrap_content_block(block) {|content| content.join}
   end
   
   def statuses(&block)
@@ -242,14 +252,17 @@ class FormBuilder
           'method' => 'post',
           'enctype' => 'multipart/form-data',
           'data-remote' => (!!@remote).to_s,
-          'data-success-function' => @success_function.to_s,
-          'data-errors-function' => @errors_function.to_s,
-          'data-failure-function' => @failure_function.to_s
+          'data-success-function' => "#{@id}_success",
+          'data-errors-function' => "#{@id}_errors",
+          'data-failure-function' => "#{@id}_failure"
         }.merge(@params)
         
         Hpricot::Elem.new('form', params, [
           Hpricot::Text.new(content.join),
-          Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method})
+          Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method}),
+          Hpricot::Text.new(define_callback_function('success', 'record', @success_function)),
+          Hpricot::Text.new(define_callback_function('errors', 'errors', @errors_function)),
+          Hpricot::Text.new(define_callback_function('failure', 'xhr', @failure_function))
         ])
       end
     end
@@ -273,16 +286,14 @@ class FormBuilder
       }, [Hpricot::Text.new(element)])
     end
     
-    def define_callback_function(name, parameter, block)
-      Ember::Template.wrap_content_block(block) do |content|
-        function_name = "#{@id}_#{name}"
-        instance_variable_set("@#{name}_function", function_name)
-        Hpricot::Elem.new('script', {}, [
-          Hpricot::Text.new("#{function_name} = function(#{parameter}){"),
-          Hpricot::Text.new(content.join),
-          Hpricot::Text.new("}"),
-        ])
-      end
+    def define_callback_function(name, parameter, source)
+      function_name = "#{@id}_#{name}"
+      instance_variable_set("@#{name}_function_name", function_name)
+      Hpricot::Elem.new('script', {}, [
+        Hpricot::Text.new("var #{function_name} = function(#{parameter}){"),
+        Hpricot::Text.new(source.to_s),
+        Hpricot::Text.new("}"),
+      ])
     end
     
     def build_element(tag, params, content=[])

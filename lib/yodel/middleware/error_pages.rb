@@ -51,8 +51,8 @@ class ErrorPages
     <body>
       <div id="modal">
         <div id="lip"></div>
-        <h1>yodel</h1>
-        <h2><%= error %></h2>
+        <header>yodel</header>
+        <h1><%= error %></h1>
         <p><%= description %></p>
       </div>
     </body>

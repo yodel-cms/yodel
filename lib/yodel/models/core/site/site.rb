@@ -13,6 +13,7 @@ class Site < MongoRecord
   field :migrations, :array
   field :options, :hash
   field :domains, :array
+  one   :remote
   
   def initialize(values={})
     super
@@ -76,6 +77,11 @@ class Site < MongoRecord
     # FIXME: add all core model types
     Record.collection.remove(_site_id: id)
     Model.collection.remove(_site_id: id)
+  end
+  
+  after_destroy :destroy_root_directory
+  def destroy_root_directory
+    FileUtils.remove_entry_secure(root_directory)
   end
   
   

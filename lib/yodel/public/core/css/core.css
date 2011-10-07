@@ -1,6 +1,7 @@
 body {
   background-color: #F3F3F3;
   font-family: HelveticaNeue, Helvetica, sans-serif;
+  font-size: 15px;
 }
 
 #modal {
@@ -14,23 +15,19 @@ body {
   padding: 81px 33px 35px 33px;
 }
 
-h2 {
-  color: #333;
-  font-size: 25px;
-  font-weight: normal;
+#modal header {
+  position: absolute;
+  background-color: #FFC900;
+  height: 53px;
+  width: 170px;
+  left: -16px;
+  top: 8px;
   padding: 0px;
-  margin: 0px 0px 10px 0px;
-}
-
-p {
-  color: #777;
-  font-size: 16px;
   margin: 0px;
-  padding: 0px;
-}
-
-a {
-  color: #777;
+  color: transparent;
+  background-repeat: no-repeat;
+  background-position: center 10px;
+  background-image: url(/core/images/yodel.png);
 }
 
 #lip {
@@ -46,17 +43,95 @@ a {
   margin: 0px;
 }
 
-h1 {
-  position: absolute;
-  background-color: #FFC900;
-  height: 53px;
-  width: 170px;
-  left: -16px;
-  top: 8px;
+h1, h2 {
+  color: #333;
+  font-size: 25px;
+  font-weight: normal;
   padding: 0px;
-  margin: 0px;
-  color: transparent;
-  background-repeat: no-repeat;
-  background-position: center 10px;
-  background-image: url(/core/images/yodel.png);
+  margin: 0px 0px 10px 0px;
 }
+
+h2 {
+  font-size: 17px;
+}
+
+p {
+  color: #777;
+  font-size: 16px;
+  line-height: 20px;
+  margin: 0px;
+  padding: 0px;
+}
+
+a {
+  color: #777;
+}
+
+ul {
+  margin-bottom: 20px;
+}
+
+/* forms */
+form {
+  font-size: 13px;
+  width: 100%;
+}
+
+  /* delete links are forms within forms */
+  form form, form.delete {
+    width: auto;
+    display: inline;
+  }
+  
+    form.delete .action {
+      cursor: pointer;
+    }
+
+  form > div {
+    margin-bottom: 5px;
+  }
+
+    form > div > label {
+      display: inline-block;
+      width: 80px;
+      vertical-align: top;
+    }
+
+    form > div > div {
+      display: inline-block;
+      width: 300px;
+    }
+
+  .yodel-field-status {
+    display: block;
+    margin-top: 6px;
+    margin-bottom: 5px;
+  }
+
+  .yodel-field-status .invalid {
+    color: #DE4343;
+  }
+  
+  input[type=text], input[type=password], input[type=email], textarea {
+    -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08) inset;
+    -moz-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08) inset;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08) inset;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    border: 1px solid #bbb;
+    height: 20px;
+    width: 100%;
+    outline: none;
+    font-size: 11px;
+    vertical-align: middle;
+    padding: 3px 5px;    
+  }
+
+  input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, textarea:focus {
+    border: 1px solid #009DDD;
+  }
+
+  textarea {
+    height: 100px;
+  }
+  

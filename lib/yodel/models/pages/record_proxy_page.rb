@@ -3,14 +3,23 @@ class RecordProxyPage < Page
     @record ||= record_model.find(BSON::ObjectId.from_string(params['id']))
   end
   
+  def records
+    @records ||= record_model.all
+  end
+  
   def record=(record)
     @record = record
   end
   
   def form_for(record, options={}, &block)
-    options[:method] = record.new? ? 'post' : 'put'
-    options[:url] = path
-    super(record, options, &block)
+    if record.new?
+      options[:method] = 'post'
+      options[:success] = "window.location = '#{after_create_page.path}';" if after_create_page
+    else
+      options[:method] = 'put'
+      options[:success] = "window.location = '#{after_update_page.path}';" if after_update_page
+    end
+    super(record, path, options, &block)
   end
   
   def form_for_new_record(options={}, &block)
@@ -29,10 +38,6 @@ class RecordProxyPage < Page
   
   # show
   respond_to :get do
-    with :html do
-      render
-    end
-    
     with :json do
       record.to_json
     end

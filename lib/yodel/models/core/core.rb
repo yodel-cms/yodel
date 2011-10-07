@@ -10,6 +10,6 @@ Dir.chdir(File.dirname(__FILE__)) do
   require './functions/functions'
   require './log/log'
   require './site/migration'
+  require './site/remote'
   require './site/site'
-  require './customer'
 end

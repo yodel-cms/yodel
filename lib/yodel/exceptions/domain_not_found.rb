@@ -11,6 +11,6 @@ class DomainNotFound < StandardError
   end
   
   def description
-    "<a href='http://yodel#{':' if @port}#{@port}/create_site/#{@domain}'>Create a new site</a> or try a different address."
+    "<form action='http://yodel#{':' if @port}#{@port}/sites' method='post'><input type='hidden' name='name'' value='#{@domain}'><a href='javascript: submit()'>Create a new site</a></form> or try a different address."
   end
 end

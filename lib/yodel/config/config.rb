@@ -6,7 +6,7 @@ end
 class YodelConfig
   def initialize
     @options = {
-      'migration_directories' => [],
+      'yodel_migration_directory' => File.join(File.dirname(__FILE__), '..', 'models', 'migrations'),
       'public_directories' => [File.join(File.dirname(__FILE__), '..', 'public')],
       'layout_directories' => [],
       'extensions' => []
