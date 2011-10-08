@@ -12,6 +12,8 @@ module SiteModel
   end
   
   def load(site, values)
-    new(site, values)
+    new(site, values).tap do |record|
+      record.new = false
+    end
   end
 end

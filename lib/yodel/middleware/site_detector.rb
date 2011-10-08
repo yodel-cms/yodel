@@ -8,14 +8,13 @@ class SiteDetector
     site = Site.where(domains: request.host).first
     env['yodel.site'] = site
     
-    if site.nil?
-      raise DomainNotFound.new(request.host, request.port)
-    else
-      if !File.directory?(site.root_directory)
-        raise MissingRootDirectory.new(site, request.port)
-      elsif Yodel.env.production?
+    unless site.nil?
+      if Yodel.env.production?
+        raise MissingRootDirectory.new(site, request.port) if !File.directory?(site.root_directory)
         env['rack.session.options'][:domain] = ".#{site.domains.first}"
       end
+    else
+      raise DomainNotFound.new(request.host, request.port) if Yodel.env.production?
     end
     
     @app.call(env)

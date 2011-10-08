@@ -55,7 +55,11 @@ class Page < Record
   # Layout helpers
   # ----------------------------------------
   def snippet(name)
-    site.snippets.where(name: name).first
+    site.snippets[name.to_s].content
+  end
+  
+  def menu(name)
+    site.menus[name.to_s].render(self)
   end
   
   def paragraph(index, field=:content)
@@ -78,15 +82,17 @@ class Page < Record
   
   def form_for(record, action, options={}, &block)
     options[:method] = record.new? ? 'post' : 'put'
-    action += '.json' if options[:remote] # FIXME: doesn't work if the path ends with a query string
+    if options[:remote]
+      components = action.split('?')
+      components[0] += '.json' unless components.first.end_with?('.json')
+      action = components.join('?')
+      options[:success] = 'window.location = record.path;' if record.new?
+    end
     FormBuilder.new(record, action, options, &block).render
   end
   
   def form_for_page(options={}, &block)
-    options[:method] = new? ? 'post' : 'put'
-    form_path = path_was
-    form_path += '.json' if options[:remote] # FIXME: doesn't work if the path ends with a query string
-    form_for(self, form_path, options, &block)
+    form_for(self, path_was, options, &block)
   end
   
   def immediately(action, options={})
@@ -256,7 +262,7 @@ class Page < Record
   end
   
   def render_layout(name, mime_type)
-    layout_record = site.layouts.where(name: name, mime_type: mime_type).first
+    layout_record = site.layouts.where(name: name, mime_type: mime_type.to_s).first
     raise LayoutNotFound if layout_record.nil?
     layout_record.render(self)
   end
@@ -334,8 +340,12 @@ class Page < Record
     Ember::Template.new(IO.read(path), {source_file: path}).render(get_binding)
   end
   
-  def page
-    self
+  def page(*args)
+    if args.empty?
+      self
+    else
+      site.pages.where(path: args.first).first
+    end
   end
   
   def user_allowed_to?(action)

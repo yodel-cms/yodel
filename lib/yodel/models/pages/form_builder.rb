@@ -222,15 +222,18 @@ class FormBuilder
   end
   
   def success(&block)
-    @success_function = Ember::Template.wrap_content_block(block) {|content| content.join}
+    @success_function = Ember::Template.content_from_block(block).join
+    ''
   end
   
   def errors(&block)
-    @errors_function = Ember::Template.wrap_content_block(block) {|content| content.join}
+    @errors_function = Ember::Template.content_from_block(block).join
+    ''
   end
   
   def failure(&block)
-    @failure_function = Ember::Template.wrap_content_block(block) {|content| content.join}
+    @failure_function = Ember::Template.content_from_block(block).join
+    ''
   end
   
   def statuses(&block)
@@ -251,19 +254,30 @@ class FormBuilder
           'action' => @action,
           'method' => 'post',
           'enctype' => 'multipart/form-data',
-          'data-remote' => (!!@remote).to_s,
-          'data-success-function' => "#{@id}_success",
-          'data-errors-function' => "#{@id}_errors",
-          'data-failure-function' => "#{@id}_failure"
+          'data-remote' => (!!@remote).to_s
         }.merge(@params)
         
-        Hpricot::Elem.new('form', params, [
+        elements = [
           Hpricot::Text.new(content.join),
-          Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method}),
-          Hpricot::Text.new(define_callback_function('success', 'record', @success_function)),
-          Hpricot::Text.new(define_callback_function('errors', 'errors', @errors_function)),
-          Hpricot::Text.new(define_callback_function('failure', 'xhr', @failure_function))
-        ])
+          Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method})
+        ]
+        
+        if @success_function
+          params['data-success-function'] = "#{@id}_success"
+          elements << Hpricot::Text.new(define_callback_function('success', 'record', @success_function))
+        end
+        
+        if @errors_function
+          params['data-errors-function'] = "#{@id}_errors"
+          elements << Hpricot::Text.new(define_callback_function('errors', 'errors', @errors_function))
+        end
+        
+        if @failure_function
+          params['data-failure-function'] = "#{@id}_failure"
+          elements << Hpricot::Text.new(define_callback_function('failure', 'xhr', @failure_function))
+        end
+        
+        Hpricot::Elem.new('form', params, elements)
       end
     end
   end

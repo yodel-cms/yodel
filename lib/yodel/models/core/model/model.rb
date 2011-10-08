@@ -122,7 +122,9 @@ class Model < SiteRecord
     if values['model'] != id
       site.models.find(values['model']).load(site, values)
     else
-      record_class.new(self, site, values)
+      record_class.new(self, site, values).tap do |record|
+        record.new = false
+      end
     end
   end
   

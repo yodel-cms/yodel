@@ -14,7 +14,7 @@ class ErrorPages
     if Yodel.env.production?
       return render_error_page(500, [])
     else
-      if $!.respond_to?(:domain)
+      if $!.respond_to?(:error) && $!.respond_to?(:description)
         return render_error_page(404, $!.error, $!.description)
       else
         raise $!
@@ -49,12 +49,14 @@ class ErrorPages
       <link rel="stylesheet" href="/core/css/core.css" type="text/css">
     </head>
     <body>
-      <div id="modal">
-        <div id="lip"></div>
-        <header>yodel</header>
+      <article id="modal">
+        <header>
+          <h1>yodel</h1>
+          <div id="lip"></div>
+        </header>
         <h1><%= error %></h1>
         <p><%= description %></p>
-      </div>
+      </article>
     </body>
   </html>
 HTML

@@ -329,6 +329,17 @@ class Record < SiteRecord
     end
   end
   
+  def first_non_blank_response_to(message)
+    message = message.to_s
+    parents.find do |record|
+      if record.respond_to?(message) || record.fields.keys.include?(message)
+        value = record.send(message)
+        return value unless value.blank?
+      end
+    end
+    ''
+  end
+  
   
   # ----------------------------------------
   # Rendering

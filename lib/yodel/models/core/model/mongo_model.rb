@@ -12,7 +12,9 @@ module MongoModel
   end
   
   def load(values)
-    new(values)
+    new(values).tap do |record|
+      record.new = false
+    end
   end
   
   def collection(*name)

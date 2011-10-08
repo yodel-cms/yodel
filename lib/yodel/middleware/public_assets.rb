@@ -12,9 +12,10 @@ class PublicAssets
   def call(env)
     parts = Rack::Utils.unescape(env["PATH_INFO"]).split(SEPARATORS)
     return [403, {"Content-Type" => "text/plain"}, "Forbidden"] if parts.include? ".."
+    request = Rack::Request.new(env)
     site = env['yodel.site']
     
-    if site
+    unless site.nil?
       public_directories = site.public_directories
     else
       public_directories = Yodel.config.public_directories
@@ -27,6 +28,12 @@ class PublicAssets
       end
     end
     
+    # raise any delayed exceptions. These are delayed till this middleware so
+    # the assets needed to render the error pages for them are available. Without
+    # this delay, a DomainNotFound exception raised in SiteDetector would prevent
+    # PublicAssest from serving the css or images used on the error page.
+    raise DomainNotFound.new(request.host, request.port) if site.nil?
+    raise MissingRootDirectory.new(site, request.port) if !File.directory?(site.root_directory)
     @app.call(env)
   end
   
