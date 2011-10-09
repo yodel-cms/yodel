@@ -1,14 +1,13 @@
 class AbstractRecord
   attr_reader   :values, :typecast, :changed, :errors, :stash
-  attr_accessor :new
   
-  def initialize(values={})
+  def initialize(values={}, new_record=true)
     @values   = default_values.merge(values.stringify_keys) # FIXME: don't merge here; default || values
     @typecast = {} # typecast versions of original document values
     @changed  = {} # typecast versions of changed values
     @stash    = {} # values of unknown fields set by from_json
     @errors   = Errors.new
-    @new      = true
+    @new      = new_record
   end
   
   

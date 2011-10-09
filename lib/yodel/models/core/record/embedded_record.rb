@@ -3,10 +3,10 @@ require './record/abstract_record'
 class EmbeddedRecord < AbstractRecord
   attr_reader :embedded_field, :parent_record
   
-  def initialize(embedded_field, parent_record, values={})
+  def initialize(embedded_field, parent_record, values={}, new_record=true)
     @embedded_field = embedded_field
     @parent_record = parent_record
-    super(values)
+    super(values, new_record)
   end
   
   def site

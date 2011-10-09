@@ -13,7 +13,7 @@ class Site < MongoRecord
   field :domains, :array
   one   :remote
   
-  def initialize(values={})
+  def initialize(values={}, new_record=true)
     super
     @cached_records = {}
     @cached_models  = {}

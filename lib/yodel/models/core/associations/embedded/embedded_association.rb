@@ -41,9 +41,7 @@ module EmbeddedAssociation
       return [] if store.blank?
       store = [store] unless store.respond_to?(:collect)
       store.collect do |values|
-        EmbeddedRecord.new(self, record, values).tap do |record|
-          record.new = false
-        end
+        EmbeddedRecord.new(self, record, values, false)
       end
     end
 end

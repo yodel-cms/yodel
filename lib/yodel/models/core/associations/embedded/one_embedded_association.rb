@@ -36,9 +36,7 @@ class OneEmbeddedAssociation < Association
   private
     def associated(store, record)
       store = {} unless store.is_a?(Hash)
-      EmbeddedRecord.new(self, record, store).tap do |record|
-        record.new = false
-      end
+      EmbeddedRecord.new(self, record, store, false)
     end
     
     def associate(embedded_record, store, record)

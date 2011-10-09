@@ -5,9 +5,9 @@ class SiteRecord < MongoRecord
   extend SiteModel
   attr_reader :site
   
-  def initialize(site, values={})
+  def initialize(site, values={}, new_record=true)
     @site = site
-    super(values)
+    super(values, new_record)
   end
   
   def site_id;  @values['_site_id']; end

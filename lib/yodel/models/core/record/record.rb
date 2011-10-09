@@ -9,12 +9,12 @@ class Record < SiteRecord
   attr_reader   :model_record, :model, :mixins
   attr_accessor :real_record
 
-  def initialize(model, site, values={})
+  def initialize(model, site, values={}, new_record=true)
     @model_record = model
     @site = site
     @model  = load_model(model, values)
     @mixins = create_mixin_instances(values)
-    super(site, values)
+    super(site, values, new_record)
 
     # mixins have their db access methods delegated to the "real record"
     # (the main object representing the mongo document). To maintain a
