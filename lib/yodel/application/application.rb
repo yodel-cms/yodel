@@ -2,12 +2,7 @@ Dir.chdir(File.dirname(__FILE__)) do
   require './request_handler'
   require './extension'
   require './yodel'
-  
-  if Yodel.env.development?
-    require '../middleware/public_assets'
-  else
-    require '../middleware/production_runtime'
-  end
+  require '../middleware/public_assets' if Yodel.env.development?
 end
 
 class Application < Rack::Builder
