@@ -9,7 +9,7 @@ class Remote < MongoRecord
   def site_list
     uri = URI.parse(url)
     Net::HTTP.start(uri.host, uri.port) do |http|
-      request = Net::HTTP::Get.new(uri.merge('/sites').path, {'Content-Type' => 'application/json'})
+      request = Net::HTTP::Get.new(uri.merge('/sites.json').path, {'Content-Type' => 'application/json'})
       request.basic_auth username, password
       response = http.request(request, '')
       if response.is_a?(Net::HTTPNotFound)
