@@ -25,4 +25,9 @@ require 'active_support/core_ext/array/conversions'
 # from yodel, so a configuration can be created
 # before loading the server or console
 require File.join(File.dirname(__FILE__), 'config', 'config')
-require '/usr/local/etc/yodel/settings.rb'
+if $settings
+  require $settings
+else
+  require '/usr/local/etc/yodel/settings.rb'
+end
+

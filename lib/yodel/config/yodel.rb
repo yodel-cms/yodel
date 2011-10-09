@@ -9,6 +9,7 @@ module Yodel
   YODEL_MIGRATIONS_DIRECTORY_NAME     = 'yodel'
   EXTENSION_MIGRATIONS_DIRECTORY_NAME = 'extensions'
   SITE_MIGRATIONS_DIRECTORY_NAME      = 'site'
+  SITE_YML_FILE_NAME                  = 'site.yml'
   
   def self.config
     @config ||= YodelConfig.new

@@ -21,6 +21,8 @@ Yodel.config.define do |config|
   config.sev_threshold      = Logger::INFO
 end
 
+Yodel.env.development!
+
 Mail.defaults do
   delivery_method :sendmail
 end

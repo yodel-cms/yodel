@@ -1,12 +1,10 @@
 class Site < MongoRecord
   attr_reader :cached_records, :cached_models
-  #extend MongoModel::Lookup
   
   collection :sites
   field :name, :string
   field :root_directory, :string
   field :remote_id, :string
-  field :git_rev, :string
   field :model_plural_names, :hash
   field :model_types, :hash
   field :extensions, :array
@@ -82,6 +80,29 @@ class Site < MongoRecord
   after_destroy :destroy_root_directory
   def destroy_root_directory
     FileUtils.remove_entry_secure(root_directory)
+  end
+  
+  after_save :update_site_yml
+  def update_site_yml
+    File.open(File.join(root_directory, Yodel::SITE_YML_FILE_NAME), 'w') do |file|
+      file.write(YAML.dump({
+        id: id.to_s,
+        name: name.to_s,
+        extensions: extensions.collect(&:to_s),
+        domains: domains.collect(&:to_s),
+        options: options.to_hash
+      }))
+    end
+  end
+  
+  def reload_from_site_yaml
+    update(YAML.load_file(path))
+  end
+  
+  def self.load_from_site_yaml(path)
+    Site.new(YAML.load_file(path)).tap do |site|
+      site.root_directory = File.dirname(path)
+    end
   end
   
   

@@ -5,12 +5,16 @@ class CommandRunner
   def self.run
     OptionParser.new do |opts|
       opts.banner = "Usage: yodel [options] server|dns|console|migrate|setup"
-      opts.on('-p', '--port PORT', Integer, 'Port to run the DNS or web server (default 80)') do |port|
+      opts.on('-p', '--port PORT', Integer, 'Override the default web server port') do |port|
         $web_port = port
       end
   
       opts.on('-e', '--environment ENV', 'Web server environment (default development)', 'development', 'production') do |env|
         $env = env
+      end
+      
+      opts.on('-s', '--settings FILE', 'Load this settings file (default: /usr/local/etc/yodel/settings.rb)') do |settings|
+        $settings = settings
       end
   
       opts.on('-h', '--help', 'Display this screen') do
