@@ -6,21 +6,12 @@ class Image < Attachment
 
   def crop_image
     sizes = @field.options['sizes'].to_hash.merge('admin_thumb' => '100x100')
-    return unless exist?
-    ImageScience.with_image(path.to_s) do |img|
-      iw, ih = img.width, img.height
-      sizes.each do |size_name, size|
-        sw, sh = size.split('x').collect(&:to_i)
-        aspect = sw.to_f / sh.to_f
-        w, h = (ih * aspect), (iw / aspect)
-        w = [iw, w].min.to_i
-        h = [ih, h].min.to_i
-        img.with_crop((iw-w)/2, (ih-h)/2, (iw+w)/2, (ih+h)/2) do |crop|
-          crop.resize(sw, sh) do |resized|
-            resized.save resized_image_path(size_name, false).to_s
-          end
-        end
-      end
+    return unless exist?    
+    sizes.each do |size_name, size|
+      image = MiniMagick::Image.open(path.to_s)
+      image.resize("#{size}^")
+      image.format('jpeg')
+      image.write(resized_image_path(size_name, false).to_s)
     end
   end
 
