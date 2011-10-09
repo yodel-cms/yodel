@@ -20,5 +20,7 @@ class Remote < MongoRecord
         JSON.parse(response.body)
       end
     end
+  rescue Errno::ECONNREFUSED
+    {success: false, reason: 'Remote host could not be contacted'}
   end
 end
