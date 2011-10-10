@@ -10,6 +10,11 @@ class Layout < Record
     # acquire a lock on the site to prevent multiple reloads colliding
     attempts = 0
     updated = 0
+
+    # sites created in production that are yet to be pushed to won't have
+    # any models (including layouts) or any layouts to load
+    return if site.model_types['layouts'].nil?
+    
     while updated == 0 && attempts < MAX_LOCK_ATTEMPTS
       updated = Site.collection.update(
         {'_id' => site.id, 'layout_lock' => {'$exists' => false}},
@@ -32,11 +37,13 @@ class Layout < Record
 
   # release the lock
   ensure
-    updated = Site.collection.update(
-      {'_id' => site.id, 'layout_lock' => {'$exists' => true}},
-      {'$unset' => {'layout_lock' => 1}},
-      safe: true)['n']
-    raise InconsistentLockState if updated != 1
+    if attempts != 0
+      updated = Site.collection.update(
+        {'_id' => site.id, 'layout_lock' => {'$exists' => true}},
+        {'$unset' => {'layout_lock' => 1}},
+        safe: true)['n']
+      raise InconsistentLockState if updated != 1
+    end
   end
 
   def render(page)

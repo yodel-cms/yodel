@@ -10,7 +10,8 @@ Yodel.config.define do |config|
   config.sites_root         = '<%= sites_root %>'
   
   # environment
-  config.git_path           = `which git`
+  config.dns_port           = <%= dns_port %>
+  config.git_path           = `which git`.strip
   config.public_directory   = '<%= public_directory %>'
 
   # logging

@@ -39,13 +39,13 @@ module StoreAssociation
     end
     
     def all(store, record)
-      query = record.site.model(model_name).where(_id: store)
+      query = model(record).where(_id: store)
       query = query.sort(@options['sort']) if @options['sort']
       query.all
     end
     
     def associated(store, record)
       return nil if store.nil?
-      record.site.model(model_name).first(_id: store)
+      model(record).first(_id: store)
     end
 end

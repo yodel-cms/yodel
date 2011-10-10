@@ -24,16 +24,20 @@ class ErrorPages
   
   def render_error_page(error_code, response, description=nil)
     template = Ember::Template.new(TEMPLATE)
-    unless response.empty?
+    if response.present? && response.respond_to?(:length) && response.length > 0
       components = []
       response.each {|component| components << component}
       error = components.join
+    elsif error_code == 403
+      error = "Unauthorised"
     else
       error = "We're sorry, but something went wrong."
     end
     if description.nil?
       if error_code == 404
         description = "You may have mistyped the address or the page may have moved."
+      elsif error_code == 403
+        description = "You must log in before performing this action."
       else
         description = "We've been notified about this issue and we'll take a look at it shortly."
       end

@@ -67,6 +67,10 @@ class Site < MongoRecord
     @attachments_dir ||= File.join(root_directory, Yodel::ATTACHMENTS_DIRECTORY_NAME)
   end
   
+  def site_yaml_path
+    File.join(root_directory, Yodel::SITE_YML_FILE_NAME)
+  end
+  
   # ----------------------------------------
   # Life cycle
   # ----------------------------------------
@@ -79,14 +83,14 @@ class Site < MongoRecord
   
   after_destroy :destroy_root_directory
   def destroy_root_directory
-    FileUtils.remove_entry_secure(root_directory)
+    FileUtils.remove_entry_secure(root_directory) if File.directory?(root_directory)
   end
   
   after_save :update_site_yml
   def update_site_yml
-    File.open(File.join(root_directory, Yodel::SITE_YML_FILE_NAME), 'w') do |file|
+    return unless Yodel.env.development? && File.file?(site_yaml_path)
+    File.open(site_yaml_path, 'w') do |file|
       file.write(YAML.dump({
-        id: id.to_s,
         name: name.to_s,
         extensions: extensions.collect(&:to_s),
         domains: domains.collect(&:to_s),
@@ -96,7 +100,7 @@ class Site < MongoRecord
   end
   
   def reload_from_site_yaml
-    update(YAML.load_file(path))
+    update(YAML.load_file(site_yaml_path))
   end
   
   def self.load_from_site_yaml(path)
@@ -104,6 +108,8 @@ class Site < MongoRecord
       site.root_directory = File.dirname(path)
     end
   end
+  
+  
   
   
   # ----------------------------------------
