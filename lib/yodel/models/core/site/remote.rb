@@ -23,4 +23,10 @@ class Remote < MongoRecord
   rescue Errno::ECONNREFUSED
     {success: false, reason: 'Remote host could not be contacted'}
   end
+  
+  before_save :hash_password
+  def hash_password
+    return unless password_changed? && password?
+    self.password = Password.hashed_password(nil, password)
+  end
 end
