@@ -14,7 +14,7 @@ Yodel.config.define do |config|
   # environment
   config.web_port           = <%= web_port %>
   config.dns_port           = <%= dns_port %>
-  config.git_path           = `which git`
+  config.git_path           = `which git`.strip
 
   # logging
   config.logger             = Logger.new('/var/log/yodel.log')

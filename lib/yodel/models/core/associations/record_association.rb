@@ -22,6 +22,13 @@ module RecordAssociation
     end
     
     def model(record)
-      @model ||= record.site.model(model_name)
+      @model ||=  case model_name
+        when 'Site'
+          Site
+        when 'Remote'
+          Remote
+        else
+          record.site.model(model_name)
+        end
     end
 end

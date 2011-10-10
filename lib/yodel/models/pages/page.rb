@@ -212,6 +212,7 @@ class Page < Record
     else
       data = send(action)
     end
+    return if @finished
     
     # process the response and set headers
     response.write mime_type.process(data)
@@ -351,10 +352,8 @@ class Page < Record
   def user_allowed_to?(action)
     allowed = super(current_user, action)
     return true if allowed
-
-    session[:redirect_to_after_login] = self.path
-    response.redirect site.login_pages.first.path
-    flash[:permission_denied] = action
+    
+    prompt_login
     false
   end
   

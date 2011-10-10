@@ -4,7 +4,7 @@ Dir.chdir(File.dirname(__FILE__))
 class CommandRunner
   def self.run
     OptionParser.new do |opts|
-      opts.banner = "Usage: yodel [options] server|dns|console|migrate|setup"
+      opts.banner = "Usage: yodel [options] server|dns|console|migrate|setup|deploy"
       opts.on('-p', '--port PORT', Integer, 'Override the default web server port') do |port|
         $web_port = port
       end
@@ -57,6 +57,11 @@ class CommandRunner
       Site.all.each do |site|
         Migration.run_migrations(site)
       end
+    
+    when 'deploy'
+      require '../../yodel'
+      require './deploy'
+      Deploy.new.deploy_site      
   
     when 'setup'
       require './installer'

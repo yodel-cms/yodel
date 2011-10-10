@@ -18,10 +18,23 @@ class RequestHandler
     
     # attempt to find a matching page for this request
     page = site.pages.where(path: path).first
-    return fail_with "File (#{request.path}) not found." if page.nil?
+    if page.nil?
+      site.glob_pages.all.each do |glob_page|
+        if path.start_with?(glob_page.path)
+          page = glob_page
+          request.params['glob'] = path[glob_page.path.length..-1]
+          break
+        end
+      end
+      return fail_with "File (#{request.path}) not found." if page.nil?
+    end
     Layout.reload_layouts(site) if Yodel.env.development? # FIXME: implement production caching
     page.respond_to_request(request, response, mime_type)
-    response.finish
+    if page.response.respond_to?(:finish)
+      page.response.finish
+    else
+      page.response
+    end
   end
   
   def fail_with(message)

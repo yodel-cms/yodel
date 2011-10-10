@@ -28,6 +28,11 @@ class PageModelMigration < Migration
       pages.record_class_name = 'Page'
     end
     
+    # glob pages are normal pages, but match paths with components at the end
+    # of the page's path, e.g /git/HEAD would match the glob page /git
+    site.pages.create_model :glob_pages do |glob_pages|
+    end
+    
     # default root page
     page = site.pages.new
     page.title = "Home"

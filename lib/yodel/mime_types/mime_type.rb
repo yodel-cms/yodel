@@ -6,6 +6,7 @@ class MimeType
     @mime_types = []
     @processor = nil
     @builder = nil
+    @auth_type = :page
     @layout_processor = :ember
   end
 
@@ -54,6 +55,14 @@ class MimeType
       @layout_processor
     else
       @layout_processor = processor.first
+    end
+  end
+  
+  def auth_type(*type)
+    if type.empty?
+      @auth_type
+    else
+      @auth_type = type.first
     end
   end
 end

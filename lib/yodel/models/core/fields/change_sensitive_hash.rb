@@ -35,6 +35,7 @@ class ChangeSensitiveHash
   end
   
   def method_missing(name, *args, &block)
+    notify! if name.to_s.end_with?('!')
     @hash.send(name, *args, &block)
   end
   
