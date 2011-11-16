@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-<%= ruby_path %> -e 'require "yodel/command/command"; CommandRunner.run' $1
+<%= ruby_path %> -E utf-8 -e 'require "yodel/command/command"; CommandRunner.run' $1
