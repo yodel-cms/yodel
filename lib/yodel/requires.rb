@@ -9,10 +9,28 @@ require 'fileutils'
 require 'uri'
 
 # load bundled gems
-ENV['BUNDLE_GEMFILE'] = File.join(File.dirname(__FILE__), '..', '..', 'Gemfile')
 require 'rubygems'
 require 'bundler'
-Bundler.require
+require 'rack'
+require 'plucky' # requires mongo
+require 'ember'
+require 'mail'
+require 'hpricot'
+require 'json'
+require 'rack/contrib'
+require 'rubydns'
+require 'git'
+require 'highline'
+require 'mini_magick'
+
+# extensions
+require 'yodel_admin'
+require 'yodel_queue'
+require 'yodel_blog'
+
+# environment support sites
+require 'yodel_development_environment'
+require 'yodel_production_environment'
 
 # manually load active support extensions
 require 'active_support/core_ext/object/blank'
@@ -30,4 +48,3 @@ if $settings
 else
   require '/usr/local/etc/yodel/settings.rb'
 end
-
