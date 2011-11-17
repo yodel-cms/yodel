@@ -1,14 +1,14 @@
 class RecordProxyPage < Page
   def record
-    @record ||= record_model.find(BSON::ObjectId.from_string(params['id']))
+    @record ||= decorate_record(find_record(BSON::ObjectId.from_string(params['id'])))
   end
   
   def records
-    @records ||= record_model.all
+    @records ||= all_records.map {|record| decorate_record(record)}
   end
   
   def new_record
-    record_model.new
+    decorate_record(construct_record)
   end
   
   def record=(record)
@@ -125,4 +125,35 @@ class RecordProxyPage < Page
     end
     
   end
+  
+  
+  # record interaction and decoration. all_records, find_record and
+  # construct_record can be overriden for records which can't be
+  # retrieved from a record_model (such as Site or Task)
+  private
+    def decorate_record(record)
+      record.tap do |record|
+        record.extend HTMLDecorator
+        record.instance_eval "
+          class << self
+            def path
+              \"#{path}?id=#{record.id}\"
+            end
+            alias :path_was :path
+          end
+        "
+      end
+    end
+    
+    def all_records
+      record_model.all
+    end
+    
+    def find_record(id)
+      record_model.find(id)
+    end
+    
+    def construct_record
+      record_model.new
+    end
 end

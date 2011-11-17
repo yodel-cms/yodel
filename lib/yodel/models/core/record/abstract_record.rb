@@ -1,3 +1,9 @@
+# Record objects must implement these methods:
+# fields
+# perform_save
+# perform_destroy
+# perform_reload
+
 class AbstractRecord
   attr_reader   :values, :typecast, :changed, :errors, :stash
   

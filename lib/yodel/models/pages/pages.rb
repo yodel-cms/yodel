@@ -1,3 +1,4 @@
+require './pages/html_decorator'
 require './pages/page'
 require './pages/layout'
 require './pages/form_builder'

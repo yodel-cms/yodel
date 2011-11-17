@@ -1,5 +1,6 @@
 class Page < Record
   include Authentication
+  include HTMLDecorator
   
   # ----------------------------------------
   # Paths and permalinks
@@ -62,24 +63,14 @@ class Page < Record
     site.menus[name.to_s].render(self)
   end
   
-  def paragraph(index, field=:content)
-    text = self[field]
-    paragraphs = Hpricot(text).search('/p')
-    return '' if paragraphs.nil? || paragraphs[index].nil?
-    paragraphs[index].inner_html
-  end
-  
-  def paragraphs_from(index, field=:content)
-    text = self[field]
-    paragraphs = Hpricot(text).children
-    return '' if paragraphs.nil? || paragraphs[index..-1].nil?
-    paragraphs[index..-1].collect {|p| p.to_s}.join('')
-  end
-  
   def flash
     @flash ||= Flash.new(session)
   end
   
+  
+  # ----------------------------------------
+  # Forms
+  # ----------------------------------------
   def form_for(record, action, options={}, &block)
     options[:method] = record.new? ? 'post' : 'put'
     if options[:remote]
@@ -90,66 +81,6 @@ class Page < Record
     end
     FormBuilder.new(record, action, options, &block).render
   end
-  
-  def form_for_page(options={}, &block)
-    form_for(self, path_was, options, &block)
-  end
-  
-  def immediately(action, options={})
-    action_record = options.delete(:record)
-    action_path = options.delete(:path)
-    
-    # remaining options are field mutations
-    fields = fields_to_json(options)
-    
-    # perform the action directly on a record
-    if action_path.nil?
-      action_record ||= self
-      action_record.from_json(fields)
-      action_record.save
-      ''
-    else
-      Hpricot::Elem.new('script', {}, [
-        Hpricot::Text.new(action_to_javascript(action, action_path, fields))
-      ])
-    end
-  end
-  
-  def on_click(action, options={}, &block)
-    # on_click requires child elements
-    return '' unless block_given?
-    
-    # determine the path and fields of the request
-    action_record = options.delete(:record) || self
-    action_path   = options.delete(:path) || action_record.path
-    fields        = fields_to_json(options)
-    
-    Ember::Template.wrap_content_block(block) do |content|
-      Hpricot::Elem.new('span', {
-        'class' => 'yodel-remote-action',
-        'data-action' => CGI.escape_html(action_to_javascript(action, action_path, fields))
-      }, [Hpricot::Text.new(content.join)])
-    end
-  end
-  
-  def fields_to_json(fields)
-    fields.each_with_object({}) do |(key, value), hash|
-      field_action = value.keys.first.to_s
-      field_value = value[value.keys.first]
-      hash[key.to_s] = {'_action' => field_action, '_value' => field_value}
-    end
-  end
-  private :fields_to_json
-  
-  def action_to_javascript(action, path, fields)
-    case action
-    when :update
-      "Yodel.Records.update('#{path}', #{fields.to_json});"
-    when :delete
-      "Yodel.Records.delete('#{path}');"
-    end
-  end
-  private :action_to_javascript
   
   
   # ----------------------------------------
@@ -271,39 +202,7 @@ class Page < Record
 
   # ----------------------------------------
   # Default request handling
-  # ----------------------------------------
-  def delete_button(text, options={})
-    attributes = ""
-    if options[:confirm]
-      attributes << " onsubmit='return confirm(\"#{options.delete(:confirm)}\")'"
-    end
-    attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
-    button_input = "<button>#{text}</button>"
-    method_input = "<input type='hidden' name='_method' value='delete'>"
-    "<form action='#{path}' method='post' #{attributes}>#{method_input}#{button_input}</form>"
-  end
-  
-  def delete_link(text, options={})
-    attributes = ""
-    if options[:confirm]
-      confirm = "if(confirm(\"#{options.delete(:confirm)}\"))"
-    else
-      confirm = ''
-    end
-    if options[:wrap]
-      wrap_start = options[:wrap][0]
-      wrap_end = options[:wrap][1]
-      options.delete(:wrap)
-    else
-      wrap_start = ''
-      wrap_end = ''
-    end
-    attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
-    delete_link = "#{wrap_start}<a #{attributes} onclick='#{confirm}submit()'>#{text}</a>#{wrap_end}"
-    method_input = "<input type='hidden' name='_method' value='delete'>"
-    "<form action='#{path}' method='post' class='delete'>#{method_input}#{delete_link}</form>"
-  end
-  
+  # ----------------------------------------  
   def render_or_default(mime_type, &block)
     @content ||= content
     editing = @_request && params && params['action'] == 'edit'
