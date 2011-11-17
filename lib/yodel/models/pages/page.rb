@@ -253,6 +253,7 @@ class Page < Record
     return true if allowed
     
     prompt_login
+    flash[:permission_denied] = action
     false
   end
   

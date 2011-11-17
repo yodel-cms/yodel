@@ -7,7 +7,7 @@ require './model/model'
 class Record < SiteRecord
   collection    :records
   attr_reader   :model_record, :model, :mixins
-  attr_accessor :real_record
+  attr_accessor :real_record # reference to the 'real' record if this object is a mixin
 
   def initialize(model, site, values={}, new_record=true)
     @model_record = model
