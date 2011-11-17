@@ -32,7 +32,6 @@ module Authentication
     when :page
       session[:redirect_to_after_login] = self.path
       response.redirect site.login_pages.first.path
-      flash[:permission_denied] = action
     when :basic
       response['Content-Type'] = 'text/plain'
       response['WWW-Authenticate'] = "Basic realm=\"#{title}\""

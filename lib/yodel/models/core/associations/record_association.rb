@@ -22,7 +22,11 @@ module RecordAssociation
     end
     
     def model(record)
-      @model ||=  case model_name
+      # caching was causing a bug where running migrations on a new site would fail because
+      # calls to NewModel.parent were generating the query:
+      # {id: parent_id, _site_id: yodel_dev_site_id NOT new_site.id}
+      #@model ||=
+      case model_name
         when 'Site'
           Site
         when 'Remote'
