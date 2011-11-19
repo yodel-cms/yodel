@@ -23,15 +23,6 @@ require 'git'
 require 'highline'
 require 'mini_magick'
 
-# extensions
-require 'yodel_admin'
-require 'yodel_queue'
-require 'yodel_blog'
-
-# environment support sites
-require 'yodel_development_environment'
-require 'yodel_production_environment'
-
 # manually load active support extensions
 require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/object/try'

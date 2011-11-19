@@ -159,6 +159,7 @@ class Installer
     # start yodel for environment installation
     report('starting', 'yodel')
     require '../../yodel'
+    Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
     Yodel.load_extensions
     
     # install an environment support site
@@ -166,8 +167,9 @@ class Installer
     site = Site.new
     site.name = "yodel"
     site.domains = ['yodel', 'localhost', '127.0.0.1']
-    gem = Gem::Specification.find_by_name("yodel_#{@environment}_environment")
-    site.root_directory = File.join(gem.full_gem_path, Yodel::EXTENSION_LIB_DIRECTORY_NAME)
+    extension = Yodel.extensions["yodel_#{@environment}_environment"]
+    puts "Installation environment (#{@environment}) not found" and exit(1) if extension.nil?
+    site.root_directory = extension.lib_dir
     site.save
     Migration.run_migrations(site)
     

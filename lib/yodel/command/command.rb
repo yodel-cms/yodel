@@ -17,6 +17,10 @@ class CommandRunner
         $settings = settings
       end
       
+      opts.on('-x', '--extensions PATH', 'Load extensions from the supplied folder, rather than from installed gems') do |path|
+        $extensions_folder = path
+      end
+      
       opts.on('-r', '--reload', 'Reloads the server whenever any framework source files are modified') do
         $reload = true
       end
@@ -35,7 +39,9 @@ class CommandRunner
       require '../requires'
       require '../middleware/development_server'
       
+      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       Yodel.config.web_port = $web_port if $web_port
+      
       if $env == 'production'
         Yodel.env.production!
       else
