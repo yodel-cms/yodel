@@ -16,6 +16,10 @@ class CommandRunner
       opts.on('-s', '--settings FILE', 'Load this settings file (default: /usr/local/etc/yodel/settings.rb)') do |settings|
         $settings = settings
       end
+      
+      opts.on('-r', '--reload', 'Reloads the server whenever any framework source files are modified') do
+        $reload = true
+      end
   
       opts.on('-h', '--help', 'Display this screen') do
         puts opts
@@ -38,7 +42,12 @@ class CommandRunner
         Yodel.env.development!
       end
       
-      Rack::Server.start(app: DevelopmentServer.new, Port: Yodel.config.web_port)
+      if $reload
+        Rack::Server.start(app: DevelopmentServer.new, Port: Yodel.config.web_port)
+      else
+        require File.expand_path('../../yodel')
+        Rack::Server.start(app: Application.new, Port: Yodel.config.web_port)
+      end
   
     when 'dns'
       require '../requires'
