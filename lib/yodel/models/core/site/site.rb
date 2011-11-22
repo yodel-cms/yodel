@@ -96,9 +96,11 @@ class Site < MongoRecord
   # ----------------------------------------
   before_destroy :destroy_records
   def destroy_records
-    # FIXME: add all core model types
+    Trigger.collection.remove(_site_id: id)
+    LogEntry.collection.remove(_site_id: id)
     Record.collection.remove(_site_id: id)
     Model.collection.remove(_site_id: id)
+    Task.collection.remove(_site_id: id)
   end
   
   after_destroy :destroy_root_directory
@@ -112,8 +114,8 @@ class Site < MongoRecord
     File.open(site_yaml_path, 'w') do |file|
       file.write(YAML.dump({
         name: name.to_s,
-        extensions: extensions.collect(&:to_s),
-        domains: domains.collect(&:to_s),
+        extensions: extensions,
+        domains: remote_domains,
         options: options.to_hash
       }))
     end
