@@ -114,8 +114,8 @@ class Site < MongoRecord
     File.open(site_yaml_path, 'w') do |file|
       file.write(YAML.dump({
         name: name.to_s,
-        extensions: extensions,
-        domains: remote_domains,
+        extensions: extensions.to_a,
+        domains: remote_domains.to_a,
         options: options.to_hash
       }))
     end
