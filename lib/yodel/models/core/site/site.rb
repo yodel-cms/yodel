@@ -71,6 +71,21 @@ class Site < MongoRecord
     File.join(root_directory, Yodel::SITE_YML_FILE_NAME)
   end
   
+  def local_domain
+    domains.find {|domain| domain.end_with?('.yodel')}
+  end
+  
+  def first_remote_domain
+    domains.find do |domain|
+      !domain.end_with?('.yodel') &&
+      !domain.end_with?('.local') &&
+      !domain.start_with?('192.168.') &&
+      !domain.start_with?('10.') &&
+      domain != '127.0.0.1' &&
+      domain != 'localhost'
+    end
+  end
+  
   # ----------------------------------------
   # Life cycle
   # ----------------------------------------
@@ -88,7 +103,7 @@ class Site < MongoRecord
   
   after_save :update_site_yml
   def update_site_yml
-    return unless Yodel.env.development? && File.file?(site_yaml_path)
+    return unless Yodel.env.development?
     File.open(site_yaml_path, 'w') do |file|
       file.write(YAML.dump({
         name: name.to_s,
@@ -108,8 +123,6 @@ class Site < MongoRecord
       site.root_directory = File.dirname(path)
     end
   end
-  
-  
   
   
   # ----------------------------------------
