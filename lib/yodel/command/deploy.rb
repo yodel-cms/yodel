@@ -12,14 +12,12 @@ class Deploy
     # read site.yml and update db record
     site.reload_from_site_yaml
     
-    # remove "bad" domain names
-    site.domains.reject! do |domain|
-      domain =~ /\.yodel$/ || domain =~ /localhost/ || domain =~ /^(127|0|10)\./
-    end
-    
     # FIXME: it's possible for one site to take control of another's domains at the moment;
     # process "should" be that the first site with a domain owns that domain. Only it can
     # add subdomains to it; yodelcms.com etc. is an exception to this.
+    # remove "bad" domain names
+    site.domains = site.remote_domains
+    
     # link public directories so a fronting web server can serve public assets easily
     site.domains.each do |domain|
       path = File.join(Yodel.config.public_directory, domain)
