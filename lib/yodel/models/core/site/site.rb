@@ -75,14 +75,19 @@ class Site < MongoRecord
     domains.find {|domain| domain.end_with?('.yodel')}
   end
   
-  def first_remote_domain
-    domains.find do |domain|
+  def remote_domains
+    domains.select do |domain|
       !domain.end_with?('.yodel') &&
       !domain.end_with?('.local') &&
+      !domain.end_with?('.localhost') &&
       !domain.start_with?('192.168.') &&
       !domain.start_with?('10.') &&
-      domain != '127.0.0.1' &&
-      domain != 'localhost'
+      !domain.start_with?('127.') &&
+      (!domain.start_with?('172.') || !(16..31).include?(domain.split('.')[1].to_i)) &&
+      domain != '0.0.0.0' &&
+      domain != '255.255.255.255' &&
+      domain != 'localhost' &&
+      domain != 'broadcasthost'
     end
   end
   

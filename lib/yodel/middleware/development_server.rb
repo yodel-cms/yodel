@@ -108,7 +108,6 @@ class DevelopmentServer
     response = Message.read(@client_socket)
     
     if response.restart?
-      puts "Spawning new server"
       spawn_server
       request.write(@client_socket)
       response = Message.read(@client_socket)

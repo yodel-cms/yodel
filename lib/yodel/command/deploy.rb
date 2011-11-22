@@ -17,9 +17,13 @@ class Deploy
       domain =~ /\.yodel$/ || domain =~ /localhost/ || domain =~ /^(127|0|10)\./
     end
     
+    # FIXME: it's possible for one site to take control of another's domains at the moment;
+    # process "should" be that the first site with a domain owns that domain. Only it can
+    # add subdomains to it; yodelcms.com etc. is an exception to this.
     # link public directories so a fronting web server can serve public assets easily
     site.domains.each do |domain|
-      FileUtils.ln_s(site.public_directory, File.join(Yodel.config.public_directory, domain))
+      path = File.join(Yodel.config.public_directory, domain)
+      FileUtils.ln_s(site.public_directory, path) unless File.exists?(path)
     end
     
     # migrate (taking the site live)
