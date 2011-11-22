@@ -235,7 +235,7 @@ class Page < Record
   def partial(name)
     name = name.to_s
     name = name + '.html' unless name.end_with?('.html')
-    path = site.partials_directory.join(name)
+    path = File.join(site.partials_directory, name)
     raise LayoutNotFound, path unless File.exist?(path)
     Ember::Template.new(IO.read(path), {source_file: path}).render(get_binding)
   end

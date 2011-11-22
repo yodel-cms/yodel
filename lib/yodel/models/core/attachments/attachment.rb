@@ -26,11 +26,11 @@ class Attachment
   end
   
   def path
-    @path ||= @record.site.attachments_directory.join(relative_path)
+    @path ||= File.join(@record.site.attachments_directory, relative_path)
   end
   
   def directory_path
-    @directory_path ||= @record.site.attachments_directory.join(relative_directory_path)
+    @directory_path ||= File.join(@record.site.attachments_directory, relative_directory_path)
   end
   
   def exist?
