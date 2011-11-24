@@ -63,6 +63,8 @@ class CommandRunner
     when 'console'
       require '../../yodel'
       require 'irb'
+      
+      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       $application = Application.new
       IRB.start(__FILE__)
   
