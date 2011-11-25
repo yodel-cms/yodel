@@ -11,8 +11,13 @@ class ErrorPages
       return [status, headers, response]
     end
   rescue
+    Yodel.config.logger.warn $!.to_s
     if Yodel.env.production?
-      return render_error_page(500, [])
+      if $!.is_a?(DomainNotFound)
+        return render_error_page(404, ['No site has been set up at this address'])
+      else
+        return render_error_page(500, [])
+      end
     else
       if $!.respond_to?(:error) && $!.respond_to?(:description)
         return render_error_page(404, $!.error, $!.description)
