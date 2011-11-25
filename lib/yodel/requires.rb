@@ -22,6 +22,7 @@ require 'rubydns'
 require 'git'
 require 'highline'
 require 'mini_magick'
+require 'linguistics'
 
 # manually load active support extensions
 require 'active_support/core_ext/object/blank'

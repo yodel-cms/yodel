@@ -33,11 +33,13 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'git',            '~> 1.2.5'
   s.add_runtime_dependency 'highline',       '~> 1.6.2'
   s.add_runtime_dependency 'mini_magick',    '~> 3.3'
+  s.add_runtime_dependency 'linguistics',    '~> 1.0.9'
 
   # extensions
   s.add_runtime_dependency 'yodel_admin'
   s.add_runtime_dependency 'yodel_queue'
   s.add_runtime_dependency 'yodel_blog'
+  s.add_runtime_dependency 'yodel_shop'
 
   # environment support sites
   s.add_runtime_dependency 'yodel_development_environment'

@@ -143,7 +143,6 @@ class Page < Record
     else
       data = send(action)
     end
-    return if @finished
     
     # process the response and set headers
     response.write mime_type.process(data)
@@ -249,7 +248,7 @@ class Page < Record
   end
   
   def user_allowed_to?(action)
-    allowed = super(current_user, action)
+    allowed = super(current_user(:page), action)
     return true if allowed
     
     prompt_login
@@ -265,7 +264,7 @@ class Page < Record
     end
     
     with :json do
-      return unless user_allowed_to?(:view)
+      return {success: false, unauthorised: true} unless user_allowed_to?(:view)
       render_or_default(:json) do
         to_json
       end
@@ -281,7 +280,7 @@ class Page < Record
     end
     
     with :json do
-      return unless user_allowed_to?(:delete)
+      return {success: false, unauthorised: true} unless user_allowed_to?(:delete)
       destroy
       {success: true}
     end
@@ -309,7 +308,7 @@ class Page < Record
     end
     
     with :json do
-      return unless user_allowed_to?(:update)
+      return {success: false, unauthorised: true} unless user_allowed_to?(:update)
       if params.key?('record')
         values = JSON.parse(params['record'])
       else
@@ -353,7 +352,7 @@ class Page < Record
     end
     
     with :json do
-      return unless user_allowed_to?(:create)
+      return {success: false, unauthorised: true} unless user_allowed_to?(:create)
       new_page = model.default_child_model.new
       new_page.parent = self
       

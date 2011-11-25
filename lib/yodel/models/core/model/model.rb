@@ -232,7 +232,7 @@ class Model < SiteRecord
     when :create
       group = create_group
     end
-  
+    
     return true if group.nil?
     group.permitted?(user, record)
   end
