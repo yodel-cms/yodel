@@ -24,6 +24,13 @@ class Remote < MongoRecord
     URI.parse(url).host
   end
   
+  def git_url(remote_id)
+    git_url = URI.parse(url).merge("/git/#{remote_id}")
+    git_url.user = CGI.escape(username)
+    git_url.password = password
+    git_url.to_s
+  end
+  
   private
     def perform_request(request_path, method)
       case method

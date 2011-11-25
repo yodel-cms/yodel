@@ -18,12 +18,17 @@ class Extension
       Yodel.config.extensions << self
     end
     
-    # load any models. if the init.rb file exists it will have been loaded first,
+    # load any models. if the init.rb file exists it will be loaded instead,
     # allowing extensions to specify the order models are loaded.
     if File.exist?(@models_dir)
-      Dir.foreach(@models_dir) do |model|
-        next if model.start_with?('.')
-        require File.realpath(model, @models_dir)
+      init_file = File.join(@models_dir, 'init.rb')
+      if File.exist?(init_file)
+        require init_file
+      else
+        Dir[File.join(@models_dir, '**')].sort.each do |model|
+          next if model.start_with?('.')
+          require File.realpath(model, @models_dir)
+        end
       end
     end
   end

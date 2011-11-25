@@ -18,14 +18,14 @@ class Image < Attachment
   # TODO: shouldn't always be .jpg; have image extension as an option
   def resized_image_path(size, crop_if_required=true)
     return path if size.nil? || size == :original
-    sized_path = @record.site.attachments_directory.join(relative_directory_path, "#{size}.jpg")
-    crop_image unless sized_path.exist? || !crop_if_required
+    sized_path = File.join(@record.site.attachments_directory, relative_directory_path, "#{size}.jpg")
+    crop_image unless File.exist?(sized_path) || !crop_if_required
     sized_path
   end
 
   # TODO: relative path from is quite a complex method; we should optimise the whole path system here somehow
   def relative_resized_image_path(name, crop_if_required=true)
-    resized_image_path(name, crop_if_required).relative_path_from(@record.site.attachments_directory)
+    Pathname.new(resized_image_path(name, crop_if_required)).relative_path_from(Pathname.new(@record.site.attachments_directory))
   end
 
   def url(size=:original, crop_if_required=true)
