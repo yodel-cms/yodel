@@ -19,6 +19,10 @@ class ChangeSensitiveArray
     @array
   end
   
+  def to_s
+    @array.collect(&:to_s).join(', ')
+  end
+  
   def push(value)
     notify!
     @array.push(value)
