@@ -243,6 +243,7 @@ class Record < SiteRecord
   end
 
   # FIXME: these need to be atomic ops over the whole set of children
+  # FIXME: it also seems weird to perform increments on siblings, but leave the index change to this record unchanged
   def insert_in_siblings(new_index)
     original_parent = self.parent
     remove_from_siblings if index

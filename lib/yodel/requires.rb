@@ -30,6 +30,7 @@ require 'active_support/core_ext/object/try'
 require 'active_support/inflector'
 require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/array/conversions'
+require 'active_support/core_ext/time/calculations'
 
 # config and environment are loaded separately
 # from yodel, so a configuration can be created
