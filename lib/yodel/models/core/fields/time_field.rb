@@ -24,7 +24,7 @@ class TimeField < Field
   def from_json(value, record)
     return nil unless value.present? && (value.is_a?(String) || value.is_a?(Hash))
     if value.is_a?(Hash)
-      return nil unless ['year', 'month', 'day', 'hour', 'min'].all? {|field| value.key?(field)}
+      return nil unless ['year', 'month', 'day', 'hour', 'min'].all? {|field| value.key?(field) && !value[field].blank?}
       sec = value['sec'] || 0
       Time.new(value['year'], value['month'], value['day'], value['hour'], value['min'], sec).utc
     else

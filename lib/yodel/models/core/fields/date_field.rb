@@ -24,7 +24,7 @@ class DateField < Field
   def from_json(value, record)
     return nil unless value.present? && (value.is_a?(String) || value.is_a?(Hash))
     if value.is_a?(Hash)
-      return nil unless ['year', 'month', 'day'].all? {|field| value.key?(field)}
+      return nil unless ['year', 'month', 'day'].all? {|field| value.key?(field) && !value[field].blank?}
       Time.new(value['year'], value['month'], value['day'])
     else
       Time.parse(value)
