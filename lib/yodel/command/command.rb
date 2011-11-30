@@ -1,5 +1,6 @@
 require 'optparse'
 Dir.chdir(File.dirname(__FILE__))
+Encoding.default_external = "utf-8"
 
 class CommandRunner
   def self.run
