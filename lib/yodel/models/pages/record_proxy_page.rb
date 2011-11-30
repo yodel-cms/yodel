@@ -145,7 +145,7 @@ class RecordProxyPage < Page
         # included HTMLDecorator, undef these methods so record
         # proxy page can handle them instead. When a model is
         # mixed in, forwardable creates 
-        if record.respond_to?(:delete_link)
+        if record.methods(false).include?(:delete_link)
           class << record
             HTMLDecorator.instance_methods.each do |method_name|
               remove_method method_name

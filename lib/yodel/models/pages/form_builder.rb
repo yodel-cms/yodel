@@ -35,12 +35,10 @@ class FormBuilder
     @failure_function = options.delete(:failure)
   end
   
-  
   def form_for_section(section)
     buffer = Ember::Template.buffer_from_block(@block)
-    @record.fields.each do |name, field|
-      next unless field.display? && field.section == section && field.default_input_type.present? && field.default_input_type != :embedded
-      buffer << field_row(name, field)
+    section.displayed_fields.each do |field|
+      buffer << field_row(field.name, field)
     end
     ''
   end

@@ -2,6 +2,7 @@ require './record/abstract_record'
 require './record/embedded_record'
 require './record/mongo_record'
 require './record/site_record'
+require './record/section'
 require './model/model'
 
 class Record < SiteRecord
@@ -77,7 +78,23 @@ class Record < SiteRecord
   end
   
   def field_sections
-    [nil, fields.values.collect(&:section)].flatten.uniq
+    if @sections.nil?
+      keyed_sections = Hash.new do |hash, key|
+        hash[key] = Section.new(key)
+      end
+      fields.each do |name, field|
+        keyed_sections[field.section] << field
+      end
+      @sections = keyed_sections.values
+    end
+    
+    @sections
+  end
+  
+  def fields_for_section(section)
+    fields.select do |name, field|
+      field.display? && field.section == section && field.default_input_type.present? && field.default_input_type != :embedded
+    end
   end
   
   def inspect_hash
