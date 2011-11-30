@@ -143,6 +143,7 @@ class Page < Record
     else
       data = send(action)
     end
+    return if @finished
     
     # process the response and set headers
     response.write mime_type.process(data)
