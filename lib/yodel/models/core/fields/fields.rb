@@ -7,6 +7,7 @@ Dir.chdir(File.dirname(__FILE__)) do
   require './boolean_field'
   require './change_sensitive_array'
   require './change_sensitive_hash'
+  require './color_field'
   require './date_field'
   require './decimal_field'
   require './email_field'

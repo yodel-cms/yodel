@@ -7,7 +7,12 @@ module HTMLDecorator
   # Forms
   # ----------------------------------------
   def form_for_page(options={}, &block)
-    form_for(self, path_was, options, &block)
+    # FIXME: record proxy page needs to implement form_for with 3 parameters, not 2
+    if method(:form_for).arity == -3
+      form_for(self, path_was, options, &block)
+    else
+      form_for(self, options, &block)
+    end
   end
   
   
@@ -41,7 +46,7 @@ module HTMLDecorator
       wrap_end = ''
     end
     attributes << options.collect {|name, value| "#{name}='#{value}'"}.join(' ')
-    delete_link = "#{wrap_start}<a #{attributes} onclick='#{confirm}submit()'>#{text}</a>#{wrap_end}"
+    delete_link = "#{wrap_start}<a #{attributes} onclick='#{confirm}submit()' href='#'>#{text}</a>#{wrap_end}"
     method_input = "<input type='hidden' name='_method' value='delete'>"
     "<form action='#{path}' method='post' class='delete'>#{method_input}#{delete_link}</form>"
   end

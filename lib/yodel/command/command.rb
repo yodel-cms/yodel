@@ -70,6 +70,7 @@ class CommandRunner
   
     when 'migrate'
       require '../../yodel'
+      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       $application = Application.new
       Site.all.each do |site|
         Migration.run_migrations(site)

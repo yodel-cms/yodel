@@ -64,6 +64,7 @@ class FormBuilder
     when :text, :password, :hidden
       value = nil if type == :password
       value = value.id if value.is_a?(AbstractRecord)
+      value = value.to_s("F") if value.is_a?(BigDecimal)
       element = build_element(:input, {type: type.to_s, value: value.to_s})
     when :textarea
       element = build_element(:textarea, {}, value.to_s)
@@ -254,7 +255,8 @@ class FormBuilder
           'action' => @action,
           'method' => 'post',
           'enctype' => 'multipart/form-data',
-          'data-remote' => (!!@remote).to_s
+          'data-remote' => (!!@remote).to_s,
+          'id' => @id
         }.merge(@params)
         
         elements = [
@@ -304,7 +306,7 @@ class FormBuilder
       function_name = "#{@id}_#{name}"
       instance_variable_set("@#{name}_function_name", function_name)
       Hpricot::Elem.new('script', {}, [
-        Hpricot::Text.new("var #{function_name} = function(#{parameter}){"),
+        Hpricot::Text.new("var #{function_name} = function(#{parameter}, json){"),
         Hpricot::Text.new(source.to_s),
         Hpricot::Text.new("}"),
       ])
