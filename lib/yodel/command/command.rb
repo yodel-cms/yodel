@@ -79,6 +79,7 @@ class CommandRunner
     
     when 'deploy'
       require '../../yodel'
+      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       require './deploy'
       Deploy.new.deploy_site      
   

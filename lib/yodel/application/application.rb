@@ -17,7 +17,7 @@ class Application < Rack::Builder
     # setup middleware
     use Rack::ShowExceptions if Yodel.env.development?
     use ErrorPages
-    use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret
+    use Rack::Session::Cookie, key: Yodel.config.session_key, secret: Yodel.config.session_secret, secure: true
     use Rack::NestedParams
     use Rack::MethodOverride
     use SiteDetector
