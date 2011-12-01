@@ -6,7 +6,10 @@ class RequestHandler
     request  = Rack::Request.new(env)
     response = Rack::Response.new
     site = env['yodel.site']
-    
+
+    # temporary workaround to force rack to write the session out to a cookie
+    env['rack.session']['a'] = 1
+
     # split the request path into a standard path and trailing file extension if present
     components = PATH_FORMAT_REGEX.match(request.path)
     return fail_with "Unable to parse request path: #{request.path}" if components.nil?
