@@ -103,9 +103,18 @@ class Site < MongoRecord
     Task.collection.remove(_site_id: id)
   end
   
-  after_destroy :destroy_root_directory
-  def destroy_root_directory
+  after_destroy :destroy_directories
+  def destroy_directories
+    # root directory
     FileUtils.remove_entry_secure(root_directory) if File.directory?(root_directory)
+    
+    # domain symlinks in production
+    if Yodel.env.production?
+      domains.each do |domain|
+        path = File.join(Yodel.config.public_directory, domain)
+        FileUtils.rm(path) if File.exists?(path)
+      end
+    end
   end
   
   after_save :update_site_yml

@@ -9,6 +9,10 @@ class Deploy
     site = Site.where(_id: BSON::ObjectId.from_string(@site_id)).first
     puts "Site could not be found" and return if site.nil?
     
+    # store the list of domains associated with this site; once the site has been reloaded from
+    # the updated yaml file, deleted domains need to have their corresponding folders removed
+    old_domains = site.domains.dup
+    
     # read site.yml and update db record
     site.reload_from_site_yaml
     
@@ -22,6 +26,13 @@ class Deploy
     site.domains.each do |domain|
       path = File.join(Yodel.config.public_directory, domain)
       FileUtils.ln_s(site.public_directory, path) unless File.exists?(path)
+    end
+    
+    # remove folders associated with deleted domains
+    old_domains -= site.domains
+    old_domains.each do |domain|
+      path = File.join(Yodel.config.public_directory, domain)
+      FileUtils.rm(path) if File.exists?(path)
     end
     
     # reload layouts
