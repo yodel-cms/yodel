@@ -112,7 +112,7 @@ class Site < MongoRecord
     if Yodel.env.production?
       domains.each do |domain|
         path = File.join(Yodel.config.public_directory, domain)
-        FileUtils.rm(path) if File.exists?(path)
+        FileUtils.remove_file(path, true) if File.symlink?(path)
       end
     end
   end
