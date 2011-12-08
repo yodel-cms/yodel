@@ -52,14 +52,14 @@ class Deploy
         user.first_name = admin.name
         user.email = admin.email
         user.username = admin.email
-        user.password = Password.hashed_password(nil, admin.password)
+        user.password = admin.password
         user.groups << site.groups['Developers']
         user.save
 
         # because of the before_create callback, we need to override
         # the salt and password manually by saving again
         user.password_salt = nil
-        user.password = Password.hashed_password(nil, admin.password)
+        user.password = admin.password
         user.save_without_validation
       end
     end
