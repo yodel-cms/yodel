@@ -8,6 +8,7 @@ class UserModelMigration < Migration
       add_field :username, :string, index: true, validations: {required: {}, unique: {}}, searchable: false
       add_field :password, :password, validations: {required: {}}, searchable: false
       add_field :password_salt, :string, display: false, searchable: false
+      add_field :created_at, :time, display: false
       add_many  :groups, default: [site.groups['Users'].id]
       add_field :owner, :self
       

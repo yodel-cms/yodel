@@ -24,6 +24,9 @@ class Deploy
       FileUtils.ln_s(site.public_directory, path) unless File.exists?(path)
     end
     
+    # reload layouts
+    Layout.reload_layouts(site)
+    
     # migrate (taking the site live)
     Migration.run_migrations(site)
   end
