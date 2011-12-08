@@ -35,10 +35,10 @@ class Deploy
       FileUtils.rm(path) if File.exists?(path)
     end
     
-    # reload layouts
-    Layout.reload_layouts(site)
-    
     # migrate (taking the site live)
     Migration.run_migrations(site)
+    
+    # reload layouts from disk
+    Layout.reload_layouts(site)
   end
 end
