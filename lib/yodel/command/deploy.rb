@@ -8,6 +8,7 @@ class Deploy
     puts "A site ID must be supplied as the last parameter to deploy" and return if @site_id.blank?
     site = Site.where(_id: BSON::ObjectId.from_string(@site_id)).first
     puts "Site could not be found" and return if site.nil?
+    new_site = site.migrations.empty?
     
     # store the list of domains associated with this site; once the site has been reloaded from
     # the updated yaml file, deleted domains need to have their corresponding folders removed
@@ -40,5 +41,27 @@ class Deploy
     
     # reload layouts from disk
     Layout.reload_layouts(site)
+    
+    # the first time a site is created, all users with access to the site (1 at this stage
+    # in most cases) are copied as administrators of the new site. As users are added and
+    # removed, their corresponding administrator records are updated in the site.
+    if new_site
+      production_site = Site.where(name: 'yodel').first
+      production_site.users.where(sites: site.id).all.each do |admin|
+        user = site.users.new
+        user.first_name = admin.name
+        user.email = admin.email
+        user.username = admin.email
+        user.password = Password.hashed_password(nil, admin.password)
+        user.groups << site.groups['Developers']
+        user.save
+
+        # because of the before_create callback, we need to override
+        # the salt and password manually by saving again
+        user.password_salt = nil
+        user.password = Password.hashed_password(nil, admin.password)
+        user.save_without_validation
+      end
+    end
   end
 end

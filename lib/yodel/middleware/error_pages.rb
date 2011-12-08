@@ -36,7 +36,7 @@ class ErrorPages
     elsif error_code == 403
       error = "Unauthorised"
     else
-      error = "We're sorry, but something went wrong."
+      error = "We're sorry, something went wrong."
     end
     if description.nil?
       if error_code == 404

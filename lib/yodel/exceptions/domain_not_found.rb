@@ -7,7 +7,7 @@ class DomainNotFound < StandardError
   end
   
   def error
-    ["#{@domain} isn't set up"]
+    ["The site '#{@domain.gsub('.yodel', '')}' has not been created yet"]
   end
   
   def description
