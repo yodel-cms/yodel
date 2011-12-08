@@ -32,6 +32,10 @@ require 'active_support/core_ext/hash/keys'
 require 'active_support/core_ext/array/conversions'
 require 'active_support/core_ext/time/calculations'
 
+# for consistency, default to syck for YAML dumps/loads
+# psych and syck have incompatible nil representations
+YAML::ENGINE.yamler = 'syck'
+
 # config and environment are loaded separately
 # from yodel, so a configuration can be created
 # before loading the server or console
