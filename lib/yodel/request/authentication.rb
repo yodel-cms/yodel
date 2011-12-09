@@ -10,13 +10,12 @@ module Authentication
     unless defined?(@current_user)
       @current_user = nil
       auth_type ||= mime_type.auth_type
-      case auth_type
-      when :page
-        if session['current_user_id']
-          @current_user = site.users.find(session['current_user_id'])
-          session.delete('current_user_id') if @current_user.nil?
-        end
-      when :basic
+      
+      if auth_type == :page || session['current_user_id']
+        @current_user = site.users.find(session['current_user_id'])
+        session.delete('current_user_id') if @current_user.nil?
+        
+      elsif auth_type == :basic
         unless authorization_key.nil? || !basic?
           user = site.users.first(username: credentials.first)
           @current_user = user if user.try(:passwords_match?, credentials.last)
