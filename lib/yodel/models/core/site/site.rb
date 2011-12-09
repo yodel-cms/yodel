@@ -3,6 +3,7 @@ class Site < MongoRecord
   
   collection :sites
   field :name, :string
+  field :created_at, :time
   field :root_directory, :string
   field :remote_id, :string
   field :model_plural_names, :hash
@@ -90,6 +91,19 @@ class Site < MongoRecord
       domain != 'broadcasthost'
     end
   end
+  
+  def latest_revision
+    Dir.chdir(root_directory) do
+      `git log -n1 --pretty=format:"%H"`
+    end
+  end
+  
+  def latest_revision_date
+    Dir.chdir(root_directory) do
+      `git log -n1 --pretty=format:"%ai"`
+    end
+  end
+  
   
   # ----------------------------------------
   # Life cycle

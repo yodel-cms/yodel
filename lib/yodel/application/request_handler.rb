@@ -31,6 +31,8 @@ class RequestHandler
       end
       return fail_with "File (#{request.path}) not found." if page.nil?
     end
+    
+    # respond
     Layout.reload_layouts(site) if Yodel.env.development? # FIXME: implement production caching
     page.respond_to_request(request, response, mime_type)
     if page.response.respond_to?(:finish)
