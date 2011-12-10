@@ -122,6 +122,8 @@ class Function
       previous_value(context, parent_context, params.first)
     when 'collect'
       collect(context, parent_context, params.first)
+    when 'flatten'
+      flatten(context)
     when 'majority'
       majority(context, parent_context, params.first)
     when 'count'
@@ -270,6 +272,11 @@ class Function
     def collect(context, parent_context, field)
       raise "Context to collect must respond to collect" unless context.respond_to?(:collect)
       context.collect {|item| execute(item, field, parent_context)}
+    end
+    
+    def flatten(context)
+      raise "Context to flatten must respond to flatten" unless context.respond_to?(:flatten)
+      context.flatten
     end
     
     def each(context, parent_context, statement)

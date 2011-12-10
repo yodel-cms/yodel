@@ -20,7 +20,7 @@ class Installer
   end
   
   def default_ruby_path
-    if Config.ruby =~ /rubies\/(.*)\/bin/
+    if RbConfig.ruby =~ /rubies\/(.*)\/bin/
       `rvm wrapper #{$1} yodel`
       `which yodel_ruby`.strip
     else

@@ -21,12 +21,12 @@ module QueryAssociation
   end
   
   def associate(associated_record, store, record)
-    associated_record.set_meta(foreign_key(record), record.id)
+    associated_record.set_meta(foreign_key(record), record.get(value_field))
     associated_record.save_without_validation
   end
   
   def unassociate(associated_record, store, record)
-    return unless associated_record.get_meta(foreign_key) == record.id
+    return unless associated_record.get_meta(foreign_key) == record.get(value_field)
     associated_record.set_meta(foreign_key(record), nil)
     associated_record.save_without_validation
   end
@@ -49,7 +49,7 @@ module QueryAssociation
       elsif @options['extends']
         scope = record.field(@options['extends'].to_s).scope(record)
       else
-        scope = record.site.model(model_name).where(foreign_key(record) => record.id)
+        scope = record.site.model(model_name).where(foreign_key(record) => record.get(value_field))
       end
       scope = scope.where(@options['where'].to_hash) if @options['where']
       scope = scope.sort(@options['order'].to_s) if @options['order']
@@ -59,6 +59,10 @@ module QueryAssociation
     end
     
     def associated(store, record)
-      record.site.model(model_name).first(foreign_key(record) => record.id)
+      record.site.model(model_name).first(foreign_key(record) => record.get(value_field))
+    end
+    
+    def value_field
+      @options['value_field'] || 'id'
     end
 end
