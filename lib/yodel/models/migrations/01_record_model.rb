@@ -9,7 +9,7 @@ class RecordModelMigration < Migration
       add_field :name, :string
       add_field :show_in_search, :boolean, default: true, section: 'Options'
       add_field :search_keywords, :array, of: :string, display: false
-      add_field :search_title, :alias, of: :title, display: false
+      add_field :search_title, :alias, of: :name, display: false
 
       # modelling
       add_one   :eigenmodel, model: :model, destroy: true, display: false
