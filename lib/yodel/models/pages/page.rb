@@ -34,21 +34,33 @@ class Page < Record
   
   def assign_path(prefix=nil)
     if prefix
-      new_prefix = prefix + '/' + permalink
+      prefix = '' if prefix == '/' # when the root page is parent, prefix will be "/"
+      base = prefix + '/' + permalink
     else
-      new_prefix = '/' + parents.reverse[1..-1].collect(&:permalink).join('/')
+      base = '/' + parents.reverse[1..-1].collect(&:permalink).join('/')
     end
     
-    self.path = new_prefix
+    permalink_character = site.option('pages.permalink_character') || '-'
+    self.path = base
     count = 0
     
     while site.pages.where(:path => self.path, :_id.ne => self.id).exists?
       count += 1
-      self.path = "#{new_prefix}#{count}"
+      self.path = "#{base}#{permalink_character}#{count}"
     end
     
-    save_without_validation if prefix
-    children.each {|child| child.assign_path(new_prefix)}
+    # child pages are called with prefix supplied
+    # FIXME: with the identity map, this call could save another record which has been modified
+    # elsewhere; change to update path only, not a full save
+    save_without_validation unless prefix.nil?
+    children.each {|child| child.assign_path(self.path)}
+  end
+  
+  after_validation :assign_child_paths
+  def assign_child_paths
+    return unless path_changed? || (!path.nil? && values['path'].nil?)
+    return unless @errors.empty? # @errors.present? == invalid
+    children.each {|child| child.assign_path(path)}
   end
   
   
