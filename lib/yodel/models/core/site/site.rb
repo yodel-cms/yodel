@@ -45,7 +45,13 @@ class Site < MongoRecord
   end
   
   def public_directories
-    @public_dirs ||= Yodel.config.public_directories + [public_directory]
+    @public_dirs ||= begin
+      if Yodel.env.production?
+        Yodel.config.public_directories + [public_directory]
+      else
+        Yodel.config.public_directories + [public_directory, attachments_directory]
+      end
+    end
   end
   
   def layouts_directory
