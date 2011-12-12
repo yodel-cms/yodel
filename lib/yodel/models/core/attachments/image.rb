@@ -5,7 +5,7 @@ class Image < Attachment
   end
 
   def crop_image
-    sizes = @field.options['sizes'].to_hash.merge('admin_thumb' => '100x100')
+    sizes = (@field.options['sizes'] || {}).to_hash.merge('admin_thumb' => '100x100')
     return unless exist?    
     sizes.each do |size_name, size|
       image = MiniMagick::Image.open(path.to_s)

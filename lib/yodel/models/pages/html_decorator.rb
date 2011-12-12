@@ -116,17 +116,29 @@ module HTMLDecorator
   # ----------------------------------------
   # Formatters
   # ----------------------------------------
-  def paragraph(index, field=:content)
-    text = self[field]
+  def paragraph(index, options={})
+    text = self.send(options[:field] || :content)
     paragraphs = Hpricot(text).search('/p')
     return '' if paragraphs.nil? || paragraphs[index].nil?
-    paragraphs[index].inner_html
+    if options[:strip]
+      paragraphs[index].search('//text()').join
+    else
+      paragraphs[index].inner_html
+    end
   end
   
-  def paragraphs_from(index, field=:content)
-    text = self[field]
+  # TODO: determine whether the initial search (Hpricot(text).children) should
+  # be changed to Hpricot(text).search('/p'), i.e should paragraphs_from return
+  # only p tags, or all child tags. This is dependent on the WYSIWYG editor -
+  # does it wrap <ul>s etc. in <p>s first, or are they top level elements?
+  def paragraphs_from(index, options={})
+    text = self.send(options[:field] || :content)
     paragraphs = Hpricot(text).children
     return '' if paragraphs.nil? || paragraphs[index..-1].nil?
-    paragraphs[index..-1].collect {|p| p.to_s}.join('')
+    if options[:strip]
+      paragraphs[index..-1].collect {|p| p.search('//text()').join}.join
+    else
+      paragraphs[index..-1].collect {|p| p.to_s}.join
+    end
   end
 end

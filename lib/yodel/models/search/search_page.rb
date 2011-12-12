@@ -10,24 +10,27 @@ class SearchPage < Page
   }
   
   def query
-    q = (type || site.records).where(show_in_search: true)
+    @query ||= begin
+      query_type = type || site.records
+      q = query_type.where(show_in_search: true)
     
-    # constant constraints
-    conditions.each do |condition|
-      q = add_condition(q, type, condition.name, condition.operator, condition.value)
+      # constant constraints
+      conditions.each do |condition|
+        q = add_condition(q, query_type, condition.name, condition.operator, condition.value)
+      end
+    
+      # user conditions
+      user_conditions.each do |condition|
+        param_name = condition.as || condition.name
+        q = add_condition(q, query_type, condition.name, condition.operator, params[param_name])
+      end
+    
+      # add other optional search parameters
+      q = q.sort(sort || params['sort']) if sort || params['sort']
+      q = q.limit(limit || params['limit'].to_i) if limit || params['limit']
+      q = q.skip(skip || params['skip'].to_i) if skip || params['skip']
+      q
     end
-    
-    # user conditions
-    user_conditions.each do |condition|
-      param_name = condition.as || condition.name
-      q = add_condition(q, type, condition.name, condition.operator, params[param_name])
-    end
-    
-    # add other optional search parameters
-    q = q.sort(sort || params['sort']) if sort || params['sort']
-    q = q.limit(limit || params['limit'].to_i) if limit || params['limit']
-    q = q.skip(skip || params['skip'].to_i) if skip || params['skip']
-    q
   end
   
   def add_condition(q, type, field, operator, value)
@@ -38,11 +41,6 @@ class SearchPage < Page
     if type && type.all_record_fields[field.to_s]
       value = type.all_record_fields[field.to_s].from_json(value, type)
     end
-    
-    # the in operator works on arrays
-    #if operator == :in
-    #  value = value.to_s.split(' ').reject(&:blank?).collect(&:downcase)
-    #end
     
     if operator
       q.where(field.send(operator) => value)

@@ -363,7 +363,7 @@ class Record < SiteRecord
   # Rendering
   # ----------------------------------------
   def content
-    @content
+    @content ||= get('content')
   end
   
   def set_content(content)

@@ -38,6 +38,10 @@ class Attachment
     File.exist?(path)
   end
   
+  def empty?
+    !exist?
+  end
+  
   def remove_files
     FileUtils.rm_r directory_path if exist?
   end
