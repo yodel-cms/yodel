@@ -27,7 +27,7 @@ class FormBuilder
     @embedded_record = options.delete(:embedded_record)
     @blank_record = options.delete(:blank_record)
     @prefix = options.delete(:prefix)
-    @id = options.delete(:id) || "form_for_#{record.id}"
+    @id = @params.delete(:id) || options.delete(:id) || "form_for_#{record.id}"
     
     # js functions
     @success_function = options.delete(:success)
