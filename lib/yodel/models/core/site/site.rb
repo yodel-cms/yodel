@@ -40,6 +40,19 @@ class Site < MongoRecord
     @log ||= Log.new(self)
   end
   
+  def root_directory
+    # TODO: find a better way to distinguish between dev/prod and normal sites
+    @root_directory ||= begin
+      if name != 'yodel'
+        get('root_directory')
+      elsif Yodel.env.production?
+        Yodel.extensions['yodel_production_environment'].lib_dir
+      else
+        Yodel.extensions['yodel_development_environment'].lib_dir
+      end
+    end
+  end
+  
   def public_directory
     @public_dir ||= File.join(root_directory, Yodel::PUBLIC_DIRECTORY_NAME)
   end
