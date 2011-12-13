@@ -32,7 +32,7 @@ class Image < Attachment
     if size == :original
       super()
     else
-      Pathname.new('/').join(relative_resized_image_path(size, crop_if_required))
+      Pathname.new('/').join(Yodel::ATTACHMENTS_DIRECTORY_NAME, relative_resized_image_path(size, crop_if_required))
     end
   end
 end
