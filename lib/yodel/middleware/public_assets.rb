@@ -15,16 +15,29 @@ class PublicAssets
     request = Rack::Request.new(env)
     site = env['yodel.site']
     
+    # when a site is missing, use the default set of public directories
     unless site.nil?
       public_directories = site.public_directories
     else
       public_directories = Yodel.config.public_directories
     end
     
-    public_directories.each do |public_dir|
-      path = File.join(public_dir, *parts)
+    # attachments are handled separately to normal public resources; to handle
+    # /attachments/* the same way as other public folders, the site root would
+    # need to be used as a public folder. Adding attachments as a public folder
+    # and removing /attachments/ from the url, or making the path of all
+    # attachments in development have no /attachments/ prefix could cause issues.
+    if !site.nil? && parts[1] == 'attachments'
+      path = File.join(site.attachments_directory, *parts[2..-1])
       if File.file?(path) && File.readable?(path)
         return dup.serve_file(path, env)
+      end
+    else
+      public_directories.each do |public_dir|
+        path = File.join(public_dir, *parts)
+        if File.file?(path) && File.readable?(path)
+          return dup.serve_file(path, env)
+        end
       end
     end
     
