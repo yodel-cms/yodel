@@ -1,4 +1,29 @@
 class Migration
+  def self.copy_missing_migrations_for_all_sites
+    Site.all.each do |site|
+      next if site.name == 'yodel'
+      copy_missing_migrations_for_site(site)
+    end
+  end
+  
+  def self.copy_missing_migrations_for_site(site)
+    # core yodel migrations
+    site_yodel_migrations_dir = File.join(site.migrations_directory, Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME)
+    sync_migration_directories(Yodel.config.yodel_migration_directory, site_yodel_migrations_dir)
+
+    # extension migrations
+    extension_migrations_dir = File.join(site.root_directory, Yodel::MIGRATIONS_DIRECTORY_NAME, Yodel::EXTENSION_MIGRATIONS_DIRECTORY_NAME)
+    Yodel.config.extensions.each do |extension|
+      sync_migration_directories(extension.migrations_dir, File.join(extension_migrations_dir, extension.name))
+    end
+  end
+  
+  def self.run_migrations_for_all_sites
+    Site.all.each do |site|
+      run_migrations(site)
+    end
+  end
+  
   def self.run_migrations(site)
     Yodel.config.logger.info "Migrating #{site.name}"
     
@@ -47,6 +72,19 @@ class Migration
         load file
         yield @migration, file
         Object.send(:remove_const, @migration.name.to_sym) if @migration
+      end
+    end
+    
+    def self.sync_migration_directories(authoritative_folder, site_folder)
+      if File.exist?(site_folder)
+        Dir[File.join(authoritative_folder, '**/*.rb')].each do |file|
+          destination = File.join(site_folder, File.basename(file))
+          unless File.exist?(destination)
+            FileUtils.cp(file, destination)
+          end
+        end
+      else
+        FileUtils.cp_r(authoritative_folder, site_folder)
       end
     end
 end

@@ -5,7 +5,7 @@ Encoding.default_external = "utf-8"
 class CommandRunner
   def self.run
     OptionParser.new do |opts|
-      opts.banner = "Usage: yodel [options] server|dns|console|migrate|setup|deploy"
+      opts.banner = "Usage: yodel [options] server|dns|restart|console|migrate|deploy|setup|update"
       opts.on('-p', '--port PORT', Integer, 'Override the default web server port') do |port|
         $web_port = port
       end
@@ -73,9 +73,7 @@ class CommandRunner
       require '../../yodel'
       Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       $application = Application.new
-      Site.all.each do |site|
-        Migration.run_migrations(site)
-      end
+      Migration.run_migrations_for_all_sites
     
     when 'deploy'
       require '../../yodel'
@@ -86,6 +84,24 @@ class CommandRunner
     when 'setup'
       require './installer'
       Installer.new.install_system_files
+    
+    when 'restart'
+      require './restart'
+      if Restart.can_restart?
+        Restart.restart!
+      else
+        puts "Restart can only be run on OS X machines"
+      end
+      
+    when 'update'
+      require '../../yodel'
+      require './restart'
+      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
+      $application = Application.new
+      
+      Migration.copy_missing_migrations_for_all_sites
+      Migration.run_migrations_for_all_sites
+      Restart.restart! if Restart.can_restart?
       
     else
       puts "Unknown command: #{command}"  

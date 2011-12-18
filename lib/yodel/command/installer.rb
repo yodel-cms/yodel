@@ -1,4 +1,5 @@
-require 'highline'
+require './feedback'
+require './restart'
 require 'tempfile'
 require 'ember'
 require 'etc'
@@ -60,10 +61,6 @@ class Installer
     @system_path ||= File.join(File.dirname(__FILE__), '..', '..', '..', 'system')
   end
   
-  def report(verb, noun)
-    @h.say "<%= color('#{verb}', GREEN) %>\t#{noun}"
-  end
-  
   def escape_quotes(str)
     str.gsub("'", "\\\\'")
   end
@@ -76,7 +73,7 @@ class Installer
     end
     source_path = File.join(system_path, file)
     temp_file   = Tempfile.new('yodel')
-    report('installing', dest_path)
+    Feedback.report('installing', dest_path)
     
     # render the file template
     temp_file.write Ember::Template.new(IO.read(source_path), {source_file: source_path}).render(binding)
@@ -151,12 +148,12 @@ class Installer
     h.say "-----------------------------------------------------------------------------\n\n"
     
     # default program paths
-    report('locating', "git: #{@git_path}")
-    report('warning', "git not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @git_path.empty?
-    report('locating', "identify: #{@identify_path}")
-    report('warning', "identify not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @identify_path.empty?
-    report('locating', "convert: #{@convert_path}")
-    report('warning', "convert not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @convert_path.empty?
+    Feedback.report('locating', "git: #{@git_path}")
+    Feedback.report('warning', "git not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @git_path.empty?
+    Feedback.report('locating', "identify: #{@identify_path}")
+    Feedback.report('warning', "identify not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @identify_path.empty?
+    Feedback.report('locating', "convert: #{@convert_path}")
+    Feedback.report('warning', "convert not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @convert_path.empty?
     
     # install system files
     if `uname -a` =~ /Darwin/
@@ -166,13 +163,13 @@ class Installer
     end
     
     # start yodel for environment installation
-    report('starting', 'yodel')
+    Feedback.report('starting', 'yodel')
     require '../../yodel'
     Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
     Yodel.load_extensions
     
     # install an environment support site
-    report('installing', "#{@environment} environment support site")
+    Feedback.report('installing', "#{@environment} environment support site")
     site = Site.new
     site.name = "yodel"
     site.domains = ['yodel', 'localhost', '127.0.0.1']
@@ -207,17 +204,7 @@ class Installer
       install 'usr/local/etc/yodel/production_settings.rb', '0644', 'settings.rb'
     end
     
-    report('starting', 'dns server')
-    if `sudo launchctl list` =~ /\d+.+com.yodelcms.dns$/
-      `sudo launchctl unload /Library/LaunchDaemons/com.yodelcms.dns.plist`
-    end
-    `sudo launchctl load /Library/LaunchDaemons/com.yodelcms.dns.plist`
-    
-    report('starting', 'web server')
-    if `sudo launchctl list` =~ /\d+.+com.yodelcms.server$/
-      `sudo launchctl unload /Library/LaunchDaemons/com.yodelcms.server.plist`
-    end
-    `sudo launchctl load /Library/LaunchDaemons/com.yodelcms.server.plist`
+    Restart.restart!
   end
   
   
