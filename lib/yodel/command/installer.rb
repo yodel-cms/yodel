@@ -9,7 +9,8 @@ class Installer
   # ----------------------------------------
   attr_reader :database_hostname, :database_port, :database_name,
               :sites_root, :ruby_path, :web_port, :dns_port,
-              :user, :group, :public_directory
+              :user, :group, :public_directory, :git_path,
+              :identify_path, :convert_path
   
   def default_sites_root
     if `uname -a` =~ /Darwin/
@@ -34,9 +35,6 @@ class Installer
     @group  = pwnam.gid
   end
   
-  def default_group
-  end
-  
   def initialize
     # assign default values; not all values have associated questions
     # presented to the user depen
@@ -48,6 +46,9 @@ class Installer
     @public_directory   = '/var/www'
     @sites_root         = default_sites_root
     @ruby_path          = default_ruby_path
+    @git_path           = `which git`.strip
+    @identify_path      = `which identify`.strip
+    @convert_path       = `which convert`.strip
     assign_default_user_and_group
   end
   
@@ -148,6 +149,14 @@ class Installer
     h.say "Yodel will now install the necessary system files. You may be asked to enter"
     h.say "your local user password.\n\n"
     h.say "-----------------------------------------------------------------------------\n\n"
+    
+    # default program paths
+    report('locating', "git: #{@git_path}")
+    report('warning', "git not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @git_path.empty?
+    report('locating', "identify: #{@identify_path}")
+    report('warning', "identify not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @identify_path.empty?
+    report('locating', "convert: #{@convert_path}")
+    report('warning', "convert not found, path must be set manually in /usr/local/etc/yodel/settings.rb") if @convert_path.empty?
     
     # install system files
     if `uname -a` =~ /Darwin/

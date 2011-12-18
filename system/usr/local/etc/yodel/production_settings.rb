@@ -11,9 +11,12 @@ Yodel.config.define do |config|
   
   # environment
   config.dns_port           = <%= dns_port %>
-  config.git_path           = `which git`.strip
   config.public_directory   = '<%= public_directory %>'
   config.deploy_command     = 'yodel'
+  config.git_path           = '<%= git_path %>'
+  config.identify_path      = '<%= identify_path %>'
+  config.convert_path       = '<%= convert_path %>'
+  config.image_quality      = 95
 
   # logging
   config.logger             = Logger.new('/var/log/yodel.log')
