@@ -16,6 +16,6 @@ class Section < Array
   
   private
     def display_field?(field)
-      field.display? && field.default_input_type.present? && field.default_input_type != :embedded
+      field.display? && field.default_input_type.present?
     end
 end
