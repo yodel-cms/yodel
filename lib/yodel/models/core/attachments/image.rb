@@ -9,7 +9,9 @@ class Image < Attachment
     return unless exist?
     
     # determine image dimensions
-    dimensions = `#{Yodel.config.identify_path} -ping -format "%w %h" #{path}`
+    # FIXME: uploaded file names with '..' and slashes etc. could be a security issue
+    escaped_path = "\"#{path.gsub('"', '\"')}\""
+    dimensions = `#{Yodel.config.identify_path} -ping -format "%w %h" #{escaped_path}`
     unless ('0'..'9').include?(dimensions[0])
       raise "Invalid image format or unknown Image Magick error: #{dimensions}"
     else
@@ -25,7 +27,7 @@ class Image < Attachment
       w = [iw, w].min.to_i
       h = [ih, h].min.to_i
       
-      command = "#{Yodel.config.convert_path} #{path} "
+      command = "#{Yodel.config.convert_path} #{escaped_path} "
       command += "-crop '#{w}x#{h}+#{(iw-w)/2}+#{(ih-h)/2}' "
       command += "-resize '#{sw}x#{sh}' "
       command += "-quality #{Yodel.config.image_quality} "

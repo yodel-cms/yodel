@@ -10,7 +10,6 @@ require 'uri'
 
 # load bundled gems
 require 'rubygems'
-require 'bundler'
 require 'rack'
 require 'plucky' # requires mongo
 require 'ember'
@@ -18,10 +17,7 @@ require 'mail'
 require 'hpricot'
 require 'json'
 require 'rack/contrib'
-require 'rubydns'
 require 'git'
-require 'highline'
-require 'mini_magick'
 require 'linguistics'
 
 # manually load active support extensions
