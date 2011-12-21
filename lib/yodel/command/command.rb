@@ -38,7 +38,6 @@ class CommandRunner
     case command
     when 'server'
       require '../requires'
-      require '../middleware/development_server'
       
       Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       Yodel.config.web_port = $web_port if $web_port
@@ -50,9 +49,11 @@ class CommandRunner
       end
       
       if $reload
+        require '../middleware/development_server'
         Rack::Server.start(app: DevelopmentServer.new, Port: Yodel.config.web_port)
       else
-        require File.expand_path('../../yodel')
+        require '../middleware/rack_server'
+        require '../../yodel'
         Rack::Server.start(app: Application.new, Port: Yodel.config.web_port)
       end
   
