@@ -32,6 +32,10 @@ class EmbeddedRecord < AbstractRecord
     embedded_field.fields
   end
   
+  def field_sections
+    @sections ||= {nil => Section.new(nil, fields.values)}
+  end
+  
   def perform_save
     embedded_field.save(self, parent_record)
   end

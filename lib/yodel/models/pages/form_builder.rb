@@ -36,16 +36,23 @@ class FormBuilder
   end
   
   def form_for_section(section)
-    buffer = Ember::Template.buffer_from_block(@block)
-    section.displayed_fields.each do |field|
-      buffer << field_row(field.name, field)
-    end
-    ''
+    section.displayed_fields.collect do |field|
+      field_row(field.name, field)
+    end.join('')
   end
   
   def field_row(name, field=nil)
     field = @record.fields[name.to_s] if field.nil?
-    "<div class='contains-field-type-#{field.options['type']}'>" << label(name).to_s << "<div>" << field(name).to_s << status(name).to_s << "</div></div>"
+    html = "<div class='contains-field-type-#{field.options['type']}'>"
+    html << label(name).to_s << "<div>"
+    
+    if field.default_input_type == :embedded
+      html << field(name, blank_record: true).to_s
+    else
+      html << field(name).to_s
+    end
+    
+    html << status(name).to_s << "</div></div>"
   end
   
   
@@ -64,10 +71,13 @@ class FormBuilder
       value = value.id if value.is_a?(AbstractRecord)
       value = value.to_s("F") if value.is_a?(BigDecimal)
       element = build_element(:input, {type: type.to_s, value: value.to_s})
+      
     when :textarea
       element = build_element(:textarea, {}, value.to_s)
+      
     when :html
       element = build_element(:textarea, {class: 'html'}, value.to_s)
+      
     when :file, :image
       elements = []
       elements << build_element(:input, {type: 'hidden', name: input_name + '[_action]', value: 'set'})
@@ -88,6 +98,7 @@ class FormBuilder
       elements << build_element(:span, {}, "Delete")
       elements << build_element(:input, {type: 'file', value: value.name, name: input_name + '[_value]'})
       element = build_element(:span, {}, elements)
+      
     when :radio
       base = {type: 'radio', name: input_name}
       true_button   = build_element(:input, base.merge(condition('checked', value, ['true', true])))
@@ -95,13 +106,17 @@ class FormBuilder
       true_text     = options.delete(:true) || 'Yes'
       false_text    = options.delete(:false) || 'No'
       element = build_element(:span, {}, [true_text, true_button, false_text, false_button])
+      
     when :enum
       element = build_select(value, field.options['options'], show_blank: field.show_blank, blank_text: field.blank_text)
+      
     when :store_one
       element = build_select(value, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
+      
     when :store_many
       element = build_select(value.collect(&:id), field.record_options(@record), show_blank: false, name_field: 'name', value_field: 'id', multiple: true)
       input_name += '[]'
+      
     when :date, :datetime
       # day
       day_select = build_select(value.try(:day).to_s, (1..31), show_blank: true, blank_text: '', name_field: 'to_s', value_field: 'to_s')
@@ -134,23 +149,29 @@ class FormBuilder
       end
       
       element = build_element(:span, {}, elements)
-    when :embedded
-      if block_given?
-        if value.respond_to?(:each)
-          value.each do |document|
-            self.class.new(document, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
-          end
-        else
-          self.class.new(value, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
-        end
       
-        if options.delete(:blank_record)
-          self.class.new(value.new, @action, {embedded_record: field, blank_record: true, prefix: name, id: @id}, &block).render
+    when :embedded
+      elements = []
+      
+      if value.respond_to?(:each)
+        value.each do |document|
+          elements << self.class.new(document, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
         end
+      else
+        elements << self.class.new(value, @action, {embedded_record: field, prefix: name, id: @id}, &block).render
+      end
+  
+      if options.delete(:blank_record)
+        elements << self.class.new(value.new, @action, {embedded_record: field, blank_record: true, prefix: name, id: @id}, &block).render
       end
       
-      buffer = Ember::Template.buffer_from_block(@block)
-      buffer << build_element(:input, {'type' => 'hidden', 'data-field' => input_name}).to_s
+      if block_given?
+        buffer = Ember::Template.buffer_from_block(@block)
+        buffer << build_element(:input, {'type' => 'hidden', 'data-field' => input_name}).to_s
+      else
+        elements << build_element(:input, {'type' => 'hidden', 'data-field' => input_name})
+        element = build_element(:span, {}, elements)
+      end
     end
     
     element.tap do |element|
@@ -244,46 +265,62 @@ class FormBuilder
   end
   
   def render
-    if @embedded_record
-      buffer = Ember::Template.buffer_from_block(@block)
-      buffer << Ember::Template.content_from_block(@block, self)
+    # render a default form
+    if @block.nil?
+      if @embedded_record
+        puts "Rendering form for embedded record with fields:"
+        p @record.field_sections[nil]
+        form_for_section(@record.field_sections[nil])
+      else
+        form_element(@record.field_sections[nil])
+      end
+    
+    # render a user supplied form
     else
-      Ember::Template.wrap_content_block(@block, self) do |content|
-        params = {
-          'action' => @action,
-          'method' => 'post',
-          'enctype' => 'multipart/form-data',
-          'data-remote' => (!!@remote).to_s,
-          'id' => @id
-        }.merge(@params)
-        
-        elements = [
-          Hpricot::Text.new(content.join),
-          Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method})
-        ]
-        
-        if @success_function
-          params['data-success-function'] = "#{@id}_success"
-          elements << Hpricot::Text.new(define_callback_function('success', 'record', @success_function))
-        end
-        
-        if @errors_function
-          params['data-errors-function'] = "#{@id}_errors"
-          elements << Hpricot::Text.new(define_callback_function('errors', 'errors', @errors_function))
-        end
-        
-        if @failure_function
-          params['data-failure-function'] = "#{@id}_failure"
-          elements << Hpricot::Text.new(define_callback_function('failure', 'xhr', @failure_function))
-        end
-        
-        Hpricot::Elem.new('form', params, elements)
+      if @embedded_record
+        buffer = Ember::Template.buffer_from_block(@block)
+        buffer << Ember::Template.content_from_block(@block, self)
+      else
+        Ember::Template.wrap_content_block(@block, self) {|content| form_element(content.join)}
       end
     end
+    
   end
   
   
   private
+    def form_element(content)
+      params = {
+        'action' => @action,
+        'method' => 'post',
+        'enctype' => 'multipart/form-data',
+        'data-remote' => (!!@remote).to_s,
+        'id' => @id
+      }.merge(@params)
+    
+      elements = [
+        Hpricot::Text.new(content),
+        Hpricot::Elem.new('input', {type: 'hidden', name: '_method', value: @method})
+      ]
+    
+      if @success_function
+        params['data-success-function'] = "#{@id}_success"
+        elements << Hpricot::Text.new(define_callback_function('success', 'record', @success_function))
+      end
+    
+      if @errors_function
+        params['data-errors-function'] = "#{@id}_errors"
+        elements << Hpricot::Text.new(define_callback_function('errors', 'errors', @errors_function))
+      end
+    
+      if @failure_function
+        params['data-failure-function'] = "#{@id}_failure"
+        elements << Hpricot::Text.new(define_callback_function('failure', 'xhr', @failure_function))
+      end
+    
+      Hpricot::Elem.new('form', params, elements)
+    end
+    
     def render_status(name, handles, message, state, new_text, valid_text, invalid_text)
       if @status_template
         element = Ember::Template.content_from_block(@status_template, name, message, state).join

@@ -1,9 +1,10 @@
 class Section < Array
   attr_reader :name
   
-  def initialize(name)
-    @name = name
+  def initialize(name, initial_fields=[])
     super()
+    @name = name
+    push(*initial_fields)
   end
   
   def display?
