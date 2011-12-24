@@ -192,6 +192,9 @@ class FormBuilder
     @record
   end
   
+  def prefix
+    @prefix
+  end
   
   def label(name, text=nil, options={})
     text ||= name.to_s.humanize
@@ -268,8 +271,6 @@ class FormBuilder
     # render a default form
     if @block.nil?
       if @embedded_record
-        puts "Rendering form for embedded record with fields:"
-        p @record.field_sections[nil]
         form_for_section(@record.field_sections[nil])
       else
         form_element(@record.field_sections[nil])

@@ -57,6 +57,29 @@ class ManyEmbeddedAssociation < Association
     raise "ManyEmbedded values must be enumerable (#{name})" unless value.respond_to?(:each)
     EmbeddedRecordArray.new(record, self, all(value, record))
   end
+  
+  def from_json(value, record)
+    # TODO: change to constructing a new array here instead of removing elements at the end
+    store = record.get(name)
+    existing_records = store.each_with_object({}) {|record, ids| ids[record.id.to_s] = record}
+    
+    # update and add existing/new records
+    value.each do |new_record|
+      next unless new_record.is_a?(Hash)
+      new_record_id = new_record['_id']
+      new_record.delete('_id')
+      if existing_records.key?(new_record_id)
+        existing_records[new_record_id].from_json(new_record)
+        existing_records.delete(new_record_id)
+      else
+        process_json_item(new_record, store, record).save
+      end
+    end
+    
+    # any remaining ids in existing_records were deleted
+    existing_records.values.each(&:destroy)
+    record.get(name)
+  end
 end
 
 Field::TYPES['many_embedded'] = ManyEmbeddedAssociation

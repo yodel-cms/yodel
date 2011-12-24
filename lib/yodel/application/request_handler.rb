@@ -11,7 +11,7 @@ class RequestHandler
     env['rack.session']['a'] = 1
 
     # split the request path into a standard path and trailing file extension if present
-    components = PATH_FORMAT_REGEX.match(request.path)
+    components = PATH_FORMAT_REGEX.match(request.path.downcase)
     return fail_with "Unable to parse request path: #{request.path}" if components.nil?
     path, format = components.captures
     path = path[0...-1] if path.end_with?('/') && path.length != 1

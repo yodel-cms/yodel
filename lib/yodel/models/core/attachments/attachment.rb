@@ -22,7 +22,13 @@ class Attachment
   end
   
   def relative_directory_path
-    @relative_directory_path ||= File.join(@field.name, @record.id.to_s)
+    @relative_directory_path ||= begin
+      if @record.is_a?(EmbeddedRecord)
+        File.join("#{@record.embedded_field.name}_#{@field.name}", @record.parent_record.id.to_s, @record.id.to_s)
+      else
+        File.join(@field.name, @record.id.to_s)
+      end
+    end
   end
   
   def path

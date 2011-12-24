@@ -9,6 +9,18 @@ class EmbeddedRecord < AbstractRecord
     super(values, new_record)
   end
   
+  def id
+    @values['_id']
+  end
+  
+  def set_id(new_id)
+    @values['_id'] = new_id
+  end
+
+  def default_values
+    super.merge({'_id' => PrimaryKeyFactory.pk})
+  end
+  
   def site
     parent_record.site
   end

@@ -274,6 +274,7 @@ class AbstractRecord
 
   def update(values, do_save=true)
     raise DestroyedRecord if destroyed?
+    return if values.empty?
     values.stringify_keys!
     values.each do |name, value|
       ensure_field_is_valid(name)
