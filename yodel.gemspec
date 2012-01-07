@@ -35,12 +35,12 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'linguistics',     '~> 1.0.9'
 
   # extensions
-  s.add_runtime_dependency 'yodel_admin',     '0.0.6'
-  s.add_runtime_dependency 'yodel_queue',     '0.0.6'
-  s.add_runtime_dependency 'yodel_blog',      '0.0.6'
-  s.add_runtime_dependency 'yodel_shop',      '0.0.6'
+  s.add_runtime_dependency 'yodel_admin',     '0.0.7'
+  s.add_runtime_dependency 'yodel_queue',     '0.0.7'
+  s.add_runtime_dependency 'yodel_blog',      '0.0.7'
+  s.add_runtime_dependency 'yodel_shop',      '0.0.7'
   
   # environment support sites
-  s.add_runtime_dependency 'yodel_development_environment', '0.0.6'
-  s.add_runtime_dependency 'yodel_production_environment',  '0.0.6'
+  s.add_runtime_dependency 'yodel_development_environment', '0.0.7'
+  s.add_runtime_dependency 'yodel_production_environment',  '0.0.7'
 end
