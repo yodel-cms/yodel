@@ -3,6 +3,10 @@ class AttachmentField < Field
     :file
   end
   
+  def default
+    Attachment.new({}, nil, self).to_hash
+  end
+  
   def untypecast(value, record)
     # expecting an Attachment object, or a hash of the original data
     value.to_hash

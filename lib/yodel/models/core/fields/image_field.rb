@@ -3,6 +3,10 @@ class ImageField < AttachmentField
     :image
   end
   
+  def default
+    Image.new({}, nil, self).to_hash
+  end
+  
   def typecast(value, record)
     Image.new(value, record, self)
   end
