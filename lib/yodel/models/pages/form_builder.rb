@@ -106,6 +106,11 @@ class FormBuilder
       true_text     = options.delete(:true) || 'Yes'
       false_text    = options.delete(:false) || 'No'
       element = build_element(:span, {}, [true_text, true_button, false_text, false_button])
+    
+    when :checkbox
+      hidden_value = build_element(:input, {type: 'hidden', name: input_name, value: (value ? 'true' : 'false')})
+      checkbox = build_element(:input, {type: 'checkbox'}.merge(condition('checked', value, ['true', true])))
+      element = build_element(:span, {}, [hidden_value, checkbox])
       
     when :enum
       element = build_select(value, field.options['options'], show_blank: field.show_blank, blank_text: field.blank_text)

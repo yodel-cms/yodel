@@ -1,6 +1,6 @@
 class BooleanField < Field
   def default_input_type
-    :radio
+    :checkbox
   end
   
   def json_action(action, value, record)
