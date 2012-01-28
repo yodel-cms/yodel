@@ -73,6 +73,14 @@ class ChangeSensitiveArray
     @array.include?(item)
   end
   
+  def blank?
+    @array.blank?
+  end
+  
+  def present?
+    @array.present?
+  end
+  
   def method_missing(name, *args, &block)
     notify! if name.to_s.end_with?('!')
     @array.send(name, *args, &block)

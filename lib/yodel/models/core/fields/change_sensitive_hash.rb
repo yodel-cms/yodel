@@ -34,6 +34,14 @@ class ChangeSensitiveHash
     @hash[key] = value
   end
   
+  def blank?
+    @array.blank?
+  end
+  
+  def present?
+    @array.present?
+  end
+  
   def method_missing(name, *args, &block)
     notify! if name.to_s.end_with?('!')
     @hash.send(name, *args, &block)
