@@ -347,7 +347,7 @@ class Record < SiteRecord
         return value unless value.blank?
       end
     end
-    ''
+    nil
   end
   
   

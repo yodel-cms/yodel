@@ -11,7 +11,7 @@ class Model < SiteRecord
   # Fields
   # ----------------------------------------
   field :name, :string, validations: {required: {}}
-  field :record_fields, :fields, validations: {required: {}}
+  field :record_fields, :fields
   field :triggers, :array
   field :functions, :hash
   field :icon, :string, inherited: true
