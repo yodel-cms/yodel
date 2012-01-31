@@ -25,7 +25,7 @@ class Site < MongoRecord
     @cached_models['Trigger'] = @cached_models['triggers']  = Trigger.scoped_for(self)
     @cached_models['Task']    = @cached_models['tasks']     = Task.scoped_for(self)
   end
-  
+    
   
   # ----------------------------------------
   # Accessors

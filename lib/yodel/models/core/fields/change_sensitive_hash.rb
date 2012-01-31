@@ -35,11 +35,11 @@ class ChangeSensitiveHash
   end
   
   def blank?
-    @array.blank?
+    @hash.blank?
   end
   
   def present?
-    @array.present?
+    @hash.present?
   end
   
   def method_missing(name, *args, &block)
