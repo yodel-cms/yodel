@@ -8,7 +8,7 @@ class StringField < Field
   end
 
   def from_json(value, record)
-    value.to_s
+    value.to_s.force_encoding("UTF-8")
   end
 end
 
