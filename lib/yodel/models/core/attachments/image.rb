@@ -30,7 +30,7 @@ class Image < Attachment
       command = "#{Yodel.config.convert_path} #{escaped_path} "
       command += "-crop '#{w}x#{h}+#{(iw-w)/2}+#{(ih-h)/2}' "
       command += "-resize '#{sw}x#{sh}' "
-      command += "-quality #{Yodel.config.image_quality} "
+      command += "-quality #{@record.site.option('images.image_quality')} "
       command += resized_image_path(size_name, false).to_s
       result = `#{command}`
       raise "Error converting image: #{result}" unless result.empty?
