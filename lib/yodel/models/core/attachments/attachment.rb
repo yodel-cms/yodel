@@ -14,11 +14,15 @@ class Attachment
   end
     
   def url
-    @url ||= Pathname.new('/').join(Yodel::ATTACHMENTS_DIRECTORY_NAME, relative_path)
+    @url ||= if @name.present?
+      Pathname.new('/').join(Yodel::ATTACHMENTS_DIRECTORY_NAME, relative_path)
+    else
+      ''
+    end
   end
   
   def relative_path
-    @relative_path ||= File.join(relative_directory_path, @name)
+    @relative_path ||= File.join(relative_directory_path, @name.to_s)
   end
   
   def relative_directory_path
