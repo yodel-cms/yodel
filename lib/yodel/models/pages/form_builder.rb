@@ -116,7 +116,7 @@ class FormBuilder
       element = build_select(value, field.options['options'], show_blank: field.show_blank, blank_text: field.blank_text)
       
     when :store_one
-      element = build_select(value, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
+      element = build_select(value.try(:id).to_s, field.record_options(@record), show_blank: field.show_blank, blank_text: field.blank_text, group_by: field.group_by, name_field: 'name', value_field: 'id')
       
     when :store_many
       element = build_select(value.collect(&:id), field.record_options(@record), show_blank: false, name_field: 'name', value_field: 'id', multiple: true)

@@ -3,8 +3,10 @@ class RedirectPage < Page
     with :html do
       if url?
         response.redirect url
-      else
+      elsif page?
         response.redirect page.path
+      else
+        response.redirect '/'
       end
     end
   end

@@ -14,6 +14,7 @@ class Email < Record
   end
   
   def perform_delivery(options)
+    # TODO: validate at least to and from exist
     mail = Mail.new
     
     # retrieve records that were replaced with their ID as above
