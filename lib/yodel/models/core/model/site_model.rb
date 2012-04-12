@@ -12,6 +12,6 @@ module SiteModel
   end
   
   def load(site, values)
-    new(site, values)
+    new(site, values, false)
   end
 end
