@@ -49,9 +49,9 @@ class Model < SiteRecord
   one   :new_child_page, model: :page, inherited: true
   
   
-  def initialize(site, values={})
+  def initialize(site, values={}, new_record=true)
     @cached_records_by_name = {}
-    super
+    super(site, values, new_record)
     @unscoped     = Record.scoped(site, self)
     @scope        = Record.scoped(site, self, 'model' => get_raw('descendants'))
     @record_class = Object.module_eval(get_raw('record_class_name'))
