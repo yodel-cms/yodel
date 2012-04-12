@@ -5,7 +5,7 @@ Encoding.default_external = "utf-8"
 class CommandRunner
   def self.run
     OptionParser.new do |opts|
-      opts.banner = "Usage: yodel [options] server|dns|restart|console|migrate|deploy|setup|update"
+      opts.banner = "Usage: yodel [options] server|dns|restart|console|queue|migrate|deploy|setup|update"
       opts.on('-p', '--port PORT', Integer, 'Override the default web server port') do |port|
         $web_port = port
       end
@@ -69,7 +69,13 @@ class CommandRunner
       Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       $application = Application.new
       IRB.start(__FILE__)
-  
+    
+    when 'queue'
+      require '../../yodel'
+      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
+      $application = Application.new
+      QueueDaemon.run
+      
     when 'migrate'
       require '../../yodel'
       Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
