@@ -24,7 +24,7 @@ class TaskQueue
       return nil
     end
     
-    Task.new(site, document)
+    Task.new(site, document, false)
   rescue Mongo::OperationFailure
     return nil
   end
