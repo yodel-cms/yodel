@@ -73,6 +73,7 @@ class CommandRunner
     when 'deploy'
       require '../../yodel'
       require './deploy'
+      $env = 'production' # override env since deploys only happen in production
       setup!
       Deploy.new.deploy_site      
   
