@@ -38,15 +38,7 @@ class CommandRunner
     case command
     when 'server'
       require '../requires'
-      
-      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
-      Yodel.config.web_port = $web_port if $web_port
-      
-      if $env == 'production'
-        Yodel.env.production!
-      else
-        Yodel.env.development!
-      end
+      setup!(false)
       
       if $reload
         require '../middleware/development_server'
@@ -65,27 +57,23 @@ class CommandRunner
     when 'console'
       require '../../yodel'
       require 'irb'
-      
-      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
-      $application = Application.new
+      setup!
       IRB.start(__FILE__)
     
     when 'queue'
       require '../../yodel'
-      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
-      $application = Application.new
+      setup!
       QueueDaemon.run
       
     when 'migrate'
       require '../../yodel'
-      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
-      $application = Application.new
+      setup!
       Migration.run_migrations_for_all_sites
     
     when 'deploy'
       require '../../yodel'
-      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
       require './deploy'
+      setup!
       Deploy.new.deploy_site      
   
     when 'setup'
@@ -103,8 +91,7 @@ class CommandRunner
     when 'update'
       require '../../yodel'
       require './restart'
-      Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
-      $application = Application.new
+      setup!
       
       Migration.copy_missing_migrations_for_all_sites
       Migration.run_migrations_for_all_sites
@@ -113,5 +100,12 @@ class CommandRunner
     else
       puts "Unknown command: #{command}"  
     end
+  end
+  
+  def self.setup!(create_application = true)
+    Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
+    Yodel.config.web_port = $web_port if $web_port
+    $env == 'production' ? Yodel.env.production! : Yodel.env.development!
+    $application = Application.new if create_application
   end
 end

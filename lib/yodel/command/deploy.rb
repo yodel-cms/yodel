@@ -1,6 +1,5 @@
 class Deploy
   def initialize
-    @application = Application.new
     @site_id = ARGV.shift
   end
   
