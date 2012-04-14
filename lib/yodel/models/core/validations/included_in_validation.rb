@@ -1,10 +1,6 @@
 class IncludedInValidation < Validation
-  def self.validate(params, field, name, value, record, errors)
-    valid_values = params['valid_values']
-    errors[field.name] << new(valid_values) unless valid_values.include?(value)
-  end
-
-  def describe
-    "must be one of: #{params.join(', ')}"
+  validate do
+    allowed_values = params['valid_values']
+    invalidate_with("must be one of: #{allowed_values.join(', ')}") unless allowed_values.include?(value)
   end
 end

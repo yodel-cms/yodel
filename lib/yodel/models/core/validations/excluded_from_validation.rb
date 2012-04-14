@@ -1,10 +1,6 @@
 class ExcludedFromValidation < Validation
-  def self.validate(params, field, name, value, record, errors)
+  validate do
     prohibited_values = params['prohibited_values']
-    errors[field.name] << new(prohibited_values) if prohibited_values.include?(value)
-  end
-
-  def describe
-    "must not be: #{params.join(', ')}"
+    invalidate_with("must not be: #{prohibited_values.join(', ')}") if prohibited_values.include?(value)
   end
 end

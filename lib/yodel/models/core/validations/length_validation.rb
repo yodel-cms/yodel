@@ -1,28 +1,24 @@
 class LengthValidation < Validation
-  def self.validate(params, field, name, value, record, errors)
-    length = params['length']
-    min, max = length
+  validate do
+    min, max = params['length']
+    size = value.try(:size) || 0
   
     if min == 0
-      valid = (value.size <= max)
+      valid = (size <= max)
     elsif max == 0
-      valid = (value.size >= min)
+      valid = (size >= min)
     else
-      valid = (value.size >= min) && (value.size <= max)
+      valid = (size >= min) && (size <= max)
     end
   
-    errors[field.name] << new(length) unless valid
-  end
-
-  def describe
-    min, max = params
-
-    if min == 0
-      "is too long (maximum length is #{max})"
-    elsif max == 0
-      "is too short (minimum length is #{min})"
-    else
-      "must be between #{min} and #{max}"
+    unless valid
+      if min == 0
+        invalidate_with("is too long (maximum length is #{max})")
+      elsif max == 0
+        invalidate_with("is too short (minimum length is #{min})")
+      else
+        invalidate_with("must be between #{min} and #{max}")
+      end
     end
   end
 end

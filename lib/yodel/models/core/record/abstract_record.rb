@@ -12,7 +12,7 @@ class AbstractRecord
     @typecast = {} # typecast versions of original document values
     @changed  = {} # typecast versions of changed values
     @stash    = {} # values of unknown fields set by from_json
-    @errors   = Errors.new
+    @errors   = ValidationErrors.new(self)
     @new      = new_record
   end
   
@@ -351,9 +351,9 @@ class AbstractRecord
     run_validation_callbacks do
       @errors.clear
       unless new?
-        @changed.each {|name, value| field(name).validate(self, @errors)}
+        @errors.run_validations(@changed.keys.collect {|name| field(name)})
       else
-        fields.each {|name, field| field.validate(self, @errors)}
+        @errors.run_validations(fields.values)
       end
     end
     @errors.empty?

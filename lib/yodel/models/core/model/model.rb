@@ -65,45 +65,14 @@ class Model < SiteRecord
   # ----------------------------------------
   # Callbacks
   # ----------------------------------------
-  # TODO: use loops like in abstract record to write these functions
-  def run_record_before_validation_callbacks(record)
-    record_before_validation_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_after_validation_callbacks(record)
-    record_after_validation_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_before_save_callbacks(record)
-    record_before_save_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_after_save_callbacks(record)
-    record_after_save_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_before_create_callbacks(record)
-    record_before_create_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-
-  def run_record_after_create_callbacks(record)
-    record_after_create_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_before_update_callbacks(record)
-    record_before_update_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_after_update_callbacks(record)
-    record_after_update_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_before_destroy_callbacks(record)
-    record_before_destroy_callbacks.each {|fn| Function.new(fn).execute(record)}
-  end
-  
-  def run_record_after_destroy_callbacks(record)
-    record_after_destroy_callbacks.each {|fn| Function.new(fn).execute(record)}
+  AbstractRecord::CALLBACKS.each do |callback|
+    AbstractRecord::ORDERS.each do |order|
+      eval "
+        def run_record_#{order}_#{callback}_callbacks(record)
+          record_#{order}_#{callback}_callbacks.each {|fn| Function.new(fn).execute(record)}
+        end
+      "
+    end
   end
 
   
@@ -236,21 +205,14 @@ class Model < SiteRecord
     return true if group.nil?
     group.permitted?(user, record)
   end
-
-  def user_allowed_to_view?(user, record)
-    user_allowed_to?(user, :view, record)
-  end
-
-  def user_allowed_to_update?(user, record)
-    user_allowed_to?(user, :update, record)
-  end
-
-  def user_allowed_to_delete?(user, record)
-    user_allowed_to?(user, :delete, record)
-  end
-
-  def user_allowed_to_create?(user, record)
-    user_allowed_to?(user, :create, record)
+  
+  ACTIONS = %w{view update delete create}
+  ACTIONS.each do |action|
+    eval "
+      def user_allowed_to_#{action}?(user, record)
+        user_allowed_to?(user, :#{action}, record)
+      end
+    "
   end
   
   
@@ -265,7 +227,6 @@ class Model < SiteRecord
   end
   
   # TODO: ensure field name != a public method name
-  
   def add_field(name, type, options={})
     name = name.to_s
     
@@ -303,7 +264,6 @@ class Model < SiteRecord
   
   
   # TODO: modify versions of the association methods
-  
   def add_embed_many(name, options={}, &block)
     embedded_field = add_field(name, 'many_embedded', options)
     embedded_field.instance_exec(embedded_field, &block) if block_given?

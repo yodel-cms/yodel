@@ -4,17 +4,16 @@ class PasswordField < StringField
     :password
   end
   
-  def validate(record, errors)
-    PasswordConfirmationValidation.validate(nil, self, name, nil, record, errors)
-    super
-  end
-  
   def from_json(value, record)
     if value.blank?
       throw :ignore_value
     else
       value.to_s
     end
+  end
+  
+  def validations
+    super.merge({password_confirmation: {}})
   end
 end
 

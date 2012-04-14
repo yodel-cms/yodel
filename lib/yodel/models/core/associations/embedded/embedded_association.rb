@@ -13,13 +13,12 @@ module EmbeddedAssociation
     @options.merge({'fields' => fields_field.untypecast(fields, nil)})
   end
   
-  def validate(record, errors)
-    EmbeddedRecordsValidation.validate(self, record.get(name), record, errors)
-    super(record, errors)
-  end
-  
   def default_input_type
     :embedded
+  end
+  
+  def validations
+    super.merge({embedded_records: {}})
   end
   
   private

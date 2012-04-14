@@ -65,18 +65,13 @@ class Field
   def include_in_search_keywords?
     @options.key?('include_in_search_keywords')
   end
+  
+  def validations
+    @options['validations'] || {}
+  end
 
   def method_missing(name, *args, &block)
     @options[name.to_s]
-  end
-
-  def validate(record, errors)
-    return if @options['validations'].blank?
-    value = record.get(name)
-    field_name = name.humanize
-    @options['validations'].each do |type, params|
-      Validation.validate(type, params, self, field_name, value, record, errors)
-    end
   end
   
   def default_input_type

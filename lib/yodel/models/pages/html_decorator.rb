@@ -127,10 +127,6 @@ module HTMLDecorator
     end
   end
   
-  # TODO: determine whether the initial search (Hpricot(text).children) should
-  # be changed to Hpricot(text).search('/p'), i.e should paragraphs_from return
-  # only p tags, or all child tags. This is dependent on the WYSIWYG editor -
-  # does it wrap <ul>s etc. in <p>s first, or are they top level elements?
   def paragraphs_from(index, options={})
     text = self.send(options[:field] || :content)
     paragraphs = Hpricot(text).children

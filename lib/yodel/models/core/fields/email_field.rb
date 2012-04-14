@@ -1,10 +1,7 @@
 class EmailField < StringField
-  
-  def validate(record, errors)
-    EmailAddressValidation.validate(nil, self, name, record.get(name), record, errors)
-    super
+  def validations
+    super.merge({email_address: {}})
   end
-  
 end
 
 Field::TYPES['email'] = EmailField

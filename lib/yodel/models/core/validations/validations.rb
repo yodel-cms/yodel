@@ -1,15 +1,7 @@
 Dir.chdir(File.dirname(__FILE__)) do
   require './validation'
-  require './email_address_validation'
-  require './embedded_records_validation'
-  require './errors'
-  require './excluded_from_validation'
-  require './excludes_combinations_validation'
-  require './format_validation'
-  require './included_in_validation'
-  require './includes_combinations_validation'
-  require './length_validation'
-  require './password_confirmation_validation'
-  require './required_validation'
-  require './unique_validation'
+  require './validation_errors'
+  Dir['*_validation.rb'].each do |validation|
+    require "./#{validation}"
+  end
 end

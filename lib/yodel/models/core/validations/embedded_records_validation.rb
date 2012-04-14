@@ -1,31 +1,23 @@
 class EmbeddedRecordsValidation < Validation
-  def initialize(params, errors)
-    super(params)
-    @errors = errors
-  end
-  
-  def self.validate(field, records, record, errors)
+  validate do
     # embedded record validations
-    records = [records] unless records.respond_to?(:to_a)
-    embedded_errors = Errors.new
-    records.to_a.each_with_index do |embedded_record, index|
-      embedded_errors[index] = embedded_record.valid? ? nil : embedded_record.errors
+    records = value.respond_to?(:to_a) ? value.to_a : [value]
+    records.each do |embedded_record|
+      add_embedded_errors(embedded_record) unless embedded_record.valid?
     end
     
-    # field set validations
-    field.fields.each do |name, embedded_field|
-      next unless embedded_field.set_validations
-      set_value = records.to_a.collect {|embedded| embedded.get(name)}.uniq
-      embedded_field.set_validations.each do |type, params|
-        Validation.validate(type, params, embedded_field, name, set_value, record, embedded_errors)
-      end
+    # field set validations - validations that apply over the set of values
+    # of a field in a group of embedded records. e.g out of all values of
+    # colour, red and green cannot both exist in a group of embedded recs.
+    embedded_fields = []
+    field_set_values = []
+    
+    field.fields.each do |field_name, embedded_field|
+      next unless embedded_field.set_validations.present?
+      embedded_fields << embedded_field
+      field_set_values << Set.new(records.collect {|embedded| embedded.get(field_name)}).to_a
     end
     
-    errors[field.name] = embedded_errors unless embedded_errors.empty?
-  end
-
-  def describe
-    # FIXME: don't just call inspect here, format correctly using describe calls
-    "has these errors: #{@errors.inspect}}"
+    run_validations(embedded_fields, :set_validations, field_set_values)
   end
 end
