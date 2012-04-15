@@ -94,8 +94,9 @@ class AbstractRecord
     @values.to_json(*a)
   end
 
-  def from_json(values)
+  def from_json(values, do_save=true)
     values.each do |name, value|
+      
       if field?(name)
         current_field = field(name)
         raise MassAssignment, "Cannot mass assign #{field}" if current_field.protected?
@@ -115,7 +116,7 @@ class AbstractRecord
       end
     end
     
-    save
+    save if do_save
   end
 
 
