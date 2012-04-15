@@ -251,7 +251,7 @@ class AbstractRecord
           end
           typecast[name] = value
         end
-        
+          
         succeeded = perform_save
       end
     end

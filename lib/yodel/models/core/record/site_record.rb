@@ -22,7 +22,7 @@ class SiteRecord < MongoRecord
   
   def perform_reload(params)
     document = load_mongo_document(_id: params[:id])
-    initialize(params[:site], document)
+    initialize(params[:site], document, false)
   end
   
   def prepare_reload_params

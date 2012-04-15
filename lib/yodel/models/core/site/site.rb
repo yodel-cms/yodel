@@ -85,6 +85,18 @@ class Site < MongoRecord
     @migrations_dir ||= File.join(root_directory, Yodel::MIGRATIONS_DIRECTORY_NAME)
   end
   
+  def site_migrations_directory
+    @site_migrations_dir ||= File.join(migrations_directory, Yodel::SITE_MIGRATIONS_DIRECTORY_NAME)
+  end
+  
+  def extensions_migrations_directory
+    @extensions_migrations_dir ||= File.join(migrations_directory, Yodel::EXTENSION_MIGRATIONS_DIRECTORY_NAME)
+  end
+  
+  def yodel_migrations_directory
+    @yodel_migrations_dir ||= File.join(migrations_directory, Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME)
+  end
+  
   def attachments_directory
     @attachments_dir ||= File.join(root_directory, Yodel::ATTACHMENTS_DIRECTORY_NAME)
   end
@@ -181,29 +193,29 @@ class Site < MongoRecord
     
     # find an unused site directory
     identifier = cleanse_name(name)
-    site_folder = find_unused_site_dir(identifier)
+    site_dir = find_unused_site_dir(identifier)
     
     # clone the repos locally  
     Dir.chdir(Yodel.config.sites_root) do
-      result = `#{Yodel.config.git_path} clone -o #{GIT_REMOTE_NAME} #{git_url} #{site_folder}`
+      result = `#{Yodel.config.git_path} clone -o #{GIT_REMOTE_NAME} #{git_url} #{site_dir}`
       return "Git error: #{$1}" if result =~ /error: (.+)$/
     end
     
     # the attachments directory is in .gitignore
-    Dir.mkdir(File.join(site_folder, Yodel::ATTACHMENTS_DIRECTORY_NAME))
+    Dir.mkdir(File.join(site_dir, Yodel::ATTACHMENTS_DIRECTORY_NAME))
     
     # when running as a daemon, the root user will own the cloned repos
     Dir.chdir(Yodel.config.sites_root) do
       return unless Yodel.config.owner_user
       if Yodel.config.owner_group != 0
-        FileUtils.chown_R(Yodel.config.owner_user, Yodel.config.owner_group, site_folder)
+        FileUtils.chown_R(Yodel.config.owner_user, Yodel.config.owner_group, site_dir)
       else
-        FileUtils.chown_R(Yodel.config.owner_user, nil, site_folder)
+        FileUtils.chown_R(Yodel.config.owner_user, nil, site_dir)
       end
     end
     
     # create a new site from the cloned site.yml file
-    site_yml = File.join(Yodel.config.sites_root, site_folder, Yodel::SITE_YML_FILE_NAME)
+    site_yml = File.join(site_dir, Yodel::SITE_YML_FILE_NAME)
     return 'Site yml file was not cloned successfully' unless File.exist?(site_yml)
     new_site = Site.new(YAML.load_file(site_yml)).tap do |site|
       site.root_directory = File.dirname(site_yml)
@@ -240,11 +252,10 @@ class Site < MongoRecord
     new_site.domains << find_unused_domain(identifier)
 
     # copy core yodel migrations
-    yodel_migrations_dir = File.join(site_dir, Yodel::Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME, Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME)
-    FileUtils.cp_r(Yodel.config.yodel_migration_directory, yodel_migrations_dir)
+    FileUtils.cp_r(Yodel.config.yodel_migration_directory, new_site.yodel_migrations_directory)
 
     # copy extension migrations
-    extension_migrations_dir = File.join(site_dir, Yodel::MIGRATIONS_DIRECTORY_NAME, Yodel::EXTENSION_MIGRATIONS_DIRECTORY_NAME)
+    extension_migrations_dir = new_site.extensions_migrations_directory
     Yodel.config.extensions.each do |extension|
       if File.directory?(extension.migrations_dir)
         FileUtils.cp_r(extension.migrations_dir, File.join(extension_migrations_dir, extension.name))
@@ -301,13 +312,13 @@ class Site < MongoRecord
     end
     
     def find_unused_site_dir(name)
-      site_folder = name
+      site_dir = name
       counter = 0
-      while File.exist?(File.join(Yodel.config.sites_root, site_folder))
+      while File.exist?(File.join(Yodel.config.sites_root, site_dir))
         counter += 1
-        site_folder = "#{name}-#{counter}"
+        site_dir = "#{name}-#{counter}"
       end
-      site_folder
+      File.join(Yodel.config.sites_root, site_dir)
     end
     
     def find_unused_domain(name)

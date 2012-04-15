@@ -1,11 +1,12 @@
 require 'optparse'
 Dir.chdir(File.dirname(__FILE__))
 Encoding.default_external = "utf-8"
+COMMANDS = "server|dns|restart|console|queue|migrate|deploy|setup|update"
 
 class CommandRunner
   def self.run
     OptionParser.new do |opts|
-      opts.banner = "Usage: yodel [options] server|dns|restart|console|queue|migrate|deploy|setup|update"
+      opts.banner = "Usage: yodel [options] #{COMMANDS}"
       opts.on('-p', '--port PORT', Integer, 'Override the default web server port') do |port|
         $web_port = port
       end
@@ -99,8 +100,8 @@ class CommandRunner
       Restart.restart! if Restart.can_restart?
       
     else
-      if command.blank?
-        puts "No command given"
+      if command.nil?
+        puts "No command given. Please enter one of: #{COMMANDS}"
       else
         puts "Unknown command: #{command}"
       end

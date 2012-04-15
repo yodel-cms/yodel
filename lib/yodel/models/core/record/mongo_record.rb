@@ -43,7 +43,7 @@ class MongoRecord < AbstractRecord
   
   def perform_reload(params)
     document = load_mongo_document(_id: params[:id])
-    initialize(document)
+    initialize(document, false)
   end
 
   def load_mongo_document(scope)

@@ -38,7 +38,7 @@ class Record < SiteRecord
   
   def perform_reload(params)
     document = load_mongo_document(_id: params[:id])
-    initialize(params[:model], params[:site], document)
+    initialize(params[:model], params[:site], document, false)
   end
   
   def prepare_reload_params

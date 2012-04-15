@@ -1,49 +1,6 @@
-require 'helper'
-
 # ----------------------------------------------------------------------
 # models used for each validation
 # ----------------------------------------------------------------------
-class RequiredValidationTestModel < MongoRecord
-  field :name, :string, validations: {required: {}}
-end
-
-class FormatValidationTestModel < MongoRecord
-  field :formatted, :string, validations: {format: {format: /a\d+z/}}
-end
-
-class EmailAddressValidationTestModel < MongoRecord
-  field :email, :email
-end
-
-class MinLengthValidationTestModel < MongoRecord
-  field :year, :string, validations: {length: {length: [4,0]}}
-end
-
-class MaxLengthValidationTestModel < MongoRecord
-  field :age, :string, validations: {length: {length: [0,3]}}
-end
-
-class LengthRangeValidationTestModel < MongoRecord
-  field :postcode, :string, validations: {length: {length: [3,4]}}
-end
-
-class IncludedInValidationTestModel < MongoRecord
-  field :gender, :string, validations: {included_in: {valid_values: %w{m f n/a}}}
-end
-
-class ExcludedFromValidationTestModel < MongoRecord
-  field :colour, :string, validations: {excluded_from: {prohibited_values: %w{red green blue}}}
-end
-
-class IncludesCombinationsValidationTestModel < MongoRecord
-  field :colours, :array, validations: {includes_combinations: {combinations: [%w{red green}, %w{green blue}]}}
-end
-
-class ExcludesCombinationsValidationTestModel < MongoRecord
-  field :colours, :array, validations: {excludes_combinations: {combinations: [%w{red green}, %w{green blue}]}}
-end
-
-
 class TestValidations < Test::Unit::TestCase
   context "Standard validations" do
     setup do
@@ -71,13 +28,13 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Required validation" do
     should "fail when no value is present" do
-      record = RequiredValidationTestModel.new
+      record = $test_site.required_validation_test_models.new
       assert !record.valid?
       assert record.errors.key?('name')
     end
     
     should "pass when a value is present" do
-      record = RequiredValidationTestModel.new
+      record = $test_site.required_validation_test_models.new
       record.name = 'Name'
       assert record.valid?
     end
@@ -89,20 +46,20 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Format validation" do
     should "fail when value is blank" do
-      record = FormatValidationTestModel.new
+      record = $test_site.format_validation_test_models.new
       assert !record.valid?
       assert record.errors.key?('formatted')
     end
     
     should "fail when value format is incorrect" do
-      record = FormatValidationTestModel.new
+      record = $test_site.format_validation_test_models.new
       record.formatted = 'b123z'
       assert !record.valid?
       assert record.errors.key?('formatted')
     end
     
     should "pass when value format is correct" do
-      record = FormatValidationTestModel.new
+      record = $test_site.format_validation_test_models.new
       record.formatted = 'a123z'
       assert record.valid?
     end
@@ -114,20 +71,20 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Email address validation" do
     should "fail when value is blank" do
-      record = EmailAddressValidationTestModel.new
+      record = $test_site.email_address_validation_test_models.new
       assert !record.valid?
       assert record.errors.key?('email')
     end
     
     should "fail when value is not an email address" do
-      record = EmailAddressValidationTestModel.new
+      record = $test_site.email_address_validation_test_models.new
       record.email = 'hello'
       assert !record.valid?
       assert record.errors.key?('email')
     end
     
     should "pass when value is an email address" do
-      record = EmailAddressValidationTestModel.new
+      record = $test_site.email_address_validation_test_models.new
       record.email = 'user@host.com'
       assert record.valid?
     end
@@ -139,7 +96,7 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Max length validation" do
     should "fail when value length is too long" do
-      record = MaxLengthValidationTestModel.new
+      record = $test_site.max_length_validation_test_models.new
       record.age = '9999'
       assert !record.valid?
       assert record.errors.key?('age')
@@ -147,7 +104,7 @@ class TestValidations < Test::Unit::TestCase
     end
     
     should "pass when value length is less than the maximum length" do
-      record = MaxLengthValidationTestModel.new
+      record = $test_site.max_length_validation_test_models.new
       record.age = '50'
       assert record.valid?
     end
@@ -155,7 +112,7 @@ class TestValidations < Test::Unit::TestCase
   
   context "Min length validation" do
     should "fail when value length is too short" do
-      record = MinLengthValidationTestModel.new
+      record = $test_site.min_length_validation_test_models.new
       record.year = '200'
       assert !record.valid?
       assert record.errors.key?('year')
@@ -163,7 +120,7 @@ class TestValidations < Test::Unit::TestCase
     end
     
     should "pass when value length is greater than the minimum length" do
-      record = MinLengthValidationTestModel.new
+      record = $test_site.min_length_validation_test_models.new
       record.year = '2012'
       assert record.valid?
     end
@@ -171,7 +128,7 @@ class TestValidations < Test::Unit::TestCase
   
   context "Length range validation" do
     should "fail when value length is too short" do
-      record = LengthRangeValidationTestModel.new
+      record = $test_site.length_range_validation_test_models.new
       record.postcode = '10'
       assert !record.valid?
       assert record.errors.key?('postcode')
@@ -179,7 +136,7 @@ class TestValidations < Test::Unit::TestCase
     end
     
     should "fail when value length is too long" do
-      record = LengthRangeValidationTestModel.new
+      record = $test_site.length_range_validation_test_models.new
       record.postcode = '12345'
       assert !record.valid?
       assert record.errors.key?('postcode')
@@ -187,7 +144,7 @@ class TestValidations < Test::Unit::TestCase
     end
     
     should "pass when value length is within the length range" do
-      record = LengthRangeValidationTestModel.new
+      record = $test_site.length_range_validation_test_models.new
       record.postcode = '2000'
       assert record.valid?
     end
@@ -199,14 +156,14 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Included in validation" do
     should "fail when value is not allowed" do
-      record = IncludedInValidationTestModel.new
+      record = $test_site.included_in_validation_test_models.new
       record.gender = 'b'
       assert !record.valid?
       assert record.errors.key?('gender')
     end
     
     should "pass when value is allowed" do
-      record = IncludedInValidationTestModel.new
+      record = $test_site.included_in_validation_test_models.new
       record.gender = 'n/a'
       assert record.valid?
     end
@@ -218,14 +175,14 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Excluded from validation" do
     should "fail when value is not allowed" do
-      record = ExcludedFromValidationTestModel.new
+      record = $test_site.excluded_from_validation_test_models.new
       record.colour = 'red'
       assert !record.valid?
       assert record.errors.key?('colour')
     end
     
     should "pass when value is allowed" do
-      record = ExcludedFromValidationTestModel.new
+      record = $test_site.excluded_from_validation_test_models.new
       record.colour = 'yellow'
       assert record.valid?
     end
@@ -237,14 +194,14 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Includes combinations in validation" do
     should "fail when value is not allowed" do
-      record = IncludesCombinationsValidationTestModel.new
+      record = $test_site.includes_combinations_validation_test_models.new
       record.colours = %w{yellow purple}
       assert !record.valid?
       assert record.errors.key?('colours')
     end
     
     should "pass when value is allowed" do
-      record = IncludesCombinationsValidationTestModel.new
+      record = $test_site.includes_combinations_validation_test_models.new
       record.colours = %w{red green}
       assert record.valid?
     end
@@ -256,16 +213,41 @@ class TestValidations < Test::Unit::TestCase
   # ----------------------------------------------------------------------
   context "Excludes combinations validation" do
     should "fail when value is not allowed" do
-      record = ExcludesCombinationsValidationTestModel.new
+      record = $test_site.excludes_combinations_validation_test_models.new
       record.colours = %w{red green}
       assert !record.valid?
       assert record.errors.key?('colours')
     end
     
     should "pass when value is allowed" do
-      record = ExcludesCombinationsValidationTestModel.new
+      record = $test_site.excludes_combinations_validation_test_models.new
       record.colours = %w{yellow purple}
       assert record.valid?
+    end
+  end
+  
+  
+  # ----------------------------------------------------------------------
+  # unique
+  # ----------------------------------------------------------------------
+  context "Unique validation" do
+    setup do
+      name_a = $test_site.unique_validation_test_models.new
+      name_a.name = 'Bob'
+      name_a.save
+    end
+    
+    should "fail when value is not unique" do
+      name_b = $test_site.unique_validation_test_models.new
+      name_b.name = 'Bob'
+      assert !name_b.valid?
+      assert name_b.errors.key?('name')
+    end
+    
+    should "pass when value is unique" do
+      name_b = $test_site.unique_validation_test_models.new
+      name_b.name = 'Smith'
+      assert name_b.valid?
     end
   end
   
