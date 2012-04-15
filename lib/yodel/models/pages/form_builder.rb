@@ -186,7 +186,7 @@ class FormBuilder
       element.set_attribute('name', input_name)
       element.set_attribute('class', class_name)
       element.set_attribute('placeholder', field.placeholder || '')
-      element.set_attribute('data-field', input_name)
+      element.set_attribute('data-field', field_name)
       options.each do |name, value|
         element.set_attribute(name.to_s, value)
       end
