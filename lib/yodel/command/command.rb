@@ -99,14 +99,19 @@ class CommandRunner
       Restart.restart! if Restart.can_restart?
       
     else
-      puts "Unknown command: #{command}"  
+      if command.blank?
+        puts "No command given"
+      else
+        puts "Unknown command: #{command}"
+      end
     end
   end
   
   def self.setup!(create_application = true)
     Yodel.config.extensions_folder = $extensions_folder if $extensions_folder
     Yodel.config.web_port = $web_port if $web_port
-    $env == 'production' ? Yodel.env.production! : Yodel.env.development!
+    Yodel.env.production! if $env == 'production'
+    Yodel.env.development! if $env == 'development'
     $application = Application.new if create_application
   end
 end
