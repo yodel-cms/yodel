@@ -43,8 +43,8 @@ class FormBuilder
   
   def field_row(name, field=nil)
     field = @record.fields[name.to_s] if field.nil?
-    html = "<div class='contains-field-type-#{field.options['type']}'>"
-    html << label(name).to_s << "<div>"
+    html = "<div class='yodel-row yodel-contains-field-type-#{field.options['type']}'>"
+    html << label(name).to_s << "<div class='yodel-row-content'>"
     
     if field.default_input_type == :embedded
       html << field(name, blank_record: true).to_s
@@ -181,11 +181,11 @@ class FormBuilder
     
     element.tap do |element|
       class_name = invalid ? 'invalid' : (@record.new? ? 'new' : 'valid')
-      class_name += " field-type-#{field.options['type']}"
-      element.set_attribute(:id, input_name.gsub(/\W/, '_'))
-      element.set_attribute(:name, input_name)
-      element.set_attribute(:class, class_name)
-      element.set_attribute(:placeholder, field.placeholder || '')
+      class_name += " yodel-field yodel-field-type-#{field.options['type']}"
+      element.set_attribute('id', input_name.gsub(/\W/, '_'))
+      element.set_attribute('name', input_name)
+      element.set_attribute('class', class_name)
+      element.set_attribute('placeholder', field.placeholder || '')
       element.set_attribute('data-field', input_name)
       options.each do |name, value|
         element.set_attribute(name.to_s, value)
@@ -276,7 +276,7 @@ class FormBuilder
     # render a default form
     if @block.nil?
       if @embedded_record
-        form_for_section(@record.field_sections[nil])
+        wrap_with_yodel_record_element(form_for_section(@record.field_sections[nil]))
       else
         form_element(@record.field_sections[nil])
       end
@@ -285,22 +285,27 @@ class FormBuilder
     else
       if @embedded_record
         buffer = Ember::Template.buffer_from_block(@block)
-        buffer << Ember::Template.content_from_block(@block, self)
+        buffer << wrap_with_yodel_record_element(Ember::Template.content_from_block(@block, self).join)
       else
         Ember::Template.wrap_content_block(@block, self) {|content| form_element(content.join)}
       end
     end
-    
   end
   
   
   private
+    def wrap_with_yodel_record_element(content)
+      "<span class='yodel-record' data-record-id='#{@record.id}'>#{content}</span>"
+    end
+    
     def form_element(content)
       params = {
         'action' => @action,
         'method' => 'post',
         'enctype' => 'multipart/form-data',
         'data-remote' => (!!@remote).to_s,
+        'class' => 'yodel-record',
+        'data-record-id' => @record.id.to_s,
         'id' => @id
       }.merge(@params)
     
