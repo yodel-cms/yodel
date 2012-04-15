@@ -18,6 +18,6 @@ class EmbeddedRecordsValidation < Validation
       field_set_values << Set.new(records.collect {|embedded| embedded.get(field_name)}).to_a
     end
     
-    run_validations(embedded_fields, :set_validations, field_set_values)
+    run_validations(embedded_fields, :set_validations, field_set_values, field)
   end
 end

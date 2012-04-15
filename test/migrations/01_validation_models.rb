@@ -43,6 +43,20 @@ class ValidationModelsMigration < Migration
     site.records.create_model :unique_validation_test_model do |unique_validation_test_model|
       add_field :name, :string, validations: {unique: {}}
     end
+    
+    site.records.create_model :multiple_validation_test_model do |multiple_validation_test_model|
+      add_field :name, :string, validations: {required: {}, length: {length: [3,10]}, format: {format: /^[A-Z]/}}
+    end
+    
+    site.records.create_model :embedded_records_validation_test_model do |embedded_records_validation_test_model|
+      add_embed_many :items do
+        add_field :name, :string, validations: {required: {}}
+        add_field :season, :enum, options: %w{Summer Autumn Winter Spring},
+                  set_validations: {
+                    excludes_combinations: {combinations: [['Winter', 'Spring'], ['Winter', 'Summer']]}
+                  }
+      end
+    end
   end
   
   def self.down(site)

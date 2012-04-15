@@ -337,4 +337,217 @@ class TestValidations < Test::Unit::TestCase
     end
   end
   
+  # ----------------------------------------------------------------------
+  # embedded record validations
+  # ----------------------------------------------------------------------
+  context "Embedded record validations" do
+    setup do
+      @record = $test_site.embedded_records_validation_test_models.new
+      @record.items.new({'name' => 'item1', 'season' => 'Summer'}).save
+    end
+    
+    should "fail when an embedded validation fails" do
+      new_item = @record.items.new
+      @record.items << new_item
+      assert !@record.valid?
+      assert @record.errors.all_record_errors_to_hash.key?(new_item.id.to_s)
+    end
+    
+    should "pass when all embedded validations pass" do
+      # the initial item in @record is valid
+      assert @record.valid?
+      
+      # test a second item is valid too
+      @record.items.new({'name' => 'item2'}).save
+      assert @record.valid?
+    end
+    
+    should "fail when set validations fail" do
+      @record.items.new({'name' => 'item2', 'season' => 'Winter'}).save
+      assert !@record.valid?
+      assert @record.errors.key?('items')
+    end
+    
+    should "pass when set validations pass" do
+      @record.items.new({'name' => 'item2', 'season' => 'Spring'}).save
+      assert @record.valid?
+    end
+  end
+
+  
+  # ----------------------------------------------------------------------
+  # multiple validations
+  # ----------------------------------------------------------------------
+  context "A field with multiple validations" do
+    setup do
+      @record = $test_site.multiple_validation_test_models.new
+    end
+    
+    should "be invalid if its validations don't pass" do
+      assert !@record.valid?
+      assert @record.errors.key?('name')
+      
+      # satisfy required, but not length or format
+      @record.name = 'a'
+      assert !@record.valid?
+      assert @record.errors.key?('name')
+      
+      # satisfy required and length, but not format
+      @record.name = 'abc'
+      assert !@record.valid?
+      assert @record.errors.key?('name')
+      
+      # satisfy required and format, but not length
+      @record.name = 'Ab'
+      assert !@record.valid?
+      assert @record.errors.key?('name')
+      
+      # satisfy all three validations
+      @record.name = 'Abc'
+      assert @record.valid?
+    end
+  end
+  
+  
+  # ----------------------------------------------------------------------
+  # validations only on modified values
+  # ----------------------------------------------------------------------
+  context "Validations" do
+    setup do
+      @user = $test_site.users.new
+      @user.email = "user@test.com"
+      @user.username = "abc"
+      @user.password = "123"
+      @user.save
+    end
+    
+    teardown do
+      @user.destroy
+    end
+    
+    should "only be applied to modified values" do
+      # the original user is valid
+      assert @user.valid?
+      
+      # invalidate a field
+      @user.username = ''
+      assert !@user.valid?
+      assert @user.errors.key?('username')
+      
+      # ensure the reloaded original value returns the record to valid
+      @user.reload
+      assert @user.valid?
+    end
+    
+    should "only be applied to modified values, ignoring previously saved invalid values" do
+      # force a field to become invalid
+      @user.username = ''
+      @user.save_without_validation
+      assert @user.valid?
+      
+      # invalidate another, only it should be invalid
+      @user.email = ''
+      assert !@user.valid?
+      assert @user.errors.to_hash.keys.length == 1
+      assert @user.errors.key?('email')
+    end
+    
+    should "pass on previously saved invalid values after reloading" do
+      # create a record with an invalid field
+      @record = $test_site.multiple_validation_test_models.new
+      @record.name = 'a'
+      @record.save_without_validation
+      assert @record.valid?
+      
+      # update the field with a new invalid value
+      @record.name = 'b'
+      assert !@record.valid?
+      assert @record.errors.key?('name')
+      
+      # test the reloaded record is valid
+      @record.reload
+      assert @record.valid?
+      
+      @record.destroy
+    end
+  end
+  
+  
+  # ----------------------------------------------------------------------
+  # validations on multiple fields
+  # ----------------------------------------------------------------------
+  context "A record with validations on multiple fields" do
+    setup do
+      @user = $test_site.users.new
+    end
+    
+    should "be invalid if any of its fields are invalid" do
+      assert !@user.valid?
+      assert @user.errors.to_hash.keys.length == 3
+      assert @user.errors.key?('username')
+      assert @user.errors.key?('password')
+      assert @user.errors.key?('email')
+      
+      @user.email = "user@test.com"
+      assert !@user.valid?
+      assert @user.errors.to_hash.keys.length == 2
+      assert @user.errors.key?('username')
+      assert @user.errors.key?('password')
+      
+      @user.email = nil
+      @user.username = "abc"
+      assert !@user.valid?
+      assert @user.errors.to_hash.keys.length == 2
+      assert @user.errors.key?('password')
+      assert @user.errors.key?('email')
+      
+      @user.username = nil
+      @user.password = "123"
+      assert !@user.valid?
+      assert @user.errors.to_hash.keys.length == 2
+      assert @user.errors.key?('username')
+      assert @user.errors.key?('email')
+    end
+    
+    should "be valid if all of its fields are valid" do
+      @user.email = "user@test.com"
+      @user.username = "abc"
+      @user.password = "123"
+      assert @user.valid?
+    end
+  end
+  
+  
+  # ----------------------------------------------------------------------
+  # json output
+  # ----------------------------------------------------------------------
+  context "The JSON output of a record's errors" do
+    setup do
+      @record = $test_site.embedded_records_validation_test_models.new
+      @item_1 = @record.items.new({season: 'Winter'})
+      @record.items << @item_1
+      @item_2 = @record.items.new({season: 'Summer'})
+      @record.items << @item_2
+      @record.valid?
+      @json_hash = @record.errors.all_record_errors_to_hash
+    end
+    
+    should "nest the record's errors under the id of the record" do
+      assert @json_hash.key?(@record.id.to_s)
+      assert @json_hash[@record.id.to_s].key?('items')
+    end
+    
+    should "nest embedded record errors under their own ids" do
+      assert @json_hash.key?(@item_1.id.to_s)
+      assert @json_hash.key?(@item_2.id.to_s)
+      assert @json_hash[@item_1.id.to_s].key?('name')
+      assert @json_hash[@item_2.id.to_s].key?('name')
+    end
+    
+    should "store validations errors in an array" do
+      assert @json_hash[@record.id.to_s]['items'].is_a?(Array)
+      assert @json_hash[@item_1.id.to_s]['name'].is_a?(Array)
+      assert @json_hash[@item_2.id.to_s]['name'].is_a?(Array)
+    end
+  end
 end
