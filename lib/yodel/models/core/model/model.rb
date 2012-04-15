@@ -262,7 +262,6 @@ class Model < SiteRecord
     end
   end
   
-  
   # TODO: modify versions of the association methods
   def add_embed_many(name, options={}, &block)
     embedded_field = add_field(name, 'many_embedded', options)

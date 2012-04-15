@@ -1,5 +1,6 @@
 class Site < MongoRecord
   attr_reader :cached_records, :cached_models
+  GIT_REMOTE_NAME = 'yodel'
   
   collection :sites
   field :name, :string
@@ -40,10 +41,17 @@ class Site < MongoRecord
     @log ||= Log.new(self)
   end
   
+  def yodel_site?
+    name == 'yodel'
+  end
+  
+  def regular_site?
+    name != 'yodel'
+  end
+  
   def root_directory
-    # TODO: find a better way to distinguish between dev/prod and normal sites
     @root_directory ||= begin
-      if name != 'yodel'
+      if regular_site?
         get('root_directory')
       elsif Yodel.env.production?
         Yodel.extensions['yodel_production_environment'].lib_dir
@@ -161,9 +169,155 @@ class Site < MongoRecord
     update(YAML.load_file(site_yaml_path))
   end
   
-  def self.load_from_site_yaml(path)
-    Site.new(YAML.load_file(path)).tap do |site|
-      site.root_directory = File.dirname(path)
+  def self.clone(name, remote, remote_id, default_user)
+    return 'No site name provided' if name.blank?
+    return 'No remote provided' if remote.blank?
+    return 'No remote site id provided' if remote_id.blank?
+    return 'No default user provided' if default_user.blank?
+    
+    # determine where to clone from
+    git_url = remote.git_url(remote_id)
+    return 'Git URL could not be constructed' if git_url.blank?
+    
+    # find an unused site directory
+    identifier = cleanse_name(name)
+    site_folder = find_unused_site_dir(identifier)
+    
+    # clone the repos locally  
+    Dir.chdir(Yodel.config.sites_root) do
+      result = `#{Yodel.config.git_path} clone -o #{GIT_REMOTE_NAME} #{git_url} #{site_folder}`
+      return "Git error: #{$1}" if result =~ /error: (.+)$/
+    end
+    
+    # the attachments directory is in .gitignore
+    Dir.mkdir(File.join(site_folder, Yodel::ATTACHMENTS_DIRECTORY_NAME))
+    
+    # when running as a daemon, the root user will own the cloned repos
+    Dir.chdir(Yodel.config.sites_root) do
+      return unless Yodel.config.owner_user
+      if Yodel.config.owner_group != 0
+        FileUtils.chown_R(Yodel.config.owner_user, Yodel.config.owner_group, site_folder)
+      else
+        FileUtils.chown_R(Yodel.config.owner_user, nil, site_folder)
+      end
+    end
+    
+    # create a new site from the cloned site.yml file
+    site_yml = File.join(Yodel.config.sites_root, site_folder, Yodel::SITE_YML_FILE_NAME)
+    return 'Site yml file was not cloned successfully' unless File.exist?(site_yml)
+    new_site = Site.new(YAML.load_file(site_yml)).tap do |site|
+      site.root_directory = File.dirname(site_yml)
+    end
+    
+    # add the remote and a new default local domain
+    new_site.domains.unshift(find_unused_domain(identifier))
+    new_site.remote_id = remote_id
+    new_site.remote = remote
+    new_site.save
+    
+    # initialise the site
+    Migration.run_migrations(new_site)
+    create_default_user(new_site, default_user)
+    return new_site
+  end
+  
+  def self.create(name, default_user)
+    return 'No site name provided' if name.blank?
+    return 'No default user provided' if default_user.blank?
+    
+    # create a new folder for the site
+    identifier = cleanse_name(name)
+    site_dir = find_unused_site_dir(identifier)
+    FileUtils.cp_r(File.join(File.dirname(__FILE__), 'site_template'), site_dir)
+    
+    # rename the gitignore file so it becomes active
+    FileUtils.mv(File.join(site_dir, 'gitignore'), File.join(site_dir, '.gitignore'))
+
+    # create the new site
+    new_site = Site.new
+    new_site.name = name
+    new_site.root_directory = site_dir
+    new_site.domains << find_unused_domain(identifier)
+
+    # copy core yodel migrations
+    yodel_migrations_dir = File.join(site_dir, Yodel::Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME, Yodel::YODEL_MIGRATIONS_DIRECTORY_NAME)
+    FileUtils.cp_r(Yodel.config.yodel_migration_directory, yodel_migrations_dir)
+
+    # copy extension migrations
+    extension_migrations_dir = File.join(site_dir, Yodel::MIGRATIONS_DIRECTORY_NAME, Yodel::EXTENSION_MIGRATIONS_DIRECTORY_NAME)
+    Yodel.config.extensions.each do |extension|
+      if File.directory?(extension.migrations_dir)
+        FileUtils.cp_r(extension.migrations_dir, File.join(extension_migrations_dir, extension.name))
+      end
+      new_site.extensions << extension.name
+    end
+
+    # create the repository and perform the first commit
+    if Yodel.config.owner_user
+      if Yodel.config.owner_group != 0
+        FileUtils.chown_R(Yodel.config.owner_user, Yodel.config.owner_group, site_dir)
+      else
+        FileUtils.chown_R(Yodel.config.owner_user, nil, site_dir)
+      end
+    end
+    
+    Dir.chdir(site_dir) do
+      `#{Yodel.config.git_path} init .`
+      `#{Yodel.config.git_path} config 'user.name' '#{default_user.name.gsub("'", "\\\\'")}'`
+      `#{Yodel.config.git_path} config 'user.email' '#{default_user.email.gsub("'", "\\\\'")}'`
+      `#{Yodel.config.git_path} config 'http.postBuffer' #{200 * 1024 * 1024}`
+      `#{Yodel.config.git_path} add .`
+      `#{Yodel.config.git_path} commit -a -m 'New yodel site'`
+    end
+
+    # save and initialise the site
+    new_site.save
+    Migration.run_migrations(new_site)
+    create_default_user(new_site, default_user)
+    return new_site
+  end
+  
+  class << self
+    private
+    def create_default_user(new_site, default_user)
+      user = new_site.users.new
+      user.first_name = default_user.name
+      user.email = default_user.email
+      user.username = default_user.email
+      user.password = Password.hashed_password(nil, default_user.password)
+      user.groups << new_site.groups['Developers']
+      user.save
+
+      # because of the before_create callback, we need to override
+      # the salt and password manually by saving again, otherwise
+      # user.password will be hashed twice
+      user.password_salt = nil
+      user.password = Password.hashed_password(nil, default_user.password)
+      user.save_without_validation
+    end
+
+    def cleanse_name(name)
+      name.downcase.gsub(/[^a-z0-9]+/, '-')
+    end
+    
+    def find_unused_site_dir(name)
+      site_folder = name
+      counter = 0
+      while File.exist?(File.join(Yodel.config.sites_root, site_folder))
+        counter += 1
+        site_folder = "#{name}-#{counter}"
+      end
+      site_folder
+    end
+    
+    def find_unused_domain(name)
+      domain = "#{name}.yodel"
+      counter = 0
+      while Site.exists?(domains: domain)
+        counter += 1
+        domain = "#{name}-#{counter}.yodel"
+      end
+      domain
     end
   end
   
